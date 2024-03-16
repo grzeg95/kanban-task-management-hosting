@@ -7,6 +7,7 @@
 @use 'app/components/form/textarea/textarea' as textarea;
 
 @use 'app/components/button/button' as button;
+@use 'app/components/snack-bar/snack-bar' as snack-bar;
 
 @import 'styles/typography';
 @import 'styles/colors';
@@ -102,6 +103,12 @@ body {
     warn-hover-background: $red-hover,
     warn-hover-color: $white
   ));
+
+  @include snack-bar.theme((
+    font-family: $font-family,
+    color: $white,
+    background: #39395b
+  ));
 }
 
 .light {
@@ -171,5 +178,11 @@ body {
     warn-color: $white,
     warn-hover-background: $red-hover,
     warn-hover-color: $white
+  ));
+
+  @include snack-bar.theme((
+    font-family: $font-family,
+    color: $black,
+    background: $light-gray
   ));
 }
