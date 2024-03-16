@@ -1,0 +1,16 @@
+$overlay-backdrop-color: transparentize(#000000, 0.5);
+
+@import '@angular/cdk/overlay/index';
+
+@include overlay();
+
+.cdk-dialog-container {
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
