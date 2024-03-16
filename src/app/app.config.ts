@@ -11,6 +11,7 @@ import {join} from 'path-browserify';
 import {forkJoin, mergeMap} from 'rxjs';
 import {environment} from '../environments/environment';
 import {routes} from './app.routes';
+import {AvailableUserViews, DefaultUserView, UnauthorizedView} from './tokens/view';
 import {SvgService} from './services/svg.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
 
@@ -100,6 +101,18 @@ export const appConfig: ApplicationConfig = {
           }
         }
       }
+    },
+    {
+      provide: UnauthorizedView,
+      useValue: ''
+    },
+    {
+      provide: AvailableUserViews,
+      useValue: ['boards']
+    },
+    {
+      provide: DefaultUserView,
+      useValue: 'boards'
     }
   ]
 };
