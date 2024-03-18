@@ -1,0 +1,91 @@
+import {animate, state, style, transition, trigger} from '@angular/animations';
+import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {NgTemplateOutlet} from '@angular/common';
+import {ChangeDetectionStrategy, Component, signal, ViewEncapsulation} from '@angular/core';
+import {SvgDirective} from '../../directives/svg.directive';
+import {AppService} from '../../services/app.service';
+import {AuthService} from '../../services/auth/auth.service';
+import {LayoutService} from '../../services/layout.service';
+import {ThemeSelectorService} from '../../services/theme-selector.service';
+import {ButtonComponent} from '../button/button.component';
+import {PopMenuItemComponent} from '../pop-menu/pop-menu-item/pop-menu-item.component';
+import {PopMenuComponent} from '../pop-menu/pop-menu.component';
+
+@Component({
+  selector: 'app-nav',
+  standalone: true,
+  imports: [
+    NgTemplateOutlet,
+    CdkOverlayOrigin,
+    ButtonComponent,
+    CdkConnectedOverlay,
+    PopMenuComponent,
+    PopMenuItemComponent,
+    SvgDirective
+  ],
+  templateUrl: './nav.component.html',
+  styleUrl: './nav.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  host: {
+    class: 'app-nav'
+  },
+  animations: [
+    trigger(
+      'move-branding-for-side-bar',
+      [
+        state(
+          'hidden',
+          style({
+            width: 0
+          })
+        ),
+        state(
+          'tablet',
+          style({
+            width: 261
+          })
+        ),
+        state(
+          'desktop',
+          style({
+            width: 300
+          })
+        ),
+        transition(
+          '* => hidden, hidden => phone, hidden => tablet, hidden => desktop',
+          animate('0.333s ease-in-out')
+        )
+      ]
+    )
+  ]
+})
+export class NavComponent {
+
+  protected showMenuOptions = signal<boolean>(false);
+  protected isDark = this._themeSelectorService.isDark;
+  protected isLoggedIn = this._authService.isLoggedIn;
+  protected appNavButtonTemplateRef = this._appService.appNavButtonTemplateRef;
+  protected appNavMenuButtonsTemplateRef = this._appService.appNavMenuButtonsTemplateRef;
+  protected appNavSelectedLabelTemplateRef = this._appService.appNavSelectedLabelTemplateRef;
+  protected isOnDesktop = this._layoutService.isOnDesktop;
+  protected isOnTablet = this._layoutService.isOnTablet;
+  protected isOnPhone = this._layoutService.isOnPhone;
+  protected moveBrandingForSideBarState = this._appService.moveForSideBarState;
+
+  constructor(
+    private readonly _themeSelectorService: ThemeSelectorService,
+    private readonly _authService: AuthService,
+    private readonly _appService: AppService,
+    private readonly _layoutService: LayoutService
+  ) {
+  }
+
+  signInAnonymously(): void {
+    this._authService.signInAnonymously();
+  }
+
+  signOut(): void {
+    this._authService.signOut();
+  }
+}

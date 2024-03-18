@@ -1,0 +1,73 @@
+<div class="app-nav__left">
+  <div class="app-nav__left__branding">
+    <div class="app-nav__left__branding__logo" [@move-branding-for-side-bar]="moveBrandingForSideBarState()">
+      <svg appSvg="logo" class="app-nav__left__branding__logo__logo"/>
+
+      @if (isOnTablet() || isOnDesktop()) {
+        <svg [appSvg]="isDark() ? 'logo-text-dark' : 'logo-text-light'" class="app-nav__branding__logo__text"/>
+      }
+    </div>
+  </div>
+
+  <div class="app-nav__left__selected-label">
+    @if (appNavSelectedLabelTemplateRef(); as appNavSelectedLabelTemplateRef) {
+      <ng-container [ngTemplateOutlet]="appNavSelectedLabelTemplateRef"/>
+    }
+  </div>
+</div>
+
+<div
+  class="app-nav__menu"
+  cdkOverlayOrigin
+  #trigger="cdkOverlayOrigin"
+>
+  @if (isLoggedIn() === false) {
+    <button
+      app-button
+      appearance="primary"
+      size="large"
+      svg="left"
+      (click)="signInAnonymously()"
+    >
+      <svg appSvg="incognito"/>
+
+      @if (!isOnPhone()) {
+        Try It
+      }
+    </button>
+  }
+
+  @if (isLoggedIn()) {
+
+    @if (appNavButtonTemplateRef(); as appNavButtonTemplateRef) {
+      <ng-container [ngTemplateOutlet]="appNavButtonTemplateRef"/>
+    }
+
+    <div
+      tabindex="0"
+      class="app-nav__menu__trigger"
+      (click)="showMenuOptions.set(!showMenuOptions())"
+      (keydown)="showMenuOptions.set(!showMenuOptions()); $event.preventDefault()"
+    >
+      <svg appSvg="icon-vertical-ellipsis"/>
+    </div>
+
+    <ng-template
+      cdkConnectedOverlay
+      #cdkConnectedOverlay="cdkConnectedOverlay"
+      [cdkConnectedOverlayOrigin]="trigger"
+      [cdkConnectedOverlayOpen]="showMenuOptions()"
+      [cdkConnectedOverlayDisposeOnNavigation]="true"
+      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); showMenuOptions.set(false);"
+    >
+      <app-pop-menu [style.min-width.px]="192">
+
+        @if (appNavMenuButtonsTemplateRef(); as appNavMenuButtonsTemplateRef) {
+          <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
+        }
+
+        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); signOut();">Sign Out</app-pop-menu-item>
+      </app-pop-menu>
+    </ng-template>
+  }
+</div>

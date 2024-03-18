@@ -10,5 +10,25 @@
   {
     "name": "icon-cross",
     "src": "icon-cross.svg"
+  },
+  {
+    "name": "icon-vertical-ellipsis",
+    "src": "icon-vertical-ellipsis.svg"
+  },
+  {
+    "name": "incognito",
+    "src": "incognito.svg"
+  },
+  {
+    "name": "logo",
+    "src": "logo.svg"
+  },
+  {
+    "name": "logo-text-dark",
+    "src": "logo-text-dark.svg"
+  },
+  {
+    "name": "logo-text-light",
+    "src": "logo-text-light.svg"
   }
 ]

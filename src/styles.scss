@@ -8,6 +8,7 @@
 @use 'app/components/form/textarea/textarea' as textarea;
 
 @use 'app/components/button/button' as button;
+@use 'app/components/nav/nav' as nav;
 @use 'app/components/pop-menu/pop-menu' as pop-menu;
 @use 'app/components/pop-menu/pop-menu-item/pop-menu-item' as pop-menu-item;
 @use 'app/components/snack-bar/snack-bar' as snack-bar;
@@ -120,6 +121,12 @@ body {
     warn-hover-color: $white
   ));
 
+  @include nav.theme((
+    background: $dark-gray,
+    border-color: $lines-dark,
+    selected-color: $white
+  ));
+
   @include pop-menu.theme((
     background: $very-dark-gray
   ));
@@ -217,6 +224,12 @@ body {
     warn-color: $white,
     warn-hover-background: $red-hover,
     warn-hover-color: $white
+  ));
+
+  @include nav.theme((
+    background: $white,
+    border-color: $lines,
+    selected-color: $black
   ));
 
   @include pop-menu.theme((

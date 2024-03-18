@@ -1,0 +1,34 @@
+@use 'styles/layout' as layout;
+
+@mixin theme($theme) {
+
+  .app-nav {
+
+    $background: map-get($theme, 'background');
+    $border-color: map-get($theme, 'border-color');
+    $selected-color: map-get($theme, 'selected-color');
+
+    background: $background;
+    border-bottom: solid 1px $border-color;
+
+    &__left {
+
+      &__branding {
+
+        &__logo {
+          @include layout.from-tablet() {
+            border-right: solid 1px $border-color;
+          }
+
+          @include layout.from-desktop() {
+            border-right: solid 1px $border-color;
+          }
+        }
+      }
+
+      &__selected-label {
+        color: $selected-color;
+      }
+    }
+  }
+}
