@@ -20,6 +20,23 @@ export class LayoutService {
   readonly isOnTablet = computed(() => this._currentScreenBreakpoint() === BreakpointsDevices.tablet);
   readonly isOnPhone = computed(() => this._currentScreenBreakpoint() === BreakpointsDevices.phone);
 
+  readonly heightNav = computed(() => {
+
+    if (this.isOnPhone()) {
+      return 64;
+    }
+
+    if (this.isOnTablet()) {
+      return 80;
+    }
+
+    if (this.isOnDesktop()) {
+      return 97;
+    }
+
+    return 0;
+  });
+
   constructor(
     private _breakpointObserver: BreakpointObserver
   ) {
