@@ -1,0 +1,126 @@
+<ng-template #appNavButtonTemplateRef>
+  <button
+    app-button
+    appearance="primary"
+    size="large"
+    [disabled]="!selected()"
+  >
+    +
+    @if (!isOnPhone()) {
+      Add new task
+    }
+  </button>
+</ng-template>
+
+<ng-template #appNavMenuButtonsTemplateRef>
+  @if (selected()) {
+    <app-pop-menu-item (click)="openEditBoardDialog($event)">Edit board</app-pop-menu-item>
+    <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event)">Delete board</app-pop-menu-item>
+  }
+</ng-template>
+
+<ng-template #appSideBarItemsTitleTemplateRef>
+  All Boards ({{list()?.length || 0}})
+</ng-template>
+
+<ng-template #appSideBarItemsContainerTemplateRef>
+  @if (list(); as list) {
+    @for (item of list; track item) {
+      <button
+        class="app-boards__app-side-bar__items__container__button"
+        [class.app-boards__app-side-bar__items__container__button--active]="item.id === selected()?.id"
+        app-button
+        svg="left"
+        (click)="select(item.id)"
+      >
+        <svg
+          class="app-boards__app-side-bar__items__container__button__svg"
+          [class.app-boards__app-side-bar__items__container__button__svg--active]="item.id === selected()?.id"
+          appSvg="icon-board"
+        />
+        {{ item.label }}
+      </button>
+    }
+  }
+
+  <button
+    class="app-boards__app-side-bar__items__container__button"
+    app-button
+    svg="left"
+    (click)="openAddBoardDialog($event); showSideBar.set(false)"
+  >
+    <svg
+      class="app-boards__app-side-bar__items__container__button__svg"
+      appSvg="icon-board"
+    />
+    + Create New Board
+  </button>
+</ng-template>
+
+<ng-template #appSideBarPhoneItemsTitleTemplateRef>
+  All Boards ({{list()?.length || 0}})
+</ng-template>
+
+<ng-template #appSideBarPhoneItemsContainerTemplateRef>
+  @if (list(); as list) {
+    @for (item of list; track item) {
+      <button
+        class="app-boards__app-side-bar-mobile__items__container__button"
+        [class.app-boards__app-side-bar-mobile__items__container__button--active]="item.id === selected()?.id"
+        app-button
+        svg="left"
+        (click)="select(item.id); showSideBar.set(false)"
+      >
+        <svg
+          class="app-boards__app-side-bar-mobile__items__container__button__svg"
+          [class.app-boards__app-side-bar-mobile__items__container__button__svg--active]="item.id === selected()?.id"
+          appSvg="icon-board"
+        />
+        {{ item.label }}
+      </button>
+    }
+  }
+
+  <button
+    class="app-boards__app-side-bar-mobile__items__container__button"
+    app-button
+    svg="left"
+    (click)="openAddBoardDialog($event); showSideBar.set(false)"
+  >
+    <svg
+      class="app-boards__app-side-bar-mobile__items__container__button__svg"
+      appSvg="icon-board"
+    />
+    + Create New Board
+  </button>
+</ng-template>
+
+<ng-template #appNavSelectedLabelTemplateRef>
+
+  @if (isOnPhone()) {
+    <span
+      class="app-boards__app-nav__left__selected-label"
+      tabindex="0"
+      (keydown)="showSideBar.set(!showSideBar()); $event.preventDefault()"
+      (click)="showSideBar.set(!showSideBar())"
+    >
+      <svg [appSvg]="showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+      {{ !list() ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}
+    </span>
+  } @else {
+    <span>{{ !list() ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}</span>
+  }
+</ng-template>
+
+<router-outlet/>
+
+@if (list()?.length === 0) {
+  <div class="app-boards__without-boards">
+    <div class="app-boards__without-boards__title">There is no boards. Create a new board to get started.</div>
+    <button
+      app-button
+      appearance="primary"
+      (click)="openAddBoardDialog($event)"
+    >+ Add New Board</button>
+  </div>
+}

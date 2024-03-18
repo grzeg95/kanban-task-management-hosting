@@ -1,0 +1,107 @@
+@use 'styles/layout' as layout;
+
+@mixin theme($theme) {
+
+  $background: map-get($theme, 'background');
+
+  $app-side-bar__items__container__button-background: map-get($theme, 'app-side-bar__items__container__button-background');
+  $app-side-bar__items__container__button-background--hover: map-get($theme, 'app-side-bar__items__container__button-background--hover');
+  $app-side-bar__items__container__button-background--active: map-get($theme, 'app-side-bar__items__container__button-background--active');
+
+  $app-side-bar__items__container__button-color: map-get($theme, 'app-side-bar__items__container__button-color');
+  $app-side-bar__items__container__button-color--hover: map-get($theme, 'app-side-bar__items__container__button-color--hover');
+  $app-side-bar__items__container__button-color--active: map-get($theme, 'app-side-bar__items__container__button-color--active');
+
+  $without-boards-title-color: map-get($theme, 'without-boards-title-color');
+
+  .app-boards {
+
+    background: $background;
+
+    &__app-side-bar__items__container__button {
+
+      background: $app-side-bar__items__container__button-background;
+      color: $app-side-bar__items__container__button-color;
+
+      svg path {
+        fill: $app-side-bar__items__container__button-color;
+      }
+
+      &:hover {
+
+        background: $app-side-bar__items__container__button-background--hover;
+        color: $app-side-bar__items__container__button-color--hover;
+
+        svg path {
+          fill: $app-side-bar__items__container__button-color--hover;
+        }
+      }
+
+      &--active {
+
+        background: $app-side-bar__items__container__button-background--active;
+        color: $app-side-bar__items__container__button-color--active;
+
+        svg path {
+          fill: $app-side-bar__items__container__button-color--active;
+        }
+
+        &:hover {
+
+          background: $app-side-bar__items__container__button-background--active;
+          color: $app-side-bar__items__container__button-color--active;
+
+          svg path {
+            fill: $app-side-bar__items__container__button-color--active;
+          }
+        }
+      }
+    }
+
+    &__app-side-bar-mobile__items__container__button {
+
+      background: $app-side-bar__items__container__button-background;
+      color: $app-side-bar__items__container__button-color;
+
+      svg path {
+        fill: $app-side-bar__items__container__button-color;
+      }
+
+      &:hover {
+
+        background: $app-side-bar__items__container__button-background--hover;
+        color: $app-side-bar__items__container__button-color--hover;
+
+        svg path {
+          fill: $app-side-bar__items__container__button-color--hover;
+        }
+      }
+
+      &--active {
+
+        background: $app-side-bar__items__container__button-background--active;
+        color: $app-side-bar__items__container__button-color--active;
+
+        svg path {
+          fill: $app-side-bar__items__container__button-color--active;
+        }
+
+        &:hover {
+
+          background: $app-side-bar__items__container__button-background--active;
+          color: $app-side-bar__items__container__button-color--active;
+
+          svg path {
+            fill: $app-side-bar__items__container__button-color--active;
+          }
+        }
+      }
+    }
+
+    &__without-boards {
+      &__title {
+        color: $without-boards-title-color;
+      }
+    }
+  }
+}

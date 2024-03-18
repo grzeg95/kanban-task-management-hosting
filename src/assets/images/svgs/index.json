@@ -8,6 +8,10 @@
     "src": "icon-chevron-down.svg"
   },
   {
+    "name": "icon-chevron-up",
+    "src": "icon-chevron-up.svg"
+  },
+  {
     "name": "icon-cross",
     "src": "icon-cross.svg"
   },

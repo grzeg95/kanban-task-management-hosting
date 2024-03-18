@@ -15,6 +15,8 @@
 @use 'app/components/side-bar-phone/side-bar-phone' as side-bar-phone;
 @use 'app/components/snack-bar/snack-bar' as snack-bar;
 
+@use 'app/views/boards/boards' as boards;
+
 @import 'styles/typography';
 @import 'styles/colors';
 @import 'styles/overlay';
@@ -161,6 +163,18 @@ body {
     color: $white,
     background: #39395b
   ));
+
+  @include boards.theme((
+    background: $very-dark-gray,
+    app-side-bar__items__title-color: $medium-gray,
+    app-side-bar__items__container__button-background: transparent,
+    app-side-bar__items__container__button-background--hover: $white,
+    app-side-bar__items__container__button-background--active: $main-purple,
+    app-side-bar__items__container__button-color: $medium-gray,
+    app-side-bar__items__container__button-color--hover: $main-purple,
+    app-side-bar__items__container__button-color--active: $white,
+    without-boards-title-color: $medium-gray
+  ));
 }
 
 .light {
@@ -282,5 +296,17 @@ body {
     font-family: $font-family,
     color: $black,
     background: $light-gray
+  ));
+
+  @include boards.theme((
+    background: $light-gray,
+    app-side-bar__items__title-color: $medium-gray,
+    app-side-bar__items__container__button-background: transparent,
+    app-side-bar__items__container__button-background--hover: transparentize(#979797, 0.9),
+    app-side-bar__items__container__button-background--active: $main-purple,
+    app-side-bar__items__container__button-color: $medium-gray,
+    app-side-bar__items__container__button-color--hover: $main-purple,
+    app-side-bar__items__container__button-color--active: white,
+    without-boards-title-color: $medium-gray
   ));
 }
