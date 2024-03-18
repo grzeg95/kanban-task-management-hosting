@@ -1,0 +1,39 @@
+@mixin side-bar-phone-button {
+  position: relative;
+  left: -20px;
+  width: 240px;
+  padding-left: 44px;
+  justify-content: flex-start;
+}
+
+
+@mixin theme($theme) {
+
+  .app-side-bar-phone {
+
+    $items__title-color: map-get($theme, 'items__title-color');
+    $background: map-get($theme, 'background');
+    $bottom-menu__theme-switch-wrapper__theme-switch-background: map-get($theme, 'bottom-menu__theme-switch-wrapper__theme-switch-background');
+
+    &__content {
+
+      background: $background;
+
+      &__items {
+        &__title {
+          color: $items__title-color;
+        }
+      }
+
+      &__bottom-menu {
+
+        &__theme-switch-wrapper {
+
+          &__theme-switch {
+            background: $bottom-menu__theme-switch-wrapper__theme-switch-background;
+          }
+        }
+      }
+    }
+  }
+}
