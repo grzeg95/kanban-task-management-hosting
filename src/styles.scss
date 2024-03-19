@@ -16,6 +16,7 @@
 @use 'app/components/snack-bar/snack-bar' as snack-bar;
 
 @use 'app/views/boards/boards' as boards;
+@use 'app/views/boards/board/board' as board;
 
 @import 'styles/typography';
 @import 'styles/colors';
@@ -175,6 +176,20 @@ body {
     app-side-bar__items__container__button-color--active: $white,
     without-boards-title-color: $medium-gray
   ));
+
+  @include board.theme((
+    font-family: $font-family,
+    status-title-color: $medium-gray,
+    task-background: $dark-gray,
+    task-box-shadow-color: transparentize(#364E7E, 0.8985),
+    task-title-color: $white,
+    task-title-color-hover: $main-purple,
+    task-done-of-color: $medium-gray,
+    status-new-background: linear-gradient(to bottom, transparentize($dark-gray, 0.5), transparentize($dark-gray, 0.75)),
+    status-new-color: $medium-gray,
+    status-new-color-hover: $main-purple,
+    without-statuses-title-color: $medium-gray
+  ));
 }
 
 .light {
@@ -308,5 +323,19 @@ body {
     app-side-bar__items__container__button-color--hover: $main-purple,
     app-side-bar__items__container__button-color--active: white,
     without-boards-title-color: $medium-gray
+  ));
+
+  @include board.theme((
+    font-family: $font-family,
+    status-title-color: $medium-gray,
+    task-background: $white,
+    task-box-shadow-color: transparentize(#364E7E, 0.8985),
+    task-title-color: $black,
+    task-title-color-hover: $main-purple,
+    task-done-of-color: $medium-gray,
+    status-new-background: linear-gradient(to bottom, #E9EFFA, transparentize(#E9EFFA, 0.75)),
+    status-new-color: $medium-gray,
+    status-new-color-hover: $main-purple,
+    without-statuses-title-color: $medium-gray
   ));
 }

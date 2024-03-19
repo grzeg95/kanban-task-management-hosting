@@ -1,0 +1,46 @@
+@for (status of statuses(); track status; let i = $index) {
+  <div class="app-board__status">
+    <div class="app-board__status__title-wrapper">
+      <div class="app-board__status__title-wrapper__indicator" [style.background-color]="statusesIndicators[i]"></div>
+      <div class="app-board__status__title-wrapper__title">({{ status.tasksIdsSequence.length }}) {{ status.name }}</div>
+    </div>
+
+    @for (task of statusPathTasks()?.get(status.path + '/tasks'); track task) {
+      <div class="app-board__task" tabindex="0" (click)="openTaskDialog($event)" (keydown)="openTaskDialog($event)">
+        <div class="app-board__task__title-wrapper">
+          <div class="app-board__task__title-wrapper__title">{{ task.title }}</div>
+        </div>
+        <div class="app-board__task__done-of">{{ getCompletedSubtasks(taskPathSubtasks()?.get(task.path + '/subtasks')) }} of {{ taskPathSubtasks()?.get(task.path + '/subtasks')?.length || 0 }} subtasks</div>
+      </div>
+    }
+  </div>
+}
+
+@if (!statuses()){
+  <div class="app-board__without-statuses">
+    <div class="app-board__without-statuses__title">Loading board...</div>
+  </div>
+}
+
+@if (statuses(); as statuses) {
+  @if (statuses.length === 0) {
+    <div class="app-board__without-statuses">
+      <div class="app-board__without-statuses__title">This board is empty. Create a new column to get started.</div>
+      <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
+    </div>
+  }
+}
+
+@if (statuses(); as statuses) {
+  @if (statuses.length > 0) {
+    <div
+      class="app-board__status-new"
+      tabindex="0"
+      (click)="openNewStatusDialog($event)"
+      (keydown)="openNewStatusDialog($event)"
+      [ngStyle]="{height: 'calc(100vh - ' + (48 +  heightNav()) + 'px)'}"
+    >
+      + New Column
+    </div>
+  }
+}

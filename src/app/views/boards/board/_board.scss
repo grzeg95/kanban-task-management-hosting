@@ -1,0 +1,64 @@
+@mixin theme($theme) {
+
+  $font-family: map-get($theme, 'font-family');
+  $status-title-color: map-get($theme, 'status-title-color');
+  $task-background: map-get($theme, 'task-background');
+  $task-box-shadow-color: map-get($theme, 'task-box-shadow-color');
+  $task-title-color: map-get($theme, 'task-title-color');
+  $task-title-color-hover: map-get($theme, 'task-title-color-hover');
+  $task-done-of-color: map-get($theme, 'task-done-of-color');
+  $status-new-background: map-get($theme, 'status-new-background');
+  $status-new-color: map-get($theme, 'status-new-color');
+  $status-new-color-hover: map-get($theme, 'status-new-color-hover');
+  $without-statuses-title-color: map-get($theme, 'without-statuses-title-color');
+
+  .app-board {
+
+    &__status {
+      &__title-wrapper {
+        &__title {
+          color: $status-title-color;
+        }
+      }
+    }
+
+    &__task {
+
+      background: $task-background;
+      box-shadow: 0 4px 6px $task-box-shadow-color;
+      $app-board__task__title-wrapper__title: '.app-board__task__title-wrapper__title';
+
+      &:hover {
+        #{$app-board__task__title-wrapper__title} {
+          color: $task-title-color-hover;
+        }
+      }
+
+      &__title-wrapper {
+        &__title {
+          color: $task-title-color;
+        }
+      }
+
+      &__done-of {
+        color: $task-done-of-color;
+      }
+    }
+
+    &__status-new {
+
+      background: $status-new-background;
+      color: $status-new-color;
+
+      &:hover {
+        color: $status-new-color-hover;
+      }
+    }
+
+    &__without-statuses {
+      &__title {
+        color: $without-statuses-title-color;
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import {QuerySnapshot} from '@angular/fire/firestore';
-import {RouterOutlet} from '@angular/router';
+import {ActivatedRoute, Router, RouterOutlet} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {ButtonComponent} from '../../components/button/button.component';
 import {PopMenuItemComponent} from '../../components/pop-menu/pop-menu-item/pop-menu-item.component';
@@ -66,8 +66,18 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
     private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
     private readonly _authService: AuthService,
-    private readonly _firestoreService: FirestoreService
+    private readonly _firestoreService: FirestoreService,
+    private readonly _router: Router,
+    private readonly _activatedRoute: ActivatedRoute
   ) {
+
+    effect(() => {
+      const selected = this._appService.selected();
+
+      if (selected) {
+        this._router.navigate(['./', selected?.id], {relativeTo: this._activatedRoute});
+      }
+    });
 
     effect(() => {
       const firebaseUser = this._authService.firebaseUser();
