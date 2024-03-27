@@ -19,6 +19,7 @@
 @use 'app/views/boards/board/board' as board;
 
 @use 'app/views/boards/dialogs/add-new-board/add-new-board' as add-new-board;
+@use 'app/views/boards/dialogs/delete-board/delete-board' as delete-board;
 @use 'app/views/boards/dialogs/edit-board/edit-board' as edit-board;
 
 @import 'styles/typography';
@@ -199,6 +200,12 @@ body {
     title-color: $white
   ));
 
+  @include delete-board.theme((
+    background: $dark-gray,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
   @include edit-board.theme((
     background: $dark-gray,
     title-color: $white
@@ -355,6 +362,12 @@ body {
   @include add-new-board.theme((
     background: $white,
     title-color: $black
+  ));
+
+  @include delete-board.theme((
+    background: $white,
+    title-color: $red,
+    description-color: $medium-gray
   ));
 
   @include edit-board.theme((

@@ -22,6 +22,7 @@ import {FirestoreService} from '../../services/firebase/firestore.service';
 import {LayoutService} from '../../services/layout.service';
 import {BoardsService} from './boards.service';
 import {AddNewBoardComponent} from './dialogs/add-new-board/add-new-board.component';
+import {DeleteBoardComponent} from './dialogs/delete-board/delete-board.component';
 import {EditBoardComponent} from './dialogs/edit-board/edit-board.component';
 
 @Component({
@@ -163,6 +164,8 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   openDeleteBoardDialog($event: MouseEvent) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(DeleteBoardComponent);
   }
 
   private _unsubBoardsListSub() {
