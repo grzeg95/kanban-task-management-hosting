@@ -19,6 +19,7 @@
 @use 'app/views/boards/board/board' as board;
 
 @use 'app/views/boards/dialogs/add-new-board/add-new-board' as add-new-board;
+@use 'app/views/boards/dialogs/edit-board/edit-board' as edit-board;
 
 @import 'styles/typography';
 @import 'styles/colors';
@@ -197,6 +198,11 @@ body {
     background: $dark-gray,
     title-color: $white
   ));
+
+  @include edit-board.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
 }
 
 .light {
@@ -347,6 +353,11 @@ body {
   ));
 
   @include add-new-board.theme((
+    background: $white,
+    title-color: $black
+  ));
+
+  @include edit-board.theme((
     background: $white,
     title-color: $black
   ));

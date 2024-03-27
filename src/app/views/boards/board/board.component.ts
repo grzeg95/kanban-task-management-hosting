@@ -1,3 +1,4 @@
+import {Dialog} from '@angular/cdk/dialog';
 import {NgStyle} from '@angular/common';
 import {ChangeDetectionStrategy, Component, effect, OnDestroy, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
@@ -12,6 +13,7 @@ import {AuthService} from '../../../services/auth/auth.service';
 import {FirestoreService} from '../../../services/firebase/firestore.service';
 import {LayoutService} from '../../../services/layout.service';
 import {BoardsService} from '../boards.service';
+import {EditBoardComponent} from '../dialogs/edit-board/edit-board.component';
 
 @Component({
   selector: 'app-board',
@@ -53,7 +55,8 @@ export class BoardComponent implements OnDestroy {
     private readonly _firestoreService: FirestoreService,
     private readonly _appService: AppService,
     private readonly _router: Router,
-    private readonly _layoutService: LayoutService
+    private readonly _layoutService: LayoutService,
+    private readonly _dialog: Dialog
   ) {
 
     effect(() => {
@@ -245,10 +248,22 @@ export class BoardComponent implements OnDestroy {
   openNewStatusDialog($event: KeyboardEvent | MouseEvent) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(EditBoardComponent, {
+      data: {
+        _boardsService: this._boardsService
+      }
+    });
   }
 
   openEditBoardDialog($event: MouseEvent) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(EditBoardComponent, {
+      data: {
+        _boardsService: this._boardsService
+      }
+    });
   }
 }
