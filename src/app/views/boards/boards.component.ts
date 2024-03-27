@@ -5,12 +5,10 @@ import {
   Component,
   effect,
   OnDestroy,
-  signal,
   TemplateRef,
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
-import {QuerySnapshot} from '@angular/fire/firestore';
 import {ActivatedRoute, Router, RouterOutlet} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {ButtonComponent} from '../../components/button/button.component';
@@ -22,6 +20,7 @@ import {AppService} from '../../services/app.service';
 import {AuthService} from '../../services/auth/auth.service';
 import {FirestoreService} from '../../services/firebase/firestore.service';
 import {LayoutService} from '../../services/layout.service';
+import {BoardsService} from './boards.service';
 import {AddNewBoardComponent} from './dialogs/add-new-board/add-new-board.component';
 
 @Component({
@@ -57,7 +56,7 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
 
   protected isOnPhone = this._layoutService.isOnPhone;
 
-  protected boards = signal<undefined | QuerySnapshot<BoardDoc>>(undefined);
+  protected boards = this._boardsService.boards;
   protected userDocSnap = this._authService.userDocSnap;
 
   private _boardsListSub: Subscription | undefined;
@@ -65,6 +64,7 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   select = this._appService.select;
 
   constructor(
+    private readonly _boardsService: BoardsService,
     private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
     private readonly _authService: AuthService,
@@ -151,6 +151,12 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   openEditBoardDialog($event: MouseEvent) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(EditBoardComponent, {
+      data: {
+        _boardsService: this._boardsService
+      }
+    });
   }
 
   openDeleteBoardDialog($event: MouseEvent) {

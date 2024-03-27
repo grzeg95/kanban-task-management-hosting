@@ -5,6 +5,7 @@ import {AppService} from '../../services/app.service';
 import {authGuard} from '../../services/auth/auth-guard';
 import {BoardComponent} from './board/board.component';
 import {BoardsComponent} from './boards.component';
+import {BoardsService} from './boards.service';
 
 export const boardsRoutes: Routes = [
   {
@@ -12,6 +13,9 @@ export const boardsRoutes: Routes = [
     component: BoardsComponent,
     canActivate: [
       (r: ActivatedRouteSnapshot, s: RouterStateSnapshot) => authGuard(redirectUnauthorizedTo('/' + inject(AppService).unauthorizedView))(r, s)
+    ],
+    providers: [
+      BoardsService
     ],
     children: [
       {

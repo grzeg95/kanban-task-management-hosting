@@ -11,6 +11,7 @@ import {AppService} from '../../../services/app.service';
 import {AuthService} from '../../../services/auth/auth.service';
 import {FirestoreService} from '../../../services/firebase/firestore.service';
 import {LayoutService} from '../../../services/layout.service';
+import {BoardsService} from '../boards.service';
 
 @Component({
   selector: 'app-board',
@@ -35,9 +36,9 @@ export class BoardComponent implements OnDestroy {
     map((params) => params['id'])
   ));
 
-  protected statuses = signal<Status[] | undefined>(undefined);
-  protected statusPathTasks = signal<Map<string, Task[]> | undefined>(undefined);
-  protected taskPathSubtasks = signal<Map<string, Subtask[]> | undefined>(undefined);
+  protected statuses = this._boardsService.statuses;
+  protected statusPathTasks = this._boardsService.statusPathTasks;
+  protected taskPathSubtasks = this._boardsService.taskPathSubtasks;
 
   private _statusesSub: Subscription | undefined;
   private _statusPathTasksSub = new Map<string, Subscription>;
@@ -46,6 +47,7 @@ export class BoardComponent implements OnDestroy {
   protected heightNav = this._layoutService.heightNav;
 
   constructor(
+    private readonly _boardsService: BoardsService,
     private readonly _authService: AuthService,
     private readonly _activatedRoute: ActivatedRoute,
     private readonly _firestoreService: FirestoreService,
