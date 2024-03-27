@@ -1,5 +1,6 @@
 @use 'app/components/form/checkbox/checkbox' as checkbox;
 @use 'app/components/form/error/error' as error;
+@use 'app/components/form/form-field/form-field' as form-field;
 @use 'app/components/form/input/input' as input;
 @use 'app/components/form/label/label' as label;
 @use 'app/components/form/switch/switch' as switch;
@@ -51,6 +52,8 @@ body {
     font-family: $font-family,
     color: $red
   ));
+
+  @include form-field.theme(());
 
   @include input.theme((
     font-family: $font-family,
@@ -119,6 +122,8 @@ body {
     font-family: $font-family,
     color: $red
   ));
+
+  @include form-field.theme(());
 
   @include input.theme((
     font-family: $font-family,
