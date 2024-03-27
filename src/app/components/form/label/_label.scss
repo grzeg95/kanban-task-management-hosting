@@ -1,0 +1,11 @@
+@mixin theme($theme) {
+
+  .app-label {
+
+    $font-family: map-get($theme, 'font-family');
+    $color: map-get($theme, 'color');
+
+    font-family: $font-family;
+    color: $color;
+  }
+}

@@ -1,0 +1,7 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-label {
+  @include typography.body-m();
+  margin-bottom: 8px;
+  display: block;
+}
