@@ -1,0 +1,17 @@
+<ng-template #svgTemplateRef>
+  <ng-content select="svg"/>
+</ng-template>
+
+@if (svg === 'left') {
+  <ng-container [ngTemplateOutlet]="svgTemplateRef"/>
+}
+
+<span
+  [class.app-button__span__svg-left]="svg === 'right' && innerText"
+  [class.app-button__span__svg-right]="svg === 'left' && innerText"
+  class="app-button__span"
+><ng-content/></span>
+
+@if (svg === 'right') {
+  <ng-container [ngTemplateOutlet]="svgTemplateRef"/>
+}

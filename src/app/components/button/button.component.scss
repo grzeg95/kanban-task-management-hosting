@@ -1,0 +1,59 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-button {
+
+  height: 40px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: white;
+  position: relative;
+
+  @include typography.body-l();
+
+  font-weight: bold;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-wrap: nowrap;
+
+  &:hover {
+    background: rgb(239, 239, 239);
+  }
+
+  &[disabled] {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &__span {
+
+    text-overflow: ellipsis;
+    overflow: hidden;
+    text-wrap: nowrap;
+
+    &__svg-left {
+      margin-right: 8px;
+    }
+    &__svg-right {
+      margin-left: 8px;
+    }
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &--large {
+    min-height: 48px;
+    border-radius: 24px;
+    @include typography.heading-m();
+    padding: 0 24px;
+  }
+}

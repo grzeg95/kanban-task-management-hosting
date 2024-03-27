@@ -1,3 +1,5 @@
+@use 'app/components/button/button' as button;
+
 @import 'styles/typography';
 @import 'styles/colors';
 
@@ -19,7 +21,39 @@ body {
 }
 
 .dark {
+
+  @include button.theme((
+    font-family: $font-family,
+    primary-background: $main-purple,
+    primary-color: $white,
+    primary-hover-background: $main-purple-hover,
+    primary-hover-color: $white,
+    secondary-background: $white,
+    secondary-color: $main-purple,
+    secondary-hover-background: transparentize($main-purple, 0.75),
+    secondary-hover-color: $main-purple,
+    warn-background: $red,
+    warn-color: $white,
+    warn-hover-background: $red-hover,
+    warn-hover-color: $white
+  ));
 }
 
 .light {
+
+  @include button.theme((
+    font-family: $font-family,
+    primary-background: $main-purple,
+    primary-color: $white,
+    primary-hover-background: $main-purple-hover,
+    primary-hover-color: $white,
+    secondary-background: transparentize($main-purple, 0.9),
+    secondary-color: $main-purple,
+    secondary-hover-background: transparentize($main-purple, 0.75),
+    secondary-hover-color: $main-purple,
+    warn-background: $red,
+    warn-color: $white,
+    warn-hover-background: $red-hover,
+    warn-hover-color: $white
+  ));
 }
