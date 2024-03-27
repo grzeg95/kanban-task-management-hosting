@@ -4,6 +4,10 @@
     "src": "icon-check.svg"
   },
   {
+    "name": "icon-chevron-down",
+    "src": "icon-chevron-down.svg"
+  },
+  {
     "name": "icon-cross",
     "src": "icon-cross.svg"
   }

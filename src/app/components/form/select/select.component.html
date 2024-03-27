@@ -1,0 +1,32 @@
+<button
+  [id]="id"
+  (blur)="_onTouched()"
+  (click)="itemsOpened = !itemsOpened"
+  class="app-select__select"
+  [class.app-select__select--active]="itemsOpened"
+  [disabled]="disabled"
+  cdkOverlayOrigin #trigger="cdkOverlayOrigin"
+>
+  @if (selected) {
+    {{ selected.label }}
+  }
+  <svg class="app-select__chevron" appSvg="icon-chevron-down"/>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="itemsOpened"
+>
+  <app-pop-menu class="app-select__app-pop-menu">
+    @for (item of items; track item) {
+      <app-pop-menu-item
+        [danger]="!!item.danger"
+        (click)="_onChange(item.value)"
+        [style.width.px]="appPopMenuItemWidth()"
+      >
+        {{ item.label }}
+      </app-pop-menu-item>
+    }
+  </app-pop-menu>
+</ng-template>
