@@ -7,6 +7,8 @@
 @use 'app/components/form/textarea/textarea' as textarea;
 
 @use 'app/components/button/button' as button;
+@use 'app/components/pop-menu/pop-menu' as pop-menu;
+@use 'app/components/pop-menu/pop-menu-item/pop-menu-item' as pop-menu-item;
 @use 'app/components/snack-bar/snack-bar' as snack-bar;
 
 @import 'styles/typography';
@@ -104,6 +106,16 @@ body {
     warn-hover-color: $white
   ));
 
+  @include pop-menu.theme((
+    background: $very-dark-gray
+  ));
+
+  @include pop-menu-item.theme((
+    font-family: $font-family,
+    color: $medium-gray,
+    color-danger: $red
+  ));
+
   @include snack-bar.theme((
     font-family: $font-family,
     color: $white,
@@ -178,6 +190,16 @@ body {
     warn-color: $white,
     warn-hover-background: $red-hover,
     warn-hover-color: $white
+  ));
+
+  @include pop-menu.theme((
+    background: $white
+  ));
+
+  @include pop-menu-item.theme((
+    font-family: $font-family,
+    color: $medium-gray,
+    color-danger: $red
   ));
 
   @include snack-bar.theme((
