@@ -2,5 +2,9 @@
   {
     "name": "icon-check",
     "src": "icon-check.svg"
+  },
+  {
+    "name": "icon-cross",
+    "src": "icon-cross.svg"
   }
 ]

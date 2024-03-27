@@ -1,4 +1,5 @@
 @use 'app/components/form/checkbox/checkbox' as checkbox;
+@use 'app/components/form/input/input' as input;
 
 @use 'app/components/button/button' as button;
 
@@ -37,6 +38,19 @@ body {
     checkbox-focus-visible-check-outline-color: $white
   ));
 
+  @include input.theme((
+    font-family: $font-family,
+    color: $white,
+    color-error: $red,
+    color-placeholder: transparentize($white, 0.75),
+    background: $dark-gray,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+
   @include button.theme((
     font-family: $font-family,
     primary-background: $main-purple,
@@ -67,6 +81,19 @@ body {
     checkbox-unchecked-background: $white,
     checkbox-checked-background: $main-purple,
     checkbox-focus-visible-check-outline-color: $black
+  ));
+
+  @include input.theme((
+    font-family: $font-family,
+    color: $black,
+    color-error: $red,
+    color-placeholder: transparentize($black, 0.75),
+    background: $white,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
   ));
 
   @include button.theme((
