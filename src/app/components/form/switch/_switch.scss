@@ -1,0 +1,17 @@
+@mixin theme($theme) {
+
+  .app-switch {
+
+    $background: map-get($theme, 'background');
+    $handler-color: map-get($theme, 'handler-color');
+
+    &__label {
+
+      background: $background;
+
+      &::before {
+        background-color: $handler-color;
+      }
+    }
+  }
+}

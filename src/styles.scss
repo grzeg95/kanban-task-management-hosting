@@ -2,6 +2,7 @@
 @use 'app/components/form/error/error' as error;
 @use 'app/components/form/input/input' as input;
 @use 'app/components/form/label/label' as label;
+@use 'app/components/form/switch/switch' as switch;
 
 @use 'app/components/button/button' as button;
 
@@ -24,6 +25,11 @@ body {
   height: 100vh;
   font-family: $font-family;
 }
+
+@include switch.theme((
+  background: $main-purple !important,
+  handler-color: $white !important
+));
 
 .dark {
 

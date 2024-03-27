@@ -1,0 +1,10 @@
+<input
+  class="app-switch__input"
+  type="checkbox"
+  (change)="_onChange($event)"
+  (blur)="_onTouched()"
+  [checked]="checked"
+  [disabled]="disabled"
+  [id]="id"
+/>
+<label class="app-switch__label" [for]="id"></label>
