@@ -18,6 +18,8 @@
 @use 'app/views/boards/boards' as boards;
 @use 'app/views/boards/board/board' as board;
 
+@use 'app/views/boards/dialogs/add-new-board/add-new-board' as add-new-board;
+
 @import 'styles/typography';
 @import 'styles/colors';
 @import 'styles/overlay';
@@ -190,6 +192,11 @@ body {
     status-new-color-hover: $main-purple,
     without-statuses-title-color: $medium-gray
   ));
+
+  @include add-new-board.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
 }
 
 .light {
@@ -337,5 +344,10 @@ body {
     status-new-color: $medium-gray,
     status-new-color-hover: $main-purple,
     without-statuses-title-color: $medium-gray
+  ));
+
+  @include add-new-board.theme((
+    background: $white,
+    title-color: $black
   ));
 }

@@ -1,3 +1,4 @@
+import {Dialog} from '@angular/cdk/dialog';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -21,6 +22,7 @@ import {AppService} from '../../services/app.service';
 import {AuthService} from '../../services/auth/auth.service';
 import {FirestoreService} from '../../services/firebase/firestore.service';
 import {LayoutService} from '../../services/layout.service';
+import {AddNewBoardComponent} from './dialogs/add-new-board/add-new-board.component';
 
 @Component({
   selector: 'app-boards',
@@ -68,7 +70,8 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
     private readonly _authService: AuthService,
     private readonly _firestoreService: FirestoreService,
     private readonly _router: Router,
-    private readonly _activatedRoute: ActivatedRoute
+    private readonly _activatedRoute: ActivatedRoute,
+    private readonly _dialog: Dialog
   ) {
 
     effect(() => {
@@ -141,6 +144,8 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   openAddBoardDialog($event: MouseEvent) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(AddNewBoardComponent);
   }
 
   openEditBoardDialog($event: MouseEvent) {
