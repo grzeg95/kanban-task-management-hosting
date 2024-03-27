@@ -1,0 +1,8 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-error {
+  @include typography.body-l();
+  bottom: -21px;
+  position: absolute;
+  display: block;
+}
