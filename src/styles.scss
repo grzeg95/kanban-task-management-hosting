@@ -1,3 +1,5 @@
+@use 'app/components/form/checkbox/checkbox' as checkbox;
+
 @use 'app/components/button/button' as button;
 
 @import 'styles/typography';
@@ -22,6 +24,19 @@ body {
 
 .dark {
 
+  @include checkbox.theme((
+    font-family: $font-family,
+    color: $white,
+    color-checked: mix($white, $very-dark-gray, 50%),
+    background: $very-dark-gray,
+    background-hover: mix($main-purple, $dark-gray, 24.89%),
+    checkbox-unchecked-border-color: mix($medium-gray, $dark-gray, 24.89%),
+    checkbox-checked-border-color: transparent,
+    checkbox-unchecked-background: $dark-gray,
+    checkbox-checked-background: $main-purple,
+    checkbox-focus-visible-check-outline-color: $white
+  ));
+
   @include button.theme((
     font-family: $font-family,
     primary-background: $main-purple,
@@ -40,6 +55,19 @@ body {
 }
 
 .light {
+
+  @include checkbox.theme((
+    font-family: $font-family,
+    color: $black,
+    color-checked: mix($black, $light-gray, 50%),
+    background: $light-gray,
+    background-hover: mix($main-purple, $white, 25%),
+    checkbox-unchecked-border-color: mix($medium-gray, $white, 24.89%),
+    checkbox-checked-border-color: transparent,
+    checkbox-unchecked-background: $white,
+    checkbox-checked-background: $main-purple,
+    checkbox-focus-visible-check-outline-color: $black
+  ));
 
   @include button.theme((
     font-family: $font-family,
