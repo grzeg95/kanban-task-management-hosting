@@ -3,6 +3,7 @@
 @use 'app/components/form/input/input' as input;
 @use 'app/components/form/label/label' as label;
 @use 'app/components/form/switch/switch' as switch;
+@use 'app/components/form/textarea/textarea' as textarea;
 
 @use 'app/components/button/button' as button;
 
@@ -69,6 +70,19 @@ body {
     color: $white
   ));
 
+  @include textarea.theme((
+    font-family: $font-family,
+    color: $white,
+    color-error: $red,
+    color-placeholder: transparentize($white, 0.75),
+    background: $dark-gray,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+
   @include button.theme((
     font-family: $font-family,
     primary-background: $main-purple,
@@ -122,6 +136,19 @@ body {
   @include label.theme((
     font-family: $font-family,
     color: $medium-gray
+  ));
+
+  @include textarea.theme((
+    font-family: $font-family,
+    color: $black,
+    color-error: $red,
+    color-placeholder: transparentize($black, 0.75),
+    background: $white,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
   ));
 
   @include button.theme((
