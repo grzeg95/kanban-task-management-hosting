@@ -12,6 +12,20 @@
   <div class="app-nav__left__selected-label">
     @if (appNavSelectedLabelTemplateRef(); as appNavSelectedLabelTemplateRef) {
       <ng-container [ngTemplateOutlet]="appNavSelectedLabelTemplateRef"/>
+    } @else {
+      @if (isOnPhone()) {
+        <span
+          class="app-nav__left__selected-label"
+          tabindex="0"
+          (keydown)="setShowSideBar(!showSideBar()); $event.preventDefault()"
+          (click)="setShowSideBar(!showSideBar())"
+        >
+      <svg [appSvg]="showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+          {{ authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}
+    </span>
+      } @else {
+        <span>{{ authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}</span>
+      }
     }
   </div>
 </div>

@@ -63,9 +63,10 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
 })
 export class NavComponent {
 
-  protected showMenuOptions = signal<boolean>(false);
+  protected showMenuOptions = signal(false);
   protected isDark = toSignal(this._themeSelectorService.isDark$);
   protected isLoggedIn = toSignal(this._authService.isLoggedIn$);
+  protected authStateReady = toSignal(this._authService.authStateReady$);
   protected appNavButtonTemplateRef = toSignal(this._appService.appNavButtonTemplateRef$);
   protected appNavMenuButtonsTemplateRef = toSignal(this._appService.appNavMenuButtonsTemplateRef$);
   protected appNavSelectedLabelTemplateRef = toSignal(this._appService.appNavSelectedLabelTemplateRef$);
@@ -73,6 +74,7 @@ export class NavComponent {
   protected isOnTablet = toSignal(this._layoutService.isOnTablet$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
   protected moveBrandingForSideBarState = toSignal(this._appService.moveForSideBarState$);
+  protected showSideBar = toSignal(this._appService.showSideBar$);
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
@@ -88,5 +90,9 @@ export class NavComponent {
 
   signOut(): void {
     this._authService.signOut();
+  }
+
+  setShowSideBar(value: boolean) {
+    this._appService.showSideBar$.next(value);
   }
 }
