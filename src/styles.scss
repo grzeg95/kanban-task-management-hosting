@@ -19,6 +19,7 @@
 @use 'app/views/boards/board/board' as board;
 
 @use 'app/views/boards/dialogs/add-new-board/add-new-board' as add-new-board;
+@use 'app/views/boards/dialogs/add-new-task/add-new-task' as add-new-task;
 @use 'app/views/boards/dialogs/delete-board/delete-board' as delete-board;
 @use 'app/views/boards/dialogs/edit-board/edit-board' as edit-board;
 
@@ -200,6 +201,11 @@ body {
     title-color: $white
   ));
 
+  @include add-new-task.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
   @include delete-board.theme((
     background: $dark-gray,
     title-color: $red,
@@ -360,6 +366,11 @@ body {
   ));
 
   @include add-new-board.theme((
+    background: $white,
+    title-color: $black
+  ));
+
+  @include add-new-task.theme((
     background: $white,
     title-color: $black
   ));

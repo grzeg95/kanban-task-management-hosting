@@ -18,6 +18,7 @@ import {AppService} from '../../services/app.service';
 import {LayoutService} from '../../services/layout.service';
 import {BoardsService} from './boards.service';
 import {AddNewBoardComponent} from './dialogs/add-new-board/add-new-board.component';
+import {AddNewTaskComponent} from './dialogs/add-new-task/add-new-task.component';
 import {DeleteBoardComponent} from './dialogs/delete-board/delete-board.component';
 import {EditBoardComponent} from './dialogs/edit-board/edit-board.component';
 
@@ -128,6 +129,12 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   openAddTaskDialog($event: MouseEvent) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(AddNewTaskComponent, {
+      data: {
+        _boardsService: this._boardsService
+      }
+    });
   }
 
   setShowSideBar(value: boolean) {
