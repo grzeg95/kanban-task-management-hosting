@@ -1,5 +1,6 @@
 import {DOCUMENT, isPlatformBrowser} from '@angular/common';
-import {Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2, signal} from '@angular/core';
+import {Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
+import {BehaviorSubject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -7,7 +8,7 @@ import {Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2, signal} fr
 export class ThemeSelectorService {
 
   private readonly _renderer: Renderer2;
-  readonly isDark = signal<boolean | undefined>(undefined);
+  readonly isDark$ = new BehaviorSubject<boolean | undefined>(undefined);
 
   constructor(
     private readonly _rendererFactory: RendererFactory2,
@@ -28,7 +29,7 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'light');
     }
 
-    this.isDark.set(false);
+    this.isDark$.next(false);
   }
 
   setDark() {
@@ -42,7 +43,7 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'dark');
     }
 
-    this.isDark.set(true);
+    this.isDark$.next(true);
   }
 
   loadTheme() {

@@ -1,4 +1,6 @@
-import {computed, Inject, Injectable, signal, TemplateRef} from '@angular/core';
+import {Inject, Injectable, TemplateRef} from '@angular/core';
+import cloneDeep from 'lodash/cloneDeep';
+import {BehaviorSubject, combineLatest} from 'rxjs';
 import {MainListItem} from '../models/main-list-item';
 import {AvailableUserViews, DefaultUserView, UnauthorizedView} from '../tokens/view';
 import {LayoutService} from './layout.service';
@@ -8,33 +10,21 @@ import {LayoutService} from './layout.service';
 })
 export class AppService {
 
-  readonly list = signal<MainListItem[] | null | undefined>(undefined)
-  readonly selected = signal<MainListItem | null | undefined>(undefined);
-  readonly showSideBar = signal<boolean>(true);
+  list$ = new BehaviorSubject<MainListItem[] | null | undefined>(undefined);
 
-  readonly moveForSideBarState = computed(() => {
+  selected$ = new BehaviorSubject<MainListItem | null | undefined>(undefined);
+  showSideBar$ = new BehaviorSubject<boolean>(true);
 
-    const showSideBar = this.showSideBar();
+  moveForSideBarState$ = new BehaviorSubject('hidden');
 
-    if (showSideBar) {
-      if (this._layoutService.isOnDesktop()) {
-        return 'desktop';
-      } else if (this._layoutService.isOnTablet()) {
-        return 'tablet';
-      }
-    }
+  appNavButtonTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
+  appNavMenuButtonsTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
+  appNavSelectedLabelTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
 
-    return 'hidden';
-  });
-
-  readonly appNavButtonTemplateRef = signal<TemplateRef<any> | null>(null);
-  readonly appNavMenuButtonsTemplateRef = signal<TemplateRef<any> | null>(null);
-  readonly appNavSelectedLabelTemplateRef = signal<TemplateRef<any> | null>(null);
-
-  readonly appSideBarItemsTitleTemplateRef = signal<TemplateRef<any> | null>(null);
-  readonly appSideBarItemsContainerTemplateRef = signal<TemplateRef<any> | null>(null);
-  readonly appSideBarPhoneItemsTitleTemplateRef = signal<TemplateRef<any> | null>(null);
-  readonly appSideBarPhoneItemsContainerTemplateRef = signal<TemplateRef<any> | null>(null);
+  appSideBarItemsTitleTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
+  appSideBarItemsContainerTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
+  appSideBarPhoneItemsTitleTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
+  appSideBarPhoneItemsContainerTemplateRef$ = new BehaviorSubject<TemplateRef<any> | null>(null);
 
   constructor(
     @Inject(UnauthorizedView) readonly unauthorizedView = '',
@@ -42,9 +32,28 @@ export class AppService {
     @Inject(DefaultUserView) readonly defaultUserView = '',
     private readonly _layoutService: LayoutService
   ) {
+
+    combineLatest([
+      this.showSideBar$,
+      this._layoutService.isOnDesktop$,
+      this._layoutService.isOnTablet$,
+    ]).subscribe(([showSideBar, isOnDesktop, isOnTablet]) => {
+
+      let state = 'hidden';
+
+      if (showSideBar) {
+        if (isOnDesktop) {
+          state = 'desktop';
+        } else if (isOnTablet) {
+          state = 'tablet';
+        }
+      }
+
+      this.moveForSideBarState$.next(state);
+    });
   }
 
   select(id: string) {
-    this.selected.set(this.list()?.find((item) => item.id === id));
+    this.selected$.next(cloneDeep(this.list$.value?.find((item) => item.id === id)));
   }
 }

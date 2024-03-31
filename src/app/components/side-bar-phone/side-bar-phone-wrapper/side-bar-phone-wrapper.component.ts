@@ -1,4 +1,5 @@
 import {Component} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {AppService} from '../../../services/app.service';
 import {LayoutService} from '../../../services/layout.service';
 import {SideBarPhoneComponent} from '../side-bar-phone.component';
@@ -17,8 +18,8 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
 })
 export class SideBarPhoneWrapperComponent {
 
-  isOnPhone = this._layoutService.isOnPhone;
-  showSideBar = this._appService.showSideBar;
+  isOnPhone = toSignal(this._layoutService.isOnPhone$);
+  showSideBar = toSignal(this._appService.showSideBar$);
 
   constructor(
     private readonly _layoutService: LayoutService,

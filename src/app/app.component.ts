@@ -1,6 +1,7 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {NgStyle} from '@angular/common';
-import {Component} from '@angular/core';
+import {Component, Signal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {RouterOutlet} from '@angular/router';
 import {NavComponent} from './components/nav/nav.component';
 import {
@@ -54,8 +55,8 @@ import {LayoutService} from './services/layout.service';
 })
 export class AppComponent {
 
-  moveRouterOutletForSideBar = this._appService.moveForSideBarState;
-  heightNav = this._layoutService.heightNav;
+  moveRouterOutletForSideBar = toSignal(this._appService.moveForSideBarState$);
+  heightNav = toSignal(this._layoutService.heightNav$);
 
   constructor(
     private readonly _appService: AppService,

@@ -2,6 +2,7 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, signal, ViewEncapsulation} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
 import {AuthService} from '../../services/auth/auth.service';
@@ -63,15 +64,15 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
 export class NavComponent {
 
   protected showMenuOptions = signal<boolean>(false);
-  protected isDark = this._themeSelectorService.isDark;
-  protected isLoggedIn = this._authService.isLoggedIn;
-  protected appNavButtonTemplateRef = this._appService.appNavButtonTemplateRef;
-  protected appNavMenuButtonsTemplateRef = this._appService.appNavMenuButtonsTemplateRef;
-  protected appNavSelectedLabelTemplateRef = this._appService.appNavSelectedLabelTemplateRef;
-  protected isOnDesktop = this._layoutService.isOnDesktop;
-  protected isOnTablet = this._layoutService.isOnTablet;
-  protected isOnPhone = this._layoutService.isOnPhone;
-  protected moveBrandingForSideBarState = this._appService.moveForSideBarState;
+  protected isDark = toSignal(this._themeSelectorService.isDark$);
+  protected isLoggedIn = toSignal(this._authService.isLoggedIn$);
+  protected appNavButtonTemplateRef = toSignal(this._appService.appNavButtonTemplateRef$);
+  protected appNavMenuButtonsTemplateRef = toSignal(this._appService.appNavMenuButtonsTemplateRef$);
+  protected appNavSelectedLabelTemplateRef = toSignal(this._appService.appNavSelectedLabelTemplateRef$);
+  protected isOnDesktop = toSignal(this._layoutService.isOnDesktop$);
+  protected isOnTablet = toSignal(this._layoutService.isOnTablet$);
+  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
+  protected moveBrandingForSideBarState = toSignal(this._appService.moveForSideBarState$);
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,

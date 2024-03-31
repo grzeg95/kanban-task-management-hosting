@@ -1,11 +1,13 @@
+import {Status} from './status';
+
 export type BoardDoc = {
   name: string;
   statusesIdsSequence: string[];
+  statuses: {[key in string]: Status};
 };
 
 export type Board = {
   id: string;
-  path: string;
 } & BoardDoc;
 
 export type CreateBoardData = {

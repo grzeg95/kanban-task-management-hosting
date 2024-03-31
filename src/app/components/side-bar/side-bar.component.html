@@ -33,7 +33,7 @@
       class="app-side-bar__content__bottom-menu__hide-side-bar-button"
       app-button
       svg="left"
-      (click)="hideSideBar()"
+      (click)="setShowSideBar(false)"
     >
       <svg appSvg="icon-hide-sidebar"/>
       Hide Sidebar
@@ -47,7 +47,7 @@
   app-button
   appearance="primary"
   svg="right"
-  (click)="showSideBar()"
+  (click)="setShowSideBar(true)"
 >
   &nbsp;&nbsp;&nbsp;
   <svg appSvg="icon-show-sidebar"/>

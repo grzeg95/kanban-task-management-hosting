@@ -1,12 +1,12 @@
-import {Injectable, NgZone, signal} from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from '@angular/fire/auth';
-import {DocumentSnapshot} from '@angular/fire/firestore';
 import {Router} from '@angular/router';
-import {Observable, Subscription} from 'rxjs';
-import {User} from '../../models/user';
+import cloneDeep from 'lodash/cloneDeep';
+import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
 import {AppService} from '../app.service';
 import {FirestoreService} from '../firebase/firestore.service';
+import {User} from './user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -15,10 +15,11 @@ export class AuthService {
 
   private _userDocSnapSub: Subscription | undefined;
 
-  readonly firebaseUser = signal<FirebaseUser | null | undefined>(undefined);
-  readonly userDocSnap = signal<DocumentSnapshot<User> | null | undefined>(undefined);
-  readonly isLoggedIn = signal<boolean | undefined>(undefined);
-  readonly whileLoginIn = signal<boolean>(false);
+  readonly authStateReady$ = new BehaviorSubject<boolean>(false);
+  private _firebaseUser: FirebaseUser | null | undefined;
+  readonly user$ = new BehaviorSubject<User | null | undefined>(undefined);
+  readonly isLoggedIn$ = new BehaviorSubject<boolean | undefined>(undefined);
+  readonly whileLoginIn$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     private readonly _auth: Auth,
@@ -30,15 +31,25 @@ export class AuthService {
     this._auth.authStateReady().then(() => {
       this._onAuthStateChanged().subscribe((nextFirebaseUser) => {
 
-        const firebaseUser = this.firebaseUser();
+        const firebaseUser = this._firebaseUser;
 
         if (!nextFirebaseUser || !firebaseUser || nextFirebaseUser.uid !== firebaseUser.uid) {
           this._unsubUserDocSnapSub();
 
           if (nextFirebaseUser) {
-            this._userDocSnapSub = this._firestoreService.docOnSnapshot<User>(`users/${nextFirebaseUser.uid}`).subscribe((userDocSnap) => {
-              this.userDocSnap.set(userDocSnap);
-            });
+
+            this._userDocSnapSub = this._firestoreService.docOnSnapshot<User>(`users/${nextFirebaseUser.uid}`)
+              .pipe(
+                map((userDoc) => {
+
+                  const user: User = {
+                    boards: userDoc.data()?.boards || [],
+                    id: userDoc.id,
+                  };
+
+                  return user;
+                }),
+              ).subscribe((user) => this.user$.next(cloneDeep(user)));
 
             const url = this._router.getCurrentNavigation()?.extractedUrl.toString() || '/';
 
@@ -52,8 +63,10 @@ export class AuthService {
           this._router.navigate(['/']);
         }
 
-        this.firebaseUser.set(nextFirebaseUser);
-        this.isLoggedIn.set(!!nextFirebaseUser);
+        this._firebaseUser = nextFirebaseUser;
+        this.isLoggedIn$.next(!!nextFirebaseUser);
+
+        this.authStateReady$.next(true);
       });
     })
   }
@@ -72,9 +85,9 @@ export class AuthService {
   }
 
   signInAnonymously(): void {
-    this.whileLoginIn.set(true);
+    this.whileLoginIn$.next(true);
     signInAnonymously(this._auth).then(() => {
-      this.whileLoginIn.set(false);
+      this.whileLoginIn$.next(false);
     });
   }
 

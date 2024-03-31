@@ -4,6 +4,7 @@
     appearance="primary"
     size="large"
     [disabled]="!selected()"
+    (click)="openAddTaskDialog($event)"
   >
     +
     @if (!isOnPhone()) {
@@ -47,7 +48,7 @@
     class="app-boards__app-side-bar__items__container__button"
     app-button
     svg="left"
-    (click)="openAddBoardDialog($event); showSideBar.set(false)"
+    (click)="openAddBoardDialog($event); setShowSideBar(false)"
   >
     <svg
       class="app-boards__app-side-bar__items__container__button__svg"
@@ -69,7 +70,7 @@
         [class.app-boards__app-side-bar-mobile__items__container__button--active]="item.id === selected()?.id"
         app-button
         svg="left"
-        (click)="select(item.id); showSideBar.set(false)"
+        (click)="select(item.id); setShowSideBar(false)"
       >
         <svg
           class="app-boards__app-side-bar-mobile__items__container__button__svg"
@@ -85,7 +86,7 @@
     class="app-boards__app-side-bar-mobile__items__container__button"
     app-button
     svg="left"
-    (click)="openAddBoardDialog($event); showSideBar.set(false)"
+    (click)="openAddBoardDialog($event); setShowSideBar(false)"
   >
     <svg
       class="app-boards__app-side-bar-mobile__items__container__button__svg"
@@ -99,13 +100,13 @@
 
   @if (isOnPhone()) {
     <span
-      class="app-boards__app-nav__left__selected-label"
+      class="app-nav__left__selected-label"
       tabindex="0"
-      (keydown)="showSideBar.set(!showSideBar()); $event.preventDefault()"
-      (click)="showSideBar.set(!showSideBar())"
+      (keydown)="setShowSideBar(!showSideBar()); $event.preventDefault()"
+      (click)="setShowSideBar(!showSideBar())"
     >
       <svg [appSvg]="showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
-      {{ !list() ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}
+      {{ list()  ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}
     </span>
   } @else {
     <span>{{ !list() ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}</span>

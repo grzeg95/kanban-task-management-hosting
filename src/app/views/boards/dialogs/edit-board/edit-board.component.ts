@@ -1,16 +1,6 @@
 import {DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  effect,
-  Inject,
-  Optional,
-  signal,
-  ViewEncapsulation,
-  WritableSignal
-} from '@angular/core';
-import {QuerySnapshot} from '@angular/fire/firestore';
+import {Component, Inject, Optional, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {ButtonComponent} from '../../../../components/button/button.component';
@@ -19,18 +9,11 @@ import {FormFieldComponent} from '../../../../components/form/form-field/form-fi
 import {InputComponent} from '../../../../components/form/input/input.component';
 import {LabelComponent} from '../../../../components/form/label/label.component';
 import {SvgDirective} from '../../../../directives/svg.directive';
-import {
-  BoardDoc,
-  CreateBoardData,
-  CreateBoardResult,
-  UpdateBoardData,
-  UpdateBoardResult
-} from '../../../../models/boards/board';
-import {Status} from '../../../../models/boards/status';
-import {AppService} from '../../../../services/app.service';
 import {FunctionsService} from '../../../../services/firebase/functions.service';
 import {SnackBarService} from '../../../../services/snack-bar.service';
+import {getProtectedRxjsPipe} from '../../../../utils/get-protected.rxjs-pipe';
 import {BoardsService} from '../../boards.service';
+import {UpdateBoardData, UpdateBoardResult} from '../../models/board';
 
 @Component({
   selector: 'app-edit-board',
@@ -46,7 +29,6 @@ import {BoardsService} from '../../boards.service';
   ],
   templateUrl: './edit-board.component.html',
   styleUrl: './edit-board.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'app-edit-board'
@@ -54,63 +36,49 @@ import {BoardsService} from '../../boards.service';
 })
 export class EditBoardComponent {
 
+  private board;
+
   form = new FormGroup({
     id: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required]),
     statuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
   });
 
-  selectedBoard = this._appService.selected;
-  boards: WritableSignal<QuerySnapshot<BoardDoc> | undefined>;
-  statuses: WritableSignal<Status[] | undefined>;
-
   constructor(
-    @Inject(DIALOG_DATA) readonly data: {_boardsService: BoardsService},
+    @Optional() @Inject(DIALOG_DATA) readonly data: {_boardsService: BoardsService},
     @Optional() private readonly _boardsService: BoardsService,
     @Optional() private readonly _dialogRef: DialogRef<EditBoardComponent>,
-    private readonly _cdr: ChangeDetectorRef,
     private readonly _functionsService: FunctionsService,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _appService: AppService
+    private readonly _snackBarService: SnackBarService
   ) {
 
     if (data) {
       this._boardsService = data._boardsService;
     }
 
-    this.boards = this._boardsService.boards;
-    this.statuses = this._boardsService.statuses;
+    this.board = this._boardsService.board$;
 
-    effect(() => {
+    this._boardsService.board$.pipe(
+      getProtectedRxjsPipe(),
+      takeUntilDestroyed()
+    ).subscribe((board) => {
 
-      const selectedBoard = this.selectedBoard();
-      const boards = this.boards();
-      const statuses = this.statuses();
-
-      if (!selectedBoard || !boards || !statuses) {
+      if (!board) {
+        this.close();
         return;
       }
 
-      const board = boards.docs.find((queryDocSnap) => queryDocSnap.id === selectedBoard.id);
-      const boardData = board?.data();
-
-      if (!boardData) {
-        return;
-      }
-
-      this.form.controls.id.setValue(selectedBoard.id);
-      this.form.controls.name.setValue(boardData?.name);
+      this.form.controls.id.setValue(board.id);
+      this.form.controls.name.setValue(board.name);
       this.form.controls.statuses.reset();
 
-      statuses.forEach((status) => {
-        this.addNewColumn(status.id!, status.name);
+      board.statusesIdsSequence.map((statusId) => board.statuses[statusId]).forEach((status) => {
+        this.addNewStatusName(status.id, status.name);
       });
-
-      this._cdr.detectChanges();
     });
   }
 
-  addNewColumn(id: null | string = null, name = '') {
+  addNewStatusName(id: null | string = null, name = '') {
     this.form.controls.statuses.push(
       new FormGroup({
         id: new FormControl(id),
@@ -150,7 +118,11 @@ export class EditBoardComponent {
       })
     ).subscribe(() => {
       this._dialogRef.close();
-      this._snackBarService.open('Board has been created', 3000);
+      this._snackBarService.open('Board has been updated', 3000);
     });
+  }
+
+  close() {
+    this._dialogRef?.close();
   }
 }

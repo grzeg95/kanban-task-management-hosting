@@ -1,24 +1,20 @@
 import {Dialog} from '@angular/cdk/dialog';
+import {AsyncPipe} from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  effect,
   OnDestroy,
   TemplateRef,
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterOutlet} from '@angular/router';
-import {Subscription} from 'rxjs';
 import {ButtonComponent} from '../../components/button/button.component';
 import {PopMenuItemComponent} from '../../components/pop-menu/pop-menu-item/pop-menu-item.component';
 import {SvgDirective} from '../../directives/svg.directive';
-import {BoardDoc} from '../../models/boards/board';
-import {MainListItem} from '../../models/main-list-item';
 import {AppService} from '../../services/app.service';
-import {AuthService} from '../../services/auth/auth.service';
-import {FirestoreService} from '../../services/firebase/firestore.service';
 import {LayoutService} from '../../services/layout.service';
 import {BoardsService} from './boards.service';
 import {AddNewBoardComponent} from './dialogs/add-new-board/add-new-board.component';
@@ -32,7 +28,8 @@ import {EditBoardComponent} from './dialogs/edit-board/edit-board.component';
     ButtonComponent,
     PopMenuItemComponent,
     SvgDirective,
-    RouterOutlet
+    RouterOutlet,
+    AsyncPipe
   ],
   templateUrl: './boards.component.html',
   styleUrl: './boards.component.scss',
@@ -52,95 +49,51 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   @ViewChild('appSideBarPhoneItemsTitleTemplateRef') appSideBarPhoneItemsTitleTemplateRef!: TemplateRef<any>;
   @ViewChild('appSideBarPhoneItemsContainerTemplateRef') appSideBarPhoneItemsContainerTemplateRef!: TemplateRef<any>;
 
-  selected = this._appService.selected;
-  list = this._appService.list;
-  showSideBar = this._appService.showSideBar;
+  protected selected = toSignal(this._appService.selected$);
+  protected list = toSignal(this._appService.list$);
+  protected showSideBar = toSignal(this._appService.showSideBar$);
 
-  protected isOnPhone = this._layoutService.isOnPhone;
-
-  protected boards = this._boardsService.boards;
-  protected userDocSnap = this._authService.userDocSnap;
-
-  private _boardsListSub: Subscription | undefined;
-
-  select = this._appService.select;
+  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
 
   constructor(
-    private readonly _boardsService: BoardsService,
+    private readonly _router: Router,
     private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
-    private readonly _authService: AuthService,
-    private readonly _firestoreService: FirestoreService,
-    private readonly _router: Router,
     private readonly _activatedRoute: ActivatedRoute,
-    private readonly _dialog: Dialog
+    private readonly _dialog: Dialog,
+    private readonly _boardsService: BoardsService
   ) {
 
-    effect(() => {
-      const selected = this._appService.selected();
-
+    this._appService.selected$.pipe(
+      takeUntilDestroyed()
+    ).subscribe((selected) => {
       if (selected) {
         this._router.navigate(['./', selected?.id], {relativeTo: this._activatedRoute});
+        this._boardsService.board$.next(undefined);
       }
     });
-
-    effect(() => {
-      const firebaseUser = this._authService.firebaseUser();
-
-      this._unsubBoardsListSub();
-
-      if (firebaseUser) {
-        this._boardsListSub = this._firestoreService.collectionOnSnapshot<BoardDoc>(`users/${firebaseUser.uid}/boards`).subscribe(this.boards.set);
-      }
-    });
-
-    effect(() => {
-
-      const boards = this.boards();
-      const userDocSnap = this.userDocSnap();
-
-      if (!boards) {
-        return;
-      }
-
-      const boardsIdsSequence = userDocSnap?.data()?.boardsIdsSequence || [];
-
-      const boardsMap = boards.docs.reduce((map, queryDocSnap) => {
-        map.set(queryDocSnap.id, {
-          id: queryDocSnap.id,
-          label: queryDocSnap.data().name,
-          path: queryDocSnap.ref.path
-        });
-
-        return map;
-      }, new Map<string, MainListItem>());
-
-      this._appService.list.set(
-        boardsIdsSequence.map(id => boardsMap.get(id)).filter(item => !!item) as MainListItem[]
-      );
-    }, {allowSignalWrites: true});
   }
 
   ngAfterViewInit(): void {
-    this._appService.appNavButtonTemplateRef.set(this.appNavButtonTemplateRef);
-    this._appService.appNavMenuButtonsTemplateRef.set(this.appNavMenuButtonsTemplateRef);
-    this._appService.appNavSelectedLabelTemplateRef.set(this.appNavSelectedLabelTemplateRef);
-    this._appService.appSideBarItemsTitleTemplateRef.set(this.appSideBarItemsTitleTemplateRef);
-    this._appService.appSideBarItemsContainerTemplateRef.set(this.appSideBarItemsContainerTemplateRef);
-    this._appService.appSideBarPhoneItemsTitleTemplateRef.set(this.appSideBarPhoneItemsTitleTemplateRef);
-    this._appService.appSideBarPhoneItemsContainerTemplateRef.set(this.appSideBarPhoneItemsContainerTemplateRef);
+    this._appService.appNavButtonTemplateRef$.next(this.appNavButtonTemplateRef);
+    this._appService.appNavMenuButtonsTemplateRef$.next(this.appNavMenuButtonsTemplateRef);
+    this._appService.appNavSelectedLabelTemplateRef$.next(this.appNavSelectedLabelTemplateRef);
+    this._appService.appSideBarItemsTitleTemplateRef$.next(this.appSideBarItemsTitleTemplateRef);
+    this._appService.appSideBarItemsContainerTemplateRef$.next(this.appSideBarItemsContainerTemplateRef);
+    this._appService.appSideBarPhoneItemsTitleTemplateRef$.next(this.appSideBarPhoneItemsTitleTemplateRef);
+    this._appService.appSideBarPhoneItemsContainerTemplateRef$.next(this.appSideBarPhoneItemsContainerTemplateRef);
   }
 
   ngOnDestroy(): void {
-    this._appService.list.set(null);
-    this._appService.selected.set(null);
-    this._appService.appNavButtonTemplateRef.set(null);
-    this._appService.appNavMenuButtonsTemplateRef.set(null);
-    this._appService.appNavSelectedLabelTemplateRef.set(null);
-    this._appService.appSideBarItemsTitleTemplateRef.set(null);
-    this._appService.appSideBarItemsContainerTemplateRef.set(null);
-    this._appService.appSideBarPhoneItemsTitleTemplateRef.set(null);
-    this._appService.appSideBarPhoneItemsContainerTemplateRef.set(null);
+    this._appService.list$.next(null);
+    this._appService.selected$.next(null);
+    this._appService.appNavButtonTemplateRef$.next(null);
+    this._appService.appNavMenuButtonsTemplateRef$.next(null);
+    this._appService.appNavSelectedLabelTemplateRef$.next(null);
+    this._appService.appSideBarItemsTitleTemplateRef$.next(null);
+    this._appService.appSideBarItemsContainerTemplateRef$.next(null);
+    this._appService.appSideBarPhoneItemsTitleTemplateRef$.next(null);
+    this._appService.appSideBarPhoneItemsContainerTemplateRef$.next(null);
   }
 
   openAddBoardDialog($event: MouseEvent) {
@@ -165,12 +118,23 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._dialog.open(DeleteBoardComponent);
+    this._dialog.open(DeleteBoardComponent, {
+      data: {
+        _boardsService: this._boardsService
+      }
+    });
   }
 
-  private _unsubBoardsListSub() {
-    if (this._boardsListSub && !this._boardsListSub.closed) {
-      this._boardsListSub.unsubscribe();
-    }
+  openAddTaskDialog($event: MouseEvent) {
+    $event.preventDefault();
+    $event.stopPropagation();
+  }
+
+  setShowSideBar(value: boolean) {
+    this._appService.showSideBar$.next(value);
+  }
+
+  select(id: string) {
+    this._appService.select(id);
   }
 }

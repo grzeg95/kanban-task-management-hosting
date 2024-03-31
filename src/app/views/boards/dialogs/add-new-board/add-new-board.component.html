@@ -32,11 +32,11 @@
   }
 
   <button
-    class="app-add-new-board__add-new-subtask-button"
+    class="app-add-new-board__add-new-status-name-button"
     app-button
     appearance="secondary"
-    (click)="addNewColumnName()"
-    [disabled]="isLoading()"
+    (click)="addNewStatusName()"
+    [disabled]="form.disabled"
   >+ Add New Column</button>
 
   <button
@@ -44,7 +44,7 @@
     app-button
     appearance="primary"
     (click)="createNewBoard()"
-    [disabled]="isLoading()"
+    [disabled]="form.disabled"
   >Create New Board</button>
 
 </form>

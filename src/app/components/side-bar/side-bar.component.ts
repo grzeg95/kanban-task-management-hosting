@@ -1,6 +1,7 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, computed, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, Signal, TemplateRef, ViewEncapsulation} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
@@ -91,22 +92,28 @@ enum states {
 })
 export class SideBarComponent {
 
-  appSideBarItemsTitleTemplateRef = this._appService.appSideBarItemsTitleTemplateRef;
-  appSideBarItemsContainerTemplateRef = this._appService.appSideBarItemsContainerTemplateRef;
+  appSideBarItemsTitleTemplateRef = toSignal(this._appService.appSideBarItemsTitleTemplateRef$);
+  appSideBarItemsContainerTemplateRef = toSignal(this._appService.appSideBarItemsContainerTemplateRef$);
+
+  showSideBar = toSignal(this._appService.showSideBar$);
+
+  isOnPhone = toSignal(this._layoutService.isOnPhone$);
+  isOnTablet = toSignal(this._layoutService.isOnTablet$);
+  isOnDesktop = toSignal(this._layoutService.isOnDesktop$);
 
   moveForSideBarState = computed(() => {
 
-    const showSideBar = this._appService.showSideBar();
+    const showSideBar = this.showSideBar();
 
     if (!showSideBar) {
 
-      if (this._layoutService.isOnDesktop()) {
+      if (this.isOnDesktop()) {
         return states.hiddenDesktop;
       }
 
       return states.hiddenTablet;
     } else {
-      if (this._layoutService.isOnPhone()) {
+      if (this.isOnPhone()) {
         return states.hiddenTablet;
       }
 
@@ -116,26 +123,26 @@ export class SideBarComponent {
 
   moveShowSideBarButtonForSideBarState = computed(() => {
 
-    const showSideBar = this._appService.showSideBar();
+    const showSideBar = this.showSideBar();
 
     if (!showSideBar) {
 
-      if (this._layoutService.isOnDesktop()) {
+      if (this.isOnDesktop()) {
         return states.visible;
       }
 
-      if (this._layoutService.isOnTablet()) {
+      if (this.isOnTablet()) {
         return states.visible;
       }
 
       return states.hidden;
     } else {
 
-      if (this._layoutService.isOnDesktop()) {
+      if (this.isOnDesktop()) {
         return states.hiddenDesktop;
       }
 
-      if (this._layoutService.isOnTablet()) {
+      if (this.isOnTablet()) {
         return states.hiddenTablet;
       }
 
@@ -143,7 +150,7 @@ export class SideBarComponent {
     }
   });
 
-  isDark = this._themeSelectorService.isDark;
+  isDark = toSignal(this._themeSelectorService.isDark$);
   logo = computed(() => this.isDark() ? 'logo-light' : 'logo-dark');
 
   constructor(
@@ -153,12 +160,8 @@ export class SideBarComponent {
   ) {
   }
 
-  hideSideBar() {
-    this._appService.showSideBar.set(false);
-  }
-
-  showSideBar() {
-    this._appService.showSideBar.set(true);
+  setShowSideBar(value: boolean) {
+    this._appService.showSideBar$.next(value);
   }
 
   toggleDarkMode() {

@@ -1,12 +1,12 @@
-export type TaskDoc = {
-  title: string;
-  statusesIdsSequence: string[];
-};
+import {Subtask} from './subtask';
 
 export type Task = {
   id: string;
-  path: string;
-} & TaskDoc;
+  title: string;
+  description: string;
+  subtasksIdsSequence: string[];
+  subtasks: {[key in string]: Subtask};
+};
 
 export type CreateTaskData = {
   boardId: string;
@@ -25,7 +25,10 @@ export type CreateTaskResult = {
 export type UpdateTaskData = {
   id: string;
   boardId: string;
-  boardStatusId: string;
+  status: {
+    id: string,
+    newId?: string
+  },
   title: string;
   description: string;
   subtasks: {

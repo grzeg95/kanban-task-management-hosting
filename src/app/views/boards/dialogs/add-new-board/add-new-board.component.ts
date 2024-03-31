@@ -1,5 +1,6 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {ChangeDetectionStrategy, Component, signal, ViewEncapsulation} from '@angular/core';
+import {Component, Optional, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {ButtonComponent} from '../../../../components/button/button.component';
@@ -8,9 +9,11 @@ import {FormFieldComponent} from '../../../../components/form/form-field/form-fi
 import {InputComponent} from '../../../../components/form/input/input.component';
 import {LabelComponent} from '../../../../components/form/label/label.component';
 import {SvgDirective} from '../../../../directives/svg.directive';
-import {CreateBoardData, CreateBoardResult} from '../../../../models/boards/board';
+import {AuthService} from '../../../../services/auth/auth.service';
 import {FunctionsService} from '../../../../services/firebase/functions.service';
 import {SnackBarService} from '../../../../services/snack-bar.service';
+import {getProtectedRxjsPipe} from '../../../../utils/get-protected.rxjs-pipe';
+import {CreateBoardData, CreateBoardResult} from '../../models/board';
 
 @Component({
   selector: 'app-add-new-board',
@@ -26,7 +29,6 @@ import {SnackBarService} from '../../../../services/snack-bar.service';
   ],
   templateUrl: './add-new-board.component.html',
   styleUrl: './add-new-board.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'app-add-new-board'
@@ -39,17 +41,27 @@ export class AddNewBoardComponent {
     statusesNames: new FormArray<FormControl<string | null>>([])
   });
 
-  isLoading = signal(false);
-
   constructor(
-    private readonly _dialogRef: DialogRef<AddNewBoardComponent>,
+    @Optional() private readonly _dialogRef: DialogRef<AddNewBoardComponent>,
     private readonly _functionsService: FunctionsService,
-    private readonly _snackBarService: SnackBarService
+    private readonly _snackBarService: SnackBarService,
+    private readonly _authService: AuthService
   ) {
-    this.addNewColumnName();
+
+    this._authService.user$.pipe(
+      getProtectedRxjsPipe(),
+      takeUntilDestroyed()
+    ).subscribe((user) => {
+
+      if (!user) {
+        this.close();
+      }
+    });
+
+    this.addNewStatusName();
   }
 
-  addNewColumnName() {
+  addNewStatusName() {
     this.form.controls.statusesNames.push(new FormControl('', [Validators.required]));
   }
 
@@ -69,10 +81,8 @@ export class AddNewBoardComponent {
       statusesNames: this.form.value.statusesNames
     } as CreateBoardData;
 
-    this.isLoading.set(true);
     this._functionsService.httpsCallable<CreateBoardData, CreateBoardResult>('board-create', createBoardData).pipe(
       catchError(() => {
-        this.isLoading.set(false);
         this.form.enable();
         return NEVER;
       })
@@ -80,5 +90,9 @@ export class AddNewBoardComponent {
       this._dialogRef.close();
       this._snackBarService.open('Board has been created', 3000);
     });
+  }
+
+  close() {
+    this._dialogRef?.close();
   }
 }
