@@ -1,0 +1,27 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-view-task {
+
+  padding: 32px;
+  max-width: 480px;
+  display: block;
+  background: white;
+  width: calc(100vw - 32px);
+  border-radius: 6px;
+  overflow: auto;
+
+  &__title {
+    @include typography.heading-l();
+    margin-bottom: 24px;
+  }
+
+  &__description {
+    @include typography.body-l();
+    margin-bottom: 24px;
+  }
+
+  &__subtask {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}

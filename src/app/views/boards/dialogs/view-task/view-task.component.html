@@ -1,0 +1,25 @@
+@if (task(); as task) {
+  <div class="app-view-task__title">{{ task.title }}</div>
+  <div class="app-view-task__description">{{ task.description }}</div>
+  <app-label>Subtasks ({{ getCompletedSubtasks(task) }} of {{ task.subtasksIdsSequence.length || 0 }})</app-label>
+  @for (subtaskId of task.subtasksIdsSequence; track subtaskId) {
+    <app-checkbox
+      class="app-view-task__subtask"
+      (click)="toggleSubtaskCompletion($event, subtaskId, appCheckbox.checked)"
+      #appCheckbox
+      [checked]="task.subtasks[subtaskId].isCompleted"
+      [disabled]="isLoading()"
+    >{{ task.subtasks[subtaskId].title }}
+    </app-checkbox>
+  }
+
+  <app-form-field>
+    <app-label>Current Status</app-label>
+    <app-select
+      [ngModel]="statusId"
+      [items]="statuses()"
+      [disabled]="isLoading()"
+      (ngModelChange)="onStatusChange($event)"
+    />
+  </app-form-field>
+}

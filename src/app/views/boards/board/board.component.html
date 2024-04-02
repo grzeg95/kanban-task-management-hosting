@@ -12,7 +12,7 @@
         @for (taskId of status.tasksIdsSequence; track taskId) {
           @if (status.tasks[taskId]; as task) {
 
-            <div class="app-board__task" tabindex="0" (click)="openTaskDialog($event, task)" (keydown)="openTaskDialog($event,task)">
+            <div class="app-board__task" tabindex="0" (click)="openTaskDialog($event, statusId, taskId)" (keydown)="openTaskDialog($event,statusId,taskId)">
               <div class="app-board__task__title-wrapper">
                 <div class="app-board__task__title-wrapper__title">{{ task.title }}</div>
               </div>

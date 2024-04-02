@@ -1,6 +1,6 @@
 import {Dialog} from '@angular/cdk/dialog';
 import {NgStyle} from '@angular/common';
-import {ChangeDetectionStrategy, Component, DestroyRef, Signal, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute} from '@angular/router';
 import {map} from 'rxjs';
@@ -9,8 +9,7 @@ import {LayoutService} from '../../../services/layout.service';
 import {getProtectedRxjsPipe} from '../../../utils/get-protected.rxjs-pipe';
 import {BoardsService} from '../boards.service';
 import {EditBoardComponent} from '../dialogs/edit-board/edit-board.component';
-import {Board} from '../models/board';
-import {Task} from '../models/task';
+import {ViewTaskComponent} from '../dialogs/view-task/view-task.component';
 
 @Component({
   selector: 'app-board',
@@ -62,9 +61,17 @@ export class BoardComponent {
     return subtasksIdsSequence.reduce((cnt, subtaskId) => cnt + +board.statuses[statusId].tasks[taskId].subtasks[subtaskId].isCompleted, 0) || 0;
   }
 
-  openTaskDialog($event: KeyboardEvent | MouseEvent, task: Task) {
+  openTaskDialog($event: KeyboardEvent | MouseEvent, statusId: string, taskId: string) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    this._dialog.open(ViewTaskComponent, {
+      data: {
+        _boardsService: this._boardsService,
+        statusId,
+        taskId
+      }
+    });
   }
 
   openNewStatusDialog($event: KeyboardEvent | MouseEvent) {

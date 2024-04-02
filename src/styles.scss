@@ -22,6 +22,7 @@
 @use 'app/views/boards/dialogs/add-new-task/add-new-task' as add-new-task;
 @use 'app/views/boards/dialogs/delete-board/delete-board' as delete-board;
 @use 'app/views/boards/dialogs/edit-board/edit-board' as edit-board;
+@use 'app/views/boards/dialogs/view-task/view-task' as view-task;
 
 @import 'styles/typography';
 @import 'styles/colors';
@@ -216,6 +217,12 @@ body {
     background: $dark-gray,
     title-color: $white
   ));
+
+  @include view-task.theme((
+    background: $dark-gray,
+    title-color: $white,
+    description-color: $medium-gray
+  ));
 }
 
 .light {
@@ -384,5 +391,11 @@ body {
   @include edit-board.theme((
     background: $white,
     title-color: $black
+  ));
+
+  @include view-task.theme((
+    background: $white,
+    title-color: $black,
+    description-color: $medium-gray
   ));
 }
