@@ -144,4 +144,8 @@ export class BoardsComponent implements OnDestroy, AfterViewInit {
   select(id: string) {
     this._appService.select(id);
   }
+
+  setShowNavMenuOptions(value: boolean) {
+    this._appService.showNavMenuOptions$.next(value);
+  }
 }

@@ -1,4 +1,4 @@
-import {Inject, Injectable, TemplateRef} from '@angular/core';
+import {Inject, Injectable, signal, TemplateRef} from '@angular/core';
 import cloneDeep from 'lodash/cloneDeep';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {MainListItem} from '../models/main-list-item';
@@ -9,6 +9,8 @@ import {LayoutService} from './layout.service';
   providedIn: 'root'
 })
 export class AppService {
+
+  showNavMenuOptions$ = new BehaviorSubject<boolean>(false);
 
   list$ = new BehaviorSubject<MainListItem[] | null | undefined>(undefined);
 

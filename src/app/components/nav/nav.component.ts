@@ -63,7 +63,7 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
 })
 export class NavComponent {
 
-  protected showMenuOptions = signal(false);
+  protected showNavMenuOptions = toSignal(this._appService.showNavMenuOptions$);
   protected isDark = toSignal(this._themeSelectorService.isDark$);
   protected isLoggedIn = toSignal(this._authService.isLoggedIn$);
   protected authStateReady = toSignal(this._authService.authStateReady$);
@@ -94,5 +94,9 @@ export class NavComponent {
 
   setShowSideBar(value: boolean) {
     this._appService.showSideBar$.next(value);
+  }
+
+  setShowNavMenuOptions(value: boolean) {
+    this._appService.showNavMenuOptions$.next(value);
   }
 }

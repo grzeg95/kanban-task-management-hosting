@@ -60,8 +60,8 @@
     <div
       tabindex="0"
       class="app-nav__menu__trigger"
-      (click)="showMenuOptions.set(!showMenuOptions())"
-      (keydown)="showMenuOptions.set(!showMenuOptions()); $event.preventDefault()"
+      (click)="setShowNavMenuOptions(!showNavMenuOptions())"
+      (keydown)="setShowNavMenuOptions(!showNavMenuOptions()); $event.preventDefault()"
     >
       <svg appSvg="icon-vertical-ellipsis"/>
     </div>
@@ -70,9 +70,9 @@
       cdkConnectedOverlay
       #cdkConnectedOverlay="cdkConnectedOverlay"
       [cdkConnectedOverlayOrigin]="trigger"
-      [cdkConnectedOverlayOpen]="showMenuOptions()"
+      [cdkConnectedOverlayOpen]="!!showNavMenuOptions()"
       [cdkConnectedOverlayDisposeOnNavigation]="true"
-      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); showMenuOptions.set(false);"
+      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); setShowNavMenuOptions(false);"
     >
       <app-pop-menu [style.min-width.px]="192">
 
@@ -80,7 +80,7 @@
           <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
         }
 
-        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); signOut();">Sign Out</app-pop-menu-item>
+        <app-pop-menu-item [danger]="true" (click)="setShowNavMenuOptions(false); signOut();">Sign Out</app-pop-menu-item>
       </app-pop-menu>
     </ng-template>
   }

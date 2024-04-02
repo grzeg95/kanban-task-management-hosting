@@ -15,8 +15,8 @@
 
 <ng-template #appNavMenuButtonsTemplateRef>
   @if (selected()) {
-    <app-pop-menu-item (click)="openEditBoardDialog($event)">Edit board</app-pop-menu-item>
-    <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event)">Delete board</app-pop-menu-item>
+    <app-pop-menu-item (click)="openEditBoardDialog($event); setShowNavMenuOptions(false);">Edit board</app-pop-menu-item>
+    <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event); setShowNavMenuOptions(false);">Delete board</app-pop-menu-item>
   }
 </ng-template>
 
@@ -106,7 +106,7 @@
       (click)="setShowSideBar(!showSideBar())"
     >
       <svg [appSvg]="showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
-      {{ list()  ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}
+      {{ !list() ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}
     </span>
   } @else {
     <span>{{ !list() ? 'Loading boards...' : selected()?.label ?? 'Select Board' }}</span>
