@@ -32,6 +32,7 @@
     >
       <app-pop-menu [style.min-width.px]="192">
         <app-pop-menu-item (click)="showMenuOptions.set(false); this.openEditTaskDialog($event);">Edit Task</app-pop-menu-item>
+        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openDeleteTaskDialog($event);">Delete Task</app-pop-menu-item>
       </app-pop-menu>
     </ng-template>
 

@@ -24,6 +24,7 @@ import {getProtectedRxjsPipe} from '../../../../utils/get-protected.rxjs-pipe';
 import {BoardsService} from '../../boards.service';
 import {Board} from '../../models/board';
 import {Task, UpdateTaskData, UpdateTaskResult} from '../../models/task';
+import {DeleteTaskComponent} from '../delete-task/delete-task.component';
 import {EditTaskComponent} from '../edit-task/edit-task.component';
 
 @Component({
@@ -80,8 +81,7 @@ export class ViewTaskComponent {
     private readonly _firestoreService: FirestoreService,
     private readonly _authService: AuthService,
     private readonly _functionsService: FunctionsService,
-    private readonly _destroyRef: DestroyRef,
-    private overlay: Overlay
+    private readonly _destroyRef: DestroyRef
   ) {
 
     if (data) {
@@ -222,6 +222,22 @@ export class ViewTaskComponent {
     $event.stopPropagation();
 
     this._dialog.open(EditTaskComponent, {
+      data: {
+        _boardsService: this._boardsService,
+        statusId: this._statusId$.value,
+        taskId: this.taskId
+      }
+    });
+
+    this.close();
+  }
+
+  openDeleteTaskDialog($event: MouseEvent) {
+
+    $event.preventDefault();
+    $event.stopPropagation();
+
+    this._dialog.open(DeleteTaskComponent, {
       data: {
         _boardsService: this._boardsService,
         statusId: this._statusId$.value,
