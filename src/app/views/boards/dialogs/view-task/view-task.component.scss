@@ -10,9 +10,26 @@
   border-radius: 6px;
   overflow: auto;
 
-  &__title {
-    @include typography.heading-l();
-    margin-bottom: 24px;
+  &__header {
+
+    display: flex;
+    justify-content: space-between;
+
+    &__title {
+      @include typography.heading-l();
+      margin-bottom: 24px;
+    }
+
+    &__menu {
+      &__trigger {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+    }
   }
 
   &__description {

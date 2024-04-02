@@ -8,8 +8,10 @@
 
     background: $background;
 
-    &__title {
-      color: $title-color;
+    &__header {
+      &__title {
+        color: $title-color;
+      }
     }
 
     &__description {

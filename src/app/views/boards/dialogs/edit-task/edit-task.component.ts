@@ -1,8 +1,7 @@
-import {Dialog, DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
-import {CdkConnectedOverlay, CdkOverlayOrigin, Overlay} from '@angular/cdk/overlay';
+import {DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
 import {Component, DestroyRef, Inject, Input, Optional, signal, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import cloneDeep from 'lodash/cloneDeep';
 import {BehaviorSubject, catchError, combineLatest, NEVER} from 'rxjs';
 import {ButtonComponent} from '../../../../components/button/button.component';
@@ -13,21 +12,17 @@ import {InputComponent} from '../../../../components/form/input/input.component'
 import {LabelComponent} from '../../../../components/form/label/label.component';
 import {SelectComponent} from '../../../../components/form/select/select.component';
 import {TextareaComponent} from '../../../../components/form/textarea/textarea.component';
-import {PopMenuItemComponent} from '../../../../components/pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuItem} from '../../../../components/pop-menu/pop-menu-item/pop-menu-item.model';
-import {PopMenuComponent} from '../../../../components/pop-menu/pop-menu.component';
 import {SvgDirective} from '../../../../directives/svg.directive';
-import {AuthService} from '../../../../services/auth/auth.service';
-import {FirestoreService} from '../../../../services/firebase/firestore.service';
 import {FunctionsService} from '../../../../services/firebase/functions.service';
+import {SnackBarService} from '../../../../services/snack-bar.service';
 import {getProtectedRxjsPipe} from '../../../../utils/get-protected.rxjs-pipe';
 import {BoardsService} from '../../boards.service';
 import {Board} from '../../models/board';
 import {Task, UpdateTaskData, UpdateTaskResult} from '../../models/task';
-import {EditTaskComponent} from '../edit-task/edit-task.component';
 
 @Component({
-  selector: 'app-view-task',
+  selector: 'app-edit-task',
   standalone: true,
   imports: [
     InputComponent,
@@ -40,33 +35,36 @@ import {EditTaskComponent} from '../edit-task/edit-task.component';
     TextareaComponent,
     SelectComponent,
     CheckboxComponent,
-    FormsModule,
-    CdkConnectedOverlay,
-    PopMenuComponent,
-    PopMenuItemComponent,
-    CdkOverlayOrigin
+    FormsModule
   ],
-  templateUrl: './view-task.component.html',
-  styleUrl: './view-task.component.scss',
+  templateUrl: './edit-task.component.html',
+  styleUrl: './edit-task.component.scss',
   encapsulation: ViewEncapsulation.None,
   host: {
-    class: 'app-view-task'
+    class: 'app-edit-task'
   }
 })
-export class ViewTaskComponent {
+export class EditTaskComponent {
 
   wasUpdated = signal(false);
-  isLoading = signal(false);
 
   board = signal<Board | undefined>(undefined);
   task = signal<Task | null | undefined>(undefined);
   statuses = signal<PopMenuItem[]>([]);
 
+  form = new FormGroup({
+    id: new FormControl(''),
+    boardId: new FormControl(''),
+    boardStatusId: new FormControl(''),
+    title: new FormControl('', [Validators.required]),
+    description: new FormControl('', [Validators.required]),
+    subtasks: new FormArray<FormGroup<{id: FormControl<string | null>, title: FormControl<string | null>}>>([])
+  });
+
   @Input({required: true}) statusId = '';
   private readonly _statusId$;
 
   @Input({required: true}) taskId = '';
-  showMenuOptions = signal(false);
 
   constructor(
     @Optional() @Inject(DIALOG_DATA) readonly data: {
@@ -75,13 +73,10 @@ export class ViewTaskComponent {
       taskId: string
     },
     @Optional() private readonly _boardsService: BoardsService,
-    @Optional() private readonly _dialogRef: DialogRef<ViewTaskComponent>,
-    private readonly _dialog: Dialog,
-    private readonly _firestoreService: FirestoreService,
-    private readonly _authService: AuthService,
+    @Optional() private readonly _dialogRef: DialogRef<EditTaskComponent>,
     private readonly _functionsService: FunctionsService,
     private readonly _destroyRef: DestroyRef,
-    private overlay: Overlay
+    private readonly _snackBarService: SnackBarService
   ) {
 
     if (data) {
@@ -150,11 +145,20 @@ export class ViewTaskComponent {
       });
 
       this.statuses.set(statuses);
-    });
-  }
 
-  getCompletedSubtasks(task: Task) {
-    return task.subtasksIdsSequence.reduce((cnt, subtaskId) => cnt + (+task.subtasks[subtaskId].isCompleted! || 0), 0) || 0;
+      this.form.controls.id.setValue(task.id);
+      this.form.controls.boardId.setValue(board.id);
+      this.form.controls.title.setValue(task.title);
+      this.form.controls.description.setValue(task.description);
+
+      this.form.controls.subtasks.clear();
+
+      task.subtasksIdsSequence.forEach((subtaskId) => {
+        this.addNewSubtask(subtaskId, task.subtasks[subtaskId].title);
+      });
+
+      this.form.controls.boardStatusId.setValue(statusId);
+    });
   }
 
   close() {
@@ -163,72 +167,72 @@ export class ViewTaskComponent {
     this._dialogRef?.close();
   }
 
-  toggleSubtaskCompletion($event: MouseEvent, subtasksId: string, checked: boolean) {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    const path = `users/${this._authService.user$.value?.id}/boards/${this.board()?.id}`;
-
-    this._firestoreService.updateDoc(path, {
-      [`statuses.${this._statusId$.value}.tasks.${this.taskId}.subtasks.${subtasksId}.isCompleted`]: checked
-    }).subscribe();
+  addNewSubtask(id: null | string = null, title = '') {
+    this.form.controls.subtasks.push(
+      new FormGroup({
+        id: new FormControl(id),
+        title: new FormControl(title, [Validators.required])
+      })
+    );
   }
 
-  onStatusChange(boardStatusId: string) {
+  updateTask() {
 
-    const board = this.board();
-    const task = this.task();
+    this.form.updateValueAndValidity();
+    this.form.markAllAsTouched();
 
-    if (!board || !task) {
+    if (this.form.invalid) {
       return;
     }
 
-    if (this._statusId$.value === boardStatusId) {
-      return;
-    }
+    this.form.disable();
 
     const updateTaskData: UpdateTaskData = {
-      id: task.id,
-      boardId: board.id,
-      description: task.description,
-      title: task.title,
+      id: this.form.value.id!,
+      boardId: this.form.value.boardId!,
+      description: this.form.value.description!,
+      title: this.form.value.title!,
       status: {
         id: this._statusId$.value,
-        newId: boardStatusId
+        newId: this.form.value.boardStatusId!
       },
-      subtasks: task.subtasksIdsSequence.map((subtaskId) => ({
-        id: task.subtasks[subtaskId].id,
-        title: task.subtasks[subtaskId].title
-      }))
+      subtasks: (this.form.value.subtasks || []).map((subtask) => {
+
+        const editedSubtask = {
+          id: subtask.id!,
+          title: subtask.title!
+        } as {
+          id?: string;
+          title: string;
+        };
+
+        if (editedSubtask.id === null) {
+          delete editedSubtask.id;
+        }
+
+        return editedSubtask;
+      })
     };
 
-    this.isLoading.set(true);
+    let nextBoardStatusId = updateTaskData.status.newId!
+
+    if (updateTaskData.status.id === updateTaskData.status.newId) {
+      delete updateTaskData.status.newId;
+      nextBoardStatusId = updateTaskData.status.id!;
+    }
+
+    this.form.disable();
+
     this.wasUpdated.set(true);
     this._functionsService.httpsCallable<UpdateTaskData, UpdateTaskResult>('task-update', updateTaskData).pipe(
       catchError(() => {
-        this.isLoading.set(false);
+        this.form.enable();
         return NEVER;
       })
     ).subscribe(() => {
-      this.isLoading.set(false);
-      this._statusId$.next(boardStatusId);
+      this._statusId$.next(nextBoardStatusId);
+      this._snackBarService.open('Task has been updated', 3000);
+      this.close();
     });
-  }
-
-  openEditTaskDialog($event: KeyboardEvent | MouseEvent) {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    this._dialog.open(EditTaskComponent, {
-      data: {
-        _boardsService: this._boardsService,
-        statusId: this._statusId$.value,
-        taskId: this.taskId
-      }
-    });
-
-    this.close();
   }
 }
