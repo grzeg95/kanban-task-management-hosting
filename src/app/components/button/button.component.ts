@@ -39,7 +39,7 @@ export class ButtonComponent implements AfterViewChecked {
   private _appearance: Appearance;
   private _size: Size;
 
-  innerText = '';
+  protected innerText = '';
 
   @HostListener('click', ['$event'])
   handleOnClick($event: MouseEvent) {

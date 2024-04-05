@@ -15,8 +15,11 @@
 
 <ng-template
   cdkConnectedOverlay
+  #cdkConnectedOverlay="cdkConnectedOverlay"
   [cdkConnectedOverlayOrigin]="trigger"
   [cdkConnectedOverlayOpen]="itemsOpened"
+  [cdkConnectedOverlayDisposeOnNavigation]="true"
+  (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); itemsOpened = false"
 >
   <app-pop-menu class="app-select__app-pop-menu">
     @for (item of items; track item) {

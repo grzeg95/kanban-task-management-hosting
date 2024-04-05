@@ -1,0 +1,70 @@
+@if (task; as task) {
+
+  <div class="app-view-task__header">
+    <div class="app-view-task__header__title">{{ task.title }}</div>
+
+    <div
+      tabindex="0"
+      class="app-view-task__header__menu__trigger"
+      (click)="setShowMenuOptions($event, !showMenuOptions())"
+      (keydown)="setShowMenuOptions($event, !showMenuOptions())"
+    >
+      <svg
+        appSvg="icon-vertical-ellipsis"
+        cdkOverlayOrigin
+        #trigger="cdkOverlayOrigin"
+      />
+    </div>
+
+    <ng-template
+      cdkConnectedOverlay
+      #cdkConnectedOverlay="cdkConnectedOverlay"
+      [cdkConnectedOverlayOrigin]="trigger"
+      [cdkConnectedOverlayOpen]="showMenuOptions()"
+      [cdkConnectedOverlayDisposeOnNavigation]="true"
+      [cdkConnectedOverlayPositions]="[{
+        originX: 'start',
+        originY: 'bottom',
+        overlayX: 'end',
+        overlayY: 'top'
+      }]"
+      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); showMenuOptions.set(false);"
+    >
+      <app-pop-menu [style.min-width.px]="192">
+        <app-pop-menu-item (click)="showMenuOptions.set(false); this.openEditTaskDialog($event);">Edit Task</app-pop-menu-item>
+        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openDeleteTaskDialog($event);">Delete Task</app-pop-menu-item>
+      </app-pop-menu>
+    </ng-template>
+
+  </div>
+
+  @if (task.description) {
+    <div class="app-view-task__description">{{ task.description }}</div>
+  }
+
+  @if (task.subtasksIdsSequence.length) {
+
+    <app-label>Subtasks ({{ getCompletedSubtasks(task) }} of {{ task.subtasksIdsSequence.length}})</app-label>
+
+    @for (subtaskId of task.subtasksIdsSequence; track subtaskId) {
+      <app-checkbox
+        class="app-view-task__subtask"
+        (click)="toggleSubtaskCompletion($event, subtaskId, appCheckbox.checked)"
+        #appCheckbox
+        [checked]="task.subtasks[subtaskId].isCompleted"
+        [disabled]="isLoading()"
+      >{{ task.subtasks[subtaskId].title }}
+      </app-checkbox>
+    }
+  }
+
+  <app-form-field>
+    <app-label>Current Status</app-label>
+    <app-select
+      [ngModel]="statusId()"
+      [items]="statuses"
+      [disabled]="isLoading()"
+      (ngModelChange)="onStatusChange($event)"
+    />
+  </app-form-field>
+}

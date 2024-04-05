@@ -1,6 +1,6 @@
 import {animate, animation, style, transition, trigger} from '@angular/animations';
 import {NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
@@ -52,9 +52,10 @@ const animateTiming = '0.333s ease-in-out';
 })
 export class SideBarPhoneComponent {
 
-  appSideBarPhoneItemsTitleTemplateRef = toSignal(this._appService.appSideBarPhoneItemsTitleTemplateRef$);
-  appSideBarPhoneItemsContainerTemplateRef = toSignal(this._appService.appSideBarPhoneItemsContainerTemplateRef$);
-  isDark = toSignal(this._themeSelectorService.isDark$);
+  @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
+  @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
+
+  protected isDark = toSignal(this._themeSelectorService.isDark$);
 
   constructor(
     private readonly _appService: AppService,

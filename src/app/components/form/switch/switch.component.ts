@@ -3,10 +3,11 @@ import {
   ChangeDetectorRef,
   Component,
   forwardRef,
-  HostBinding,
+  HostBinding, Input,
   ViewEncapsulation
 } from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {handleTabIndex} from '../../../utils/handle-tabindex';
 
 @Component({
   selector: 'app-switch',
@@ -30,10 +31,12 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 export class SwitchComponent implements ControlValueAccessor {
 
   private static _id = 1;
-  id = 'app-switch-id-' + SwitchComponent._id++;
+  protected id = 'app-switch-id-' + SwitchComponent._id++;
 
-  checked!: boolean;
-  @HostBinding('class.app-switch--disabled') disabled!: boolean;
+  protected checked!: boolean;
+  @HostBinding('class.app-switch--disabled') @Input() disabled!: boolean;
+
+  @Input() tabIndex = 0;
 
   constructor(
     private readonly _cdr: ChangeDetectorRef
@@ -71,4 +74,6 @@ export class SwitchComponent implements ControlValueAccessor {
   _onTouched() {
     this.onTouched();
   }
+
+  protected readonly handleTabIndex = handleTabIndex;
 }

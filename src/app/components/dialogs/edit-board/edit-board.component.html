@@ -1,0 +1,52 @@
+<div class="app-edit-board__title">Edit Board</div>
+
+<form [formGroup]="form">
+
+  <app-form-field>
+    <app-label>Board Name</app-label>
+    <app-input
+      placeholder="e.g. Web Design"
+      [withHint]="true"
+      [formControl]="form.controls.name"
+    />
+    @if (!form.controls.name.valid && form.controls.name.touched && form.controls.name.errors?.['required']) {
+      <app-error>Can’t be empty</app-error>
+    }
+  </app-form-field>
+
+  <app-label>Board columns</app-label>
+
+  @for (column of form.controls.statuses.controls; track column; let i = $index) {
+
+    <app-form-field>
+      <app-input
+        [formControl]="column.controls.name"
+        placeholder="e.g. Web Design"
+        [removeAble]="true"
+        (remove)="form.controls.statuses.removeAt(i)"
+      />
+    </app-form-field>
+  }
+
+  <button
+    class="app-edit-board__add-new-status-name-button"
+    app-button
+    appearance="secondary"
+    (click)="addNewStatusName()"
+    [disabled]="form.disabled"
+  >+ Add New Column</button>
+
+  <button
+    class="app-edit-board__update-board-button"
+    app-button
+    appearance="primary"
+    (click)="updateBoard()"
+    [disabled]="form.disabled"
+  >
+    Save Changes
+    @if (form.disabled) {
+      <app-loader/>
+    }
+  </button>
+
+</form>

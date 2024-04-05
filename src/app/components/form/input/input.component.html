@@ -11,5 +11,13 @@
 />
 
 @if (removeAble) {
-  <svg #removeIcon class="app-input__remove" (click)="remove.emit()" appSvg="icon-cross" appSvgHover="#ea5555"/>
+  <svg
+    tabindex="0"
+    #removeIcon
+    class="app-input__remove"
+    (click)="handleClickRemoveButton($event)"
+    (keydown)="handleClickRemoveButton($event)"
+    appSvg="icon-cross"
+    appSvgHover="#ea5555"
+  />
 }

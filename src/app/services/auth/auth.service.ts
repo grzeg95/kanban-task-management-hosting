@@ -1,10 +1,8 @@
 import {Injectable, NgZone} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from '@angular/fire/auth';
-import {Router} from '@angular/router';
 import cloneDeep from 'lodash/cloneDeep';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
-import {AppService} from '../app.service';
 import {FirestoreService} from '../firebase/firestore.service';
 import {User} from './user.model';
 
@@ -24,9 +22,7 @@ export class AuthService {
   constructor(
     private readonly _auth: Auth,
     private readonly _firestoreService: FirestoreService,
-    private readonly _router: Router,
-    private readonly _ngZone: NgZone,
-    private readonly _appService: AppService
+    private readonly _ngZone: NgZone
   ) {
     this._auth.authStateReady().then(() => {
       this._onAuthStateChanged().subscribe((nextFirebaseUser) => {
@@ -49,18 +45,13 @@ export class AuthService {
 
                   return user;
                 }),
-              ).subscribe((user) => this.user$.next(cloneDeep(user)));
+              ).subscribe((user) => {
+                this.user$.next(cloneDeep(user));
+              });
 
-            const url = this._router.getCurrentNavigation()?.extractedUrl.toString() || '/';
-
-            if (!this._appService.availableUserViews.some((path) => +url.startsWith('/' + path))) {
-              this._router.navigate(['/', this._appService.defaultUserView]);
-            }
+          } else {
+            this.user$.next(null);
           }
-        }
-
-        if (!nextFirebaseUser) {
-          this._router.navigate(['/']);
         }
 
         this._firebaseUser = nextFirebaseUser;
@@ -84,15 +75,15 @@ export class AuthService {
     );
   }
 
-  signInAnonymously(): void {
+  signInAnonymously(): Promise<void> {
     this.whileLoginIn$.next(true);
-    signInAnonymously(this._auth).then(() => {
+    return signInAnonymously(this._auth).then(() => {
       this.whileLoginIn$.next(false);
     });
   }
 
-  signOut(): void {
-    signOut(this._auth);
+  signOut(): Promise<void> {
+    return signOut(this._auth);
   }
 
   private _unsubUserDocSnapSub(): void {

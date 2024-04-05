@@ -1,12 +1,23 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
-import {NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, computed, Signal, TemplateRef, ViewEncapsulation} from '@angular/core';
+import {DOCUMENT, NgTemplateOutlet} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  Inject,
+  Input,
+  TemplateRef,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
 import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
+import {handleTabIndex} from '../../utils/handle-tabindex';
 import {ButtonComponent} from '../button/button.component';
 import {SwitchComponent} from '../form/switch/switch.component';
 
@@ -92,16 +103,19 @@ enum states {
 })
 export class SideBarComponent {
 
-  appSideBarItemsTitleTemplateRef = toSignal(this._appService.appSideBarItemsTitleTemplateRef$);
-  appSideBarItemsContainerTemplateRef = toSignal(this._appService.appSideBarItemsContainerTemplateRef$);
+  @ViewChild('hideSideBarButton', {read: ElementRef}) hideSideBarButton!: ElementRef;
+  @ViewChild('showSideBarButton', {read: ElementRef}) showSideBarButton!: ElementRef;
 
-  showSideBar = toSignal(this._appService.showSideBar$);
+  @Input() appSideBarItemsTitleTemplateRef: TemplateRef<any> | undefined;
+  @Input() appSideBarItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  isOnPhone = toSignal(this._layoutService.isOnPhone$);
-  isOnTablet = toSignal(this._layoutService.isOnTablet$);
-  isOnDesktop = toSignal(this._layoutService.isOnDesktop$);
+  protected showSideBar = toSignal(this._appService.showSideBar$);
 
-  moveForSideBarState = computed(() => {
+  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
+  protected isOnTablet = toSignal(this._layoutService.isOnTablet$);
+  protected isOnDesktop = toSignal(this._layoutService.isOnDesktop$);
+
+  protected moveForSideBarState = computed(() => {
 
     const showSideBar = this.showSideBar();
 
@@ -121,7 +135,7 @@ export class SideBarComponent {
     }
   });
 
-  moveShowSideBarButtonForSideBarState = computed(() => {
+  protected moveShowSideBarButtonForSideBarState = computed(() => {
 
     const showSideBar = this.showSideBar();
 
@@ -150,18 +164,57 @@ export class SideBarComponent {
     }
   });
 
-  isDark = toSignal(this._themeSelectorService.isDark$);
-  logo = computed(() => this.isDark() ? 'logo-light' : 'logo-dark');
+  protected isDark = toSignal(this._themeSelectorService.isDark$);
+  protected logo = computed(() => this.isDark() ? 'logo-light' : 'logo-dark');
+
+  protected tabIndex = computed(() => {
+
+    const isOnPhone = this.isOnPhone();
+    const showSideBar = this.showSideBar();
+
+    if (isOnPhone && showSideBar || !showSideBar) {
+      return -1;
+    }
+
+    return 0;
+  });
+
+  protected tabIndexShowSidebar = computed(() => {
+
+    const isOnPhone = this.isOnPhone();
+    const showSideBar = this.showSideBar();
+
+    if (isOnPhone || showSideBar) {
+      return -1;
+    }
+
+    return 0;
+  });
 
   constructor(
+    @Inject(DOCUMENT) private readonly _document: Document,
     private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
     private readonly _themeSelectorService: ThemeSelectorService
   ) {
   }
 
-  setShowSideBar(value: boolean) {
+  setShowSideBar($event: KeyboardEvent | MouseEvent, value: boolean) {
+
+    if (handleTabIndex($event)) return;
+    $event.preventDefault();
+    $event.stopPropagation();
+
     this._appService.showSideBar$.next(value);
+
+    switch (this._document.activeElement) {
+      case this.hideSideBarButton.nativeElement:
+        this.showSideBarButton.nativeElement.focus();
+        break;
+      case this.showSideBarButton.nativeElement:
+        this.hideSideBarButton.nativeElement.focus();
+        break;
+    }
   }
 
   toggleDarkMode() {

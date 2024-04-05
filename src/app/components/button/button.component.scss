@@ -37,6 +37,8 @@
     text-overflow: ellipsis;
     overflow: hidden;
     text-wrap: nowrap;
+    display: flex;
+    gap: 8px;
 
     &__svg-left {
       margin-right: 8px;

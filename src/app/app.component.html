@@ -1,9 +1,173 @@
-<app-nav/>
-<app-side-bar/>
-<app-side-bar-phone-wrapper/>
+<!-- appNavSelectedLabelTemplateRef -->
+<ng-template #appNavSelectedLabelTemplateRef>
+  @if (isOnPhone()) {
+    <span
+      class="app-root__app-nav__left__selected-label"
+      [tabindex]="0"
+      (keydown)="setShowSideBar($event, !showSideBar())"
+      (click)="setShowSideBar($event, !showSideBar())"
+    >
+      <svg [appSvg]="showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+      {{ navTitle() }}
+    </span>
+  } @else {
+    <span>{{ navTitle() }}</span>
+  }
+</ng-template>
+
+<!-- appNavButtonTemplateRef -->
+<ng-template #appNavButtonTemplateRef>
+  <button
+    app-button
+    appearance="primary"
+    size="large"
+    [disabled]="!board()"
+    (click)="openAddTaskDialog($event)"
+  >
+    +
+    @if (!isOnPhone()) {
+      Add new task
+    }
+  </button>
+</ng-template>
+
+<!-- appNavMenuButtonsTemplateRef -->
+<ng-template #appNavMenuButtonsTemplateRef>
+  @if (board()) {
+    <app-pop-menu-item (click)="openEditBoardDialog($event); setShowNavMenuOptions(false);">Edit board</app-pop-menu-item>
+    <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event); setShowNavMenuOptions(false);">Delete board</app-pop-menu-item>
+  }
+  @if (storeType() === 'in-memory') {
+    <app-pop-menu-item [danger]="true" (click)="restoreDefault(); setShowNavMenuOptions(false);">Restore default</app-pop-menu-item>
+  }
+</ng-template>
+
+<!-- appSideBarItemsTitleTemplateRef -->
+<ng-template #appSideBarItemsTitleTemplateRef>
+  All Boards ({{boards()?.length || 0}})
+</ng-template>
+
+<!-- appSideBarItemsContainerTemplateRef -->
+<ng-template #appSideBarItemsContainerTemplateRef>
+  @if (boards(); as boards) {
+    @for (board of boards; track board) {
+      <button
+        [tabIndex]="tabIndexSideBar()"
+        class="app-root__app-side-bar__items__container__button"
+        [class.app-root__app-side-bar__items__container__button--active]="board.id === boardId()"
+        app-button
+        svg="left"
+        (click)="select(board.id)"
+      >
+        <svg
+          class="app-root__app-side-bar__items__container__button__svg"
+          [class.app-root__app-side-bar__items__container__button__svg--active]="board.id === boardId()"
+          appSvg="icon-board"
+        />
+        {{ board.name }}
+      </button>
+    }
+  }
+
+  <button
+    [tabIndex]="tabIndexSideBar()"
+    class="app-root__app-side-bar__items__container__button"
+    app-button
+    svg="left"
+    (click)="openAddBoardDialog($event)"
+  >
+    <svg
+      class="app-root__app-side-bar__items__container__button__svg"
+      appSvg="icon-board"
+    />
+    + Create New Board
+  </button>
+</ng-template>
+
+<!-- appSideBarPhoneItemsTitleTemplateRef -->
+<ng-template #appSideBarPhoneItemsTitleTemplateRef>
+  All Boards ({{boards()?.length || 0}})
+</ng-template>
+
+<!-- appSideBarPhoneItemsContainerTemplateRef -->
+<ng-template #appSideBarPhoneItemsContainerTemplateRef>
+  @if (boards(); as boards) {
+    @for (board of boards; track board) {
+      <button
+        class="app-root__app-side-bar-mobile__items__container__button"
+        [class.app-root__app-side-bar-mobile__items__container__button--active]="board.id === boardId()"
+        app-button
+        svg="left"
+        (click)="select(board.id); setShowSideBar($event,false)"
+      >
+        <svg
+          class="app-root__app-side-bar-mobile__items__container__button__svg"
+          [class.app-root__app-side-bar-mobile__items__container__button__svg--active]="board.id === boardId()"
+          appSvg="icon-board"
+        />
+        {{ board.name }}
+      </button>
+    }
+  }
+
+  <button
+    class="app-root__app-side-bar-mobile__items__container__button"
+    app-button
+    svg="left"
+    (click)="openAddBoardDialog($event); setShowSideBar($event,false)"
+  >
+    <svg
+      class="app-root__app-side-bar-mobile__items__container__button__svg"
+      appSvg="icon-board"
+    />
+    + Create New Board
+  </button>
+</ng-template>
+
+<app-nav
+  [appNavButtonTemplateRef]="appNavButtonTemplateRef"
+  [appNavMenuButtonsTemplateRef]="appNavMenuButtonsTemplateRef"
+  [appNavSelectedLabelTemplateRef]="appNavSelectedLabelTemplateRef"
+/>
+
+<app-side-bar
+  [appSideBarItemsTitleTemplateRef]="appSideBarItemsTitleTemplateRef"
+  [appSideBarItemsContainerTemplateRef]="appSideBarItemsContainerTemplateRef"
+/>
+
+<app-side-bar-phone-wrapper
+  [appSideBarPhoneItemsTitleTemplateRef]="appSideBarPhoneItemsTitleTemplateRef"
+  [appSideBarPhoneItemsContainerTemplateRef]="appSideBarPhoneItemsContainerTemplateRef"
+/>
+
 <div
   [@moveRouterOutletForSideBar]="moveRouterOutletForSideBar()"
   [ngStyle]="{height: 'calc(100% - ' + heightNav() + 'px)'}"
+  class="app-root__boards"
 >
   <router-outlet/>
+
+  @if (boards()?.length === 0) {
+    <div class="app-root__boards__empty">
+      <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
+      <button
+        app-button
+        appearance="primary"
+        (click)="openAddBoardDialog($event)"
+      >+ Add New Board</button>
+    </div>
+  }
+
+  @if ((boards()?.length || 0) > 0 && !board()) {
+    <div class="app-root__boards__empty">
+      <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
+      @if (!showSideBar()) {
+        <button
+          app-button
+          appearance="primary"
+          (click)="setShowSideBar($event, true)"
+        >Open Sidebar</button>
+      }
+    </div>
+  }
 </div>

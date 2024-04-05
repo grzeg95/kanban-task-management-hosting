@@ -1,5 +1,9 @@
 [
   {
+    "name": "icon-board",
+    "src": "icon-board.svg"
+  },
+  {
     "name": "icon-check",
     "src": "icon-check.svg"
   },

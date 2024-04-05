@@ -13,7 +13,4 @@ import {ChangeDetectionStrategy, Component, ViewEncapsulation} from '@angular/co
   }
 })
 export class PopMenuComponent {
-
-  constructor() {
-  }
 }

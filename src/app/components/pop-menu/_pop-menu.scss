@@ -3,7 +3,9 @@
   .app-pop-menu {
 
     $background: map-get($theme, 'background');
+    $box-shadow-color: map-get($theme, 'box-shadow-color');
 
     background: $background;
+    box-shadow: 0 0 3px -1px $box-shadow-color;
   }
 }

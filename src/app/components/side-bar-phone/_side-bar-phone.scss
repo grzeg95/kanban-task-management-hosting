@@ -1,9 +1,9 @@
 @mixin side-bar-phone-button {
-  position: relative;
-  left: -20px;
-  width: 240px;
-  padding-left: 44px;
-  justify-content: flex-start;
+  position: relative !important;
+  left: -20px !important;
+  width: 240px !important;
+  padding-left: 44px !important;
+  justify-content: flex-start !important;
 }
 
 

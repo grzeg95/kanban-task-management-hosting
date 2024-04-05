@@ -50,9 +50,9 @@ import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
 export class SelectComponent implements ControlValueAccessor, OnChanges, AfterViewInit {
 
   private static _id = 1;
-  id = 'app-select-id-' + SelectComponent._id++;
+  protected id = 'app-select-id-' + SelectComponent._id++;
 
-  @ViewChild('trigger') trigger!: CdkOverlayOrigin;
+  @ViewChild('trigger') protected trigger!: CdkOverlayOrigin;
 
   @Input() placeholder = '';
   @Input() items: PopMenuItem[] = [];

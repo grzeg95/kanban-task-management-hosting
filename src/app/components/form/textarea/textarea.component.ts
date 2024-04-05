@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy, ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -21,7 +20,6 @@ import {SvgDirective} from '../../../directives/svg.directive';
   ],
   templateUrl: './textarea.component.html',
   styleUrl: './textarea.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'app-textarea'
@@ -37,7 +35,7 @@ import {SvgDirective} from '../../../directives/svg.directive';
 export class TextareaComponent implements ControlValueAccessor {
 
   private static _id = 1;
-  id = 'app-textarea-id-' + TextareaComponent._id++;
+  protected id = 'app-textarea-id-' + TextareaComponent._id++;
 
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
   @Input({required: true}) placeholder!: string;
@@ -51,13 +49,8 @@ export class TextareaComponent implements ControlValueAccessor {
     return this.withHint ? 32 : 11;
   }
 
-  @HostBinding('class.app-textarea--disabled') disabled!: boolean;
+  @HostBinding('class.app-textarea--disabled') @Input() disabled!: boolean;
   value = '';
-
-  constructor(
-    private readonly _cdr: ChangeDetectorRef
-  ) {
-  }
 
   onChange = (_: any) => {
   };
@@ -75,7 +68,6 @@ export class TextareaComponent implements ControlValueAccessor {
 
   setDisabledState(disabled: boolean) {
     this.disabled = disabled;
-    this._cdr.detectChanges();
   }
 
   writeValue(value: string): void {

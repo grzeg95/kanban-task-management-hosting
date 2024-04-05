@@ -1,0 +1,119 @@
+@use 'styles/typography-mixins' as typography;
+@use 'styles/layout' as layout;
+@use './components/side-bar/side-bar' as side-bar;
+@use './components/side-bar-phone/side-bar-phone' as side-bar-phone;
+
+.app-root {
+
+  &__app-side-bar__items {
+
+    display: flex;
+    flex-direction: column;
+
+    &__title {
+
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 2.4px;
+      margin-left: 24px;
+      margin-top: 54px;
+      margin-bottom: 19px;
+
+      @include layout.from-desktop() {
+        margin-left: 32px;
+      };
+    }
+
+    &__container {
+
+      height: calc(100vh - 319px);
+      overflow: auto;
+
+      @include layout.from-desktop() {
+        height: calc(100vh - 311px);
+      }
+
+      &__button {
+
+        @include side-bar.side-bar-button();
+
+        &--active {
+          background: rgb(239, 239, 239);
+        }
+      }
+    }
+  }
+
+  &__app-side-bar-mobile__items {
+
+    display: flex;
+    flex-direction: column;
+
+    &__title {
+
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 2.4px;
+      margin-left: 24px;
+      margin-top: 16px;
+      margin-bottom: 19px;
+    }
+
+    &__container {
+
+      max-height: calc(100vh - 226px);
+      overflow: auto;
+
+      &__button {
+
+        @include side-bar-phone.side-bar-phone-button();
+
+        &--active {
+          background: rgb(239, 239, 239);
+        }
+      }
+    }
+  }
+
+  &__app-nav__left__selected-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__boards {
+
+    height: 100%;
+    display: block;
+    overflow: auto;
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+
+    &__empty {
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      margin: auto;
+      height: 100%;
+
+      &__title {
+        @include typography.heading-l();
+        margin-bottom: 32px;
+        text-align: center;
+      }
+    }
+  }
+}

@@ -2,15 +2,15 @@
 
 @mixin side-bar-button {
 
-  position: relative;
-  left: -20px;
-  width: 240px;
-  padding-left: 44px;
-  justify-content: flex-start;
+  position: relative !important;
+  left: -20px !important;
+  width: 240px !important;
+  padding-left: 44px !important;
+  justify-content: flex-start !important;
 
   @include layout.from-desktop() {
-    width: 282px;
-    padding-left: 52px;
+    width: 282px !important;
+    padding-left: 52px !important;
   };
 }
 
@@ -64,6 +64,11 @@
             svg path {
               fill: $bottom-menu__hide-side-bar-button-color--hover;
             }
+          }
+
+          &:focus-visible:not(:hover) {
+            background: $bottom-menu__hide-side-bar-button-background--hover;
+            color: $bottom-menu__hide-side-bar-button-color--hover;
           }
         }
       }

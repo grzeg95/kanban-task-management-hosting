@@ -1,0 +1,15 @@
+@use '../dialog' as dialog;
+
+.app-add-new-board {
+
+  @include dialog.basic();
+
+  &__add-new-status-name-button {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  &__add-new-board-button {
+    width: 100%;
+  }
+}

@@ -1,6 +1,4 @@
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -14,6 +12,7 @@ import {
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {SvgHoverDirective} from '../../../directives/svg-hover.directive';
 import {SvgDirective} from '../../../directives/svg.directive';
+import {handleTabIndex} from '../../../utils/handle-tabindex';
 
 @Component({
   selector: 'app-input',
@@ -24,7 +23,6 @@ import {SvgDirective} from '../../../directives/svg.directive';
   ],
   templateUrl: './input.component.html',
   styleUrl: './input.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'app-input'
@@ -39,10 +37,10 @@ import {SvgDirective} from '../../../directives/svg.directive';
 })
 export class InputComponent implements ControlValueAccessor {
 
-  @ViewChild('removeIcon') removeIcon: ElementRef | undefined;
+  @ViewChild('removeIcon') protected removeIcon: ElementRef | undefined;
 
   private static _id = 1;
-  id = 'app-input-id-' + InputComponent._id++;
+  protected id = 'app-input-id-' + InputComponent._id++;
 
   @Input({required: true}) placeholder!: string;
   @Input() removeAble = false;
@@ -54,13 +52,8 @@ export class InputComponent implements ControlValueAccessor {
     return this.withHint ? 32 : 11;
   }
 
-  @HostBinding('class.app-input--disabled') disabled!: boolean;
+  @HostBinding('class.app-input--disabled') @Input() disabled!: boolean;
   value = '';
-
-  constructor(
-    private readonly _cdr: ChangeDetectorRef
-  ) {
-  }
 
   onChange = (_: any) => {
   };
@@ -78,7 +71,6 @@ export class InputComponent implements ControlValueAccessor {
 
   setDisabledState(disabled: boolean) {
     this.disabled = disabled;
-    this._cdr.detectChanges();
   }
 
   writeValue(value: string): void {
@@ -109,5 +101,14 @@ export class InputComponent implements ControlValueAccessor {
 
   _onTouched() {
     this.onTouched();
+  }
+
+  handleClickRemoveButton($event: KeyboardEvent | MouseEvent) {
+
+    if (handleTabIndex($event)) return;
+    $event.preventDefault();
+    $event.stopPropagation();
+
+    this.remove.emit();
   }
 }

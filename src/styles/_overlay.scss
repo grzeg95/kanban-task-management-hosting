@@ -6,6 +6,8 @@ $overlay-backdrop-color: transparentize(#000000, 0.5);
 
 .cdk-dialog-container {
 
+  z-index: -1;
+
   &:focus {
     outline: none;
   }

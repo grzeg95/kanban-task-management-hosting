@@ -57,7 +57,7 @@ import {
 })
 export class SnackBarComponent implements OnInit, OnDestroy {
 
-  @HostBinding('@state') _animationState: 'void' | 'visible' = 'void';
+  @HostBinding('@state') protected _animationState: 'void' | 'visible' = 'void';
   @Input() message: string = '';
 
   constructor(

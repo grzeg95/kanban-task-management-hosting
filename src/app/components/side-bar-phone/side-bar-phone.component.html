@@ -2,14 +2,14 @@
 
   <div class="app-side-bar-phone__content__items">
 
-    @if (appSideBarPhoneItemsTitleTemplateRef(); as appSideBarPhoneItemsTitleTemplateRef) {
+    @if (appSideBarPhoneItemsTitleTemplateRef; as appSideBarPhoneItemsTitleTemplateRef) {
       <div class="app-side-bar-phone__content__items__title">
         <ng-container [ngTemplateOutlet]="appSideBarPhoneItemsTitleTemplateRef"/>
       </div>
     }
 
     <div class="app-side-bar-phone__content__items__container">
-      @if (appSideBarPhoneItemsContainerTemplateRef(); as appSideBarPhoneItemsContainerTemplateRef) {
+      @if (appSideBarPhoneItemsContainerTemplateRef; as appSideBarPhoneItemsContainerTemplateRef) {
         <ng-container [ngTemplateOutlet]="appSideBarPhoneItemsContainerTemplateRef"/>
       }
     </div>

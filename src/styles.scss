@@ -1,12 +1,6 @@
-@use 'app/components/form/checkbox/checkbox' as checkbox;
-@use 'app/components/form/error/error' as error;
-@use 'app/components/form/form-field/form-field' as form-field;
-@use 'app/components/form/input/input' as input;
-@use 'app/components/form/label/label' as label;
-@use 'app/components/form/select/select' as select;
-@use 'app/components/form/switch/switch' as switch;
-@use 'app/components/form/textarea/textarea' as textarea;
+@use 'app/app' as app-root;
 
+@use 'app/components/board/board' as board;
 @use 'app/components/button/button' as button;
 @use 'app/components/nav/nav' as nav;
 @use 'app/components/pop-menu/pop-menu' as pop-menu;
@@ -15,16 +9,22 @@
 @use 'app/components/side-bar-phone/side-bar-phone' as side-bar-phone;
 @use 'app/components/snack-bar/snack-bar' as snack-bar;
 
-@use 'app/views/boards/boards' as boards;
-@use 'app/views/boards/board/board' as board;
+@use 'app/components/dialogs/add-new-board/add-new-board' as add-new-board;
+@use 'app/components/dialogs/add-new-task/add-new-task' as add-new-task;
+@use 'app/components/dialogs/delete-board/delete-board' as delete-board;
+@use 'app/components/dialogs/delete-task/delete-task' as delete-task;
+@use 'app/components/dialogs/edit-board/edit-board' as edit-board;
+@use 'app/components/dialogs/edit-task/edit-task' as edit-task;
+@use 'app/components/dialogs/view-task/view-task' as view-task;
 
-@use 'app/views/boards/dialogs/add-new-board/add-new-board' as add-new-board;
-@use 'app/views/boards/dialogs/add-new-task/add-new-task' as add-new-task;
-@use 'app/views/boards/dialogs/delete-board/delete-board' as delete-board;
-@use 'app/views/boards/dialogs/delete-task/delete-task' as delete-task;
-@use 'app/views/boards/dialogs/edit-board/edit-board' as edit-board;
-@use 'app/views/boards/dialogs/edit-task/edit-task' as edit-task;
-@use 'app/views/boards/dialogs/view-task/view-task' as view-task;
+@use 'app/components/form/checkbox/checkbox' as checkbox;
+@use 'app/components/form/error/error' as error;
+@use 'app/components/form/form-field/form-field' as form-field;
+@use 'app/components/form/input/input' as input;
+@use 'app/components/form/label/label' as label;
+@use 'app/components/form/select/select' as select;
+@use 'app/components/form/switch/switch' as switch;
+@use 'app/components/form/textarea/textarea' as textarea;
 
 @import 'styles/typography';
 @import 'styles/colors';
@@ -47,12 +47,129 @@ body {
   font-family: $font-family;
 }
 
-@include switch.theme((
-  background: $main-purple !important,
-  handler-color: $white !important
-));
-
 .dark {
+
+  @include app-root.theme((
+    background: $very-dark-gray,
+    app-side-bar__items__title-color: $medium-gray,
+    app-side-bar__items__container__button-background: transparent,
+    app-side-bar__items__container__button-background--hover: $white,
+    app-side-bar__items__container__button-background--active: $main-purple,
+    app-side-bar__items__container__button-background--focus-visible: $very-dark-gray,
+    app-side-bar__items__container__button-background--active--focus-visible: $main-purple-hover,
+    app-side-bar__items__container__button-color: $medium-gray,
+    app-side-bar__items__container__button-color--hover: $main-purple,
+    app-side-bar__items__container__button-color--active: $white,
+    empty-title-color: $medium-gray
+  ));
+
+  @include board.theme((
+    font-family: $font-family,
+    status-title-color: $medium-gray,
+    task-background: $dark-gray,
+    task-box-shadow-color: transparentize(#364E7E, 0.8985),
+    task-title-color: $white,
+    task-title-color-hover: $main-purple,
+    task-done-of-color: $medium-gray,
+    status-new-background: linear-gradient(to bottom, transparentize($dark-gray, 0.5), transparentize($dark-gray, 0.75)),
+    status-new-color: $medium-gray,
+    status-new-color-hover: $main-purple,
+    empty-title-color: $medium-gray
+  ));
+
+  @include button.theme((
+    font-family: $font-family,
+    primary-background: $main-purple,
+    primary-color: $white,
+    primary-hover-background: $main-purple-hover,
+    primary-hover-color: $white,
+    secondary-background: $white,
+    secondary-color: $main-purple,
+    secondary-hover-background: transparentize($main-purple, 0.75),
+    secondary-hover-color: $main-purple,
+    warn-background: $red,
+    warn-color: $white,
+    warn-hover-background: $red-hover,
+    warn-hover-color: $white
+  ));
+
+  @include nav.theme((
+    background: $dark-gray,
+    border-color: $lines-dark,
+    selected-color: $white
+  ));
+
+  @include pop-menu.theme((
+    background: $very-dark-gray,
+    box-shadow-color: $main-purple-hover
+  ));
+
+  @include pop-menu-item.theme((
+    font-family: $font-family,
+    color: $medium-gray,
+    color-danger: $red
+  ));
+
+  @include side-bar.theme((
+    items__title-color: $medium-gray,
+    background: $dark-gray,
+    border-color: $lines-dark,
+    bottom-menu__hide-side-bar-button-background: transparent,
+    bottom-menu__hide-side-bar-button-background--hover: $white,
+    bottom-menu__hide-side-bar-button-color: $medium-gray,
+    bottom-menu__hide-side-bar-button-color--hover: $main-purple,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $very-dark-gray
+  ));
+
+  @include side-bar-phone.theme((
+    items__title-color: $medium-gray,
+    background: $dark-gray,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $very-dark-gray
+  ));
+
+  @include snack-bar.theme((
+    font-family: $font-family,
+    color: $white,
+    background: #39395b
+  ));
+
+  @include add-new-board.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include add-new-task.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include delete-board.theme((
+    background: $dark-gray,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
+  @include delete-task.theme((
+    background: $dark-gray,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
+  @include edit-board.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include edit-task.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include view-task.theme((
+    background: $dark-gray,
+    title-color: $white,
+    description-color: $medium-gray
+  ));
 
   @include checkbox.theme((
     font-family: $font-family,
@@ -105,6 +222,12 @@ body {
     border-color-error: $red
   ));
 
+  @include switch.theme((
+    background: $main-purple,
+    handler-color: $white,
+    outline-color: $white
+  ));
+
   @include textarea.theme((
     font-family: $font-family,
     color: $white,
@@ -117,6 +240,37 @@ body {
     border-color-focus: $main-purple,
     border-color-error: $red
   ));
+}
+
+.light {
+
+  @include app-root.theme((
+    background: $light-gray,
+    app-side-bar__items__title-color: $medium-gray,
+    app-side-bar__items__container__button-background: transparent,
+    app-side-bar__items__container__button-background--hover: transparentize(#979797, 0.9),
+    app-side-bar__items__container__button-background--active: $main-purple,
+    app-side-bar__items__container__button-background--focus-visible: $light-gray,
+    app-side-bar__items__container__button-background--active--focus-visible: $main-purple-hover,
+    app-side-bar__items__container__button-color: $medium-gray,
+    app-side-bar__items__container__button-color--hover: $main-purple,
+    app-side-bar__items__container__button-color--active: white,
+    empty-title-color: $medium-gray
+  ));
+
+  @include board.theme((
+    font-family: $font-family,
+    status-title-color: $medium-gray,
+    task-background: $white,
+    task-box-shadow-color: transparentize(#364E7E, 0.8985),
+    task-title-color: $black,
+    task-title-color-hover: $main-purple,
+    task-done-of-color: $medium-gray,
+    status-new-background: linear-gradient(to bottom, #E9EFFA, transparentize(#E9EFFA, 0.75)),
+    status-new-color: $medium-gray,
+    status-new-color-hover: $main-purple,
+    empty-title-color: $medium-gray
+  ));
 
   @include button.theme((
     font-family: $font-family,
@@ -124,7 +278,7 @@ body {
     primary-color: $white,
     primary-hover-background: $main-purple-hover,
     primary-hover-color: $white,
-    secondary-background: $white,
+    secondary-background: transparentize($main-purple, 0.9),
     secondary-color: $main-purple,
     secondary-hover-background: transparentize($main-purple, 0.75),
     secondary-hover-color: $main-purple,
@@ -135,13 +289,14 @@ body {
   ));
 
   @include nav.theme((
-    background: $dark-gray,
-    border-color: $lines-dark,
-    selected-color: $white
+    background: $white,
+    border-color: $lines,
+    selected-color: $black
   ));
 
   @include pop-menu.theme((
-    background: $very-dark-gray
+    background: $white,
+    box-shadow-color: $main-purple-hover
   ));
 
   @include pop-menu-item.theme((
@@ -152,93 +307,64 @@ body {
 
   @include side-bar.theme((
     items__title-color: $medium-gray,
-    background: $dark-gray,
-    border-color: $lines-dark,
+    background: $white,
+    border-color: $lines,
     bottom-menu__hide-side-bar-button-background: transparent,
-    bottom-menu__hide-side-bar-button-background--hover: $white,
+    bottom-menu__hide-side-bar-button-background--hover: transparentize(#979797, 0.9),
     bottom-menu__hide-side-bar-button-color: $medium-gray,
     bottom-menu__hide-side-bar-button-color--hover: $main-purple,
-    bottom-menu__theme-switch-wrapper__theme-switch-background: $very-dark-gray
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $light-gray
   ));
 
   @include side-bar-phone.theme((
     items__title-color: $medium-gray,
-    background: $dark-gray,
-    bottom-menu__theme-switch-wrapper__theme-switch-background: $very-dark-gray
+    background: $white,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $light-gray
   ));
 
   @include snack-bar.theme((
     font-family: $font-family,
-    color: $white,
-    background: #39395b
-  ));
-
-  @include boards.theme((
-    background: $very-dark-gray,
-    app-side-bar__items__title-color: $medium-gray,
-    app-side-bar__items__container__button-background: transparent,
-    app-side-bar__items__container__button-background--hover: $white,
-    app-side-bar__items__container__button-background--active: $main-purple,
-    app-side-bar__items__container__button-color: $medium-gray,
-    app-side-bar__items__container__button-color--hover: $main-purple,
-    app-side-bar__items__container__button-color--active: $white,
-    without-boards-title-color: $medium-gray
-  ));
-
-  @include board.theme((
-    font-family: $font-family,
-    status-title-color: $medium-gray,
-    task-background: $dark-gray,
-    task-box-shadow-color: transparentize(#364E7E, 0.8985),
-    task-title-color: $white,
-    task-title-color-hover: $main-purple,
-    task-done-of-color: $medium-gray,
-    status-new-background: linear-gradient(to bottom, transparentize($dark-gray, 0.5), transparentize($dark-gray, 0.75)),
-    status-new-color: $medium-gray,
-    status-new-color-hover: $main-purple,
-    without-statuses-title-color: $medium-gray
+    color: $black,
+    background: $light-gray
   ));
 
   @include add-new-board.theme((
-    background: $dark-gray,
-    title-color: $white
+    background: $white,
+    title-color: $black
   ));
 
   @include add-new-task.theme((
-    background: $dark-gray,
-    title-color: $white
+    background: $white,
+    title-color: $black
   ));
 
   @include delete-board.theme((
-    background: $dark-gray,
+    background: $white,
     title-color: $red,
     description-color: $medium-gray
   ));
 
   @include delete-task.theme((
-    background: $dark-gray,
+    background: $white,
     title-color: $red,
     description-color: $medium-gray
   ));
 
   @include edit-board.theme((
-    background: $dark-gray,
-    title-color: $white
+    background: $white,
+    title-color: $black
   ));
 
   @include edit-task.theme((
-    background: $dark-gray,
-    title-color: $white
+    background: $white,
+    title-color: $black
   ));
 
   @include view-task.theme((
-    background: $dark-gray,
-    title-color: $white,
+    background: $white,
+    title-color: $black,
     description-color: $medium-gray
   ));
-}
-
-.light {
 
   @include checkbox.theme((
     font-family: $font-family,
@@ -291,6 +417,12 @@ body {
     border-color-error: $red
   ));
 
+  @include switch.theme((
+    background: $main-purple,
+    handler-color: $white,
+    outline-color: $black
+  ));
+
   @include textarea.theme((
     font-family: $font-family,
     color: $black,
@@ -302,124 +434,5 @@ body {
     border-color-active: $main-purple,
     border-color-focus: $main-purple,
     border-color-error: $red
-  ));
-
-  @include button.theme((
-    font-family: $font-family,
-    primary-background: $main-purple,
-    primary-color: $white,
-    primary-hover-background: $main-purple-hover,
-    primary-hover-color: $white,
-    secondary-background: transparentize($main-purple, 0.9),
-    secondary-color: $main-purple,
-    secondary-hover-background: transparentize($main-purple, 0.75),
-    secondary-hover-color: $main-purple,
-    warn-background: $red,
-    warn-color: $white,
-    warn-hover-background: $red-hover,
-    warn-hover-color: $white
-  ));
-
-  @include nav.theme((
-    background: $white,
-    border-color: $lines,
-    selected-color: $black
-  ));
-
-  @include pop-menu.theme((
-    background: $white
-  ));
-
-  @include pop-menu-item.theme((
-    font-family: $font-family,
-    color: $medium-gray,
-    color-danger: $red
-  ));
-
-  @include side-bar.theme((
-    items__title-color: $medium-gray,
-    background: $white,
-    border-color: $lines,
-    bottom-menu__hide-side-bar-button-background: transparent,
-    bottom-menu__hide-side-bar-button-background--hover: transparentize(#979797, 0.9),
-    bottom-menu__hide-side-bar-button-color: $medium-gray,
-    bottom-menu__hide-side-bar-button-color--hover: $main-purple,
-    bottom-menu__theme-switch-wrapper__theme-switch-background: $light-gray
-  ));
-
-  @include side-bar-phone.theme((
-    items__title-color: $medium-gray,
-    background: $white,
-    bottom-menu__theme-switch-wrapper__theme-switch-background: $light-gray
-  ));
-
-  @include snack-bar.theme((
-    font-family: $font-family,
-    color: $black,
-    background: $light-gray
-  ));
-
-  @include boards.theme((
-    background: $light-gray,
-    app-side-bar__items__title-color: $medium-gray,
-    app-side-bar__items__container__button-background: transparent,
-    app-side-bar__items__container__button-background--hover: transparentize(#979797, 0.9),
-    app-side-bar__items__container__button-background--active: $main-purple,
-    app-side-bar__items__container__button-color: $medium-gray,
-    app-side-bar__items__container__button-color--hover: $main-purple,
-    app-side-bar__items__container__button-color--active: white,
-    without-boards-title-color: $medium-gray
-  ));
-
-  @include board.theme((
-    font-family: $font-family,
-    status-title-color: $medium-gray,
-    task-background: $white,
-    task-box-shadow-color: transparentize(#364E7E, 0.8985),
-    task-title-color: $black,
-    task-title-color-hover: $main-purple,
-    task-done-of-color: $medium-gray,
-    status-new-background: linear-gradient(to bottom, #E9EFFA, transparentize(#E9EFFA, 0.75)),
-    status-new-color: $medium-gray,
-    status-new-color-hover: $main-purple,
-    without-statuses-title-color: $medium-gray
-  ));
-
-  @include add-new-board.theme((
-    background: $white,
-    title-color: $black
-  ));
-
-  @include add-new-task.theme((
-    background: $white,
-    title-color: $black
-  ));
-
-  @include delete-board.theme((
-    background: $white,
-    title-color: $red,
-    description-color: $medium-gray
-  ));
-
-  @include delete-task.theme((
-    background: $white,
-    title-color: $red,
-    description-color: $medium-gray
-  ));
-
-  @include edit-board.theme((
-    background: $white,
-    title-color: $black
-  ));
-
-  @include edit-task.theme((
-    background: $white,
-    title-color: $black
-  ));
-
-  @include view-task.theme((
-    background: $white,
-    title-color: $black,
-    description-color: $medium-gray
   ));
 }
