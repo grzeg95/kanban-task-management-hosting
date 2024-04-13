@@ -1,10 +1,10 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {Component, DestroyRef, effect, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {CreateBoardData} from '../../../models/board';
+import {BoardCreateData} from '../../../models/board';
 import {BoardsService} from '../../../services/boards/boards.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
@@ -42,7 +42,7 @@ export class AddNewBoardComponent {
 
   protected form = new FormGroup({
     name: new FormControl('', [Validators.required]),
-    statusesNames: new FormArray<FormControl<string | null>>([])
+    boardStatusesNames: new FormArray<FormControl<string | null>>([])
   });
 
   constructor(
@@ -65,7 +65,7 @@ export class AddNewBoardComponent {
   }
 
   addNewStatusName() {
-    this.form.controls.statusesNames.push(new FormControl('', [Validators.required]));
+    this.form.controls.boardStatusesNames.push(new FormControl('', [Validators.required]));
   }
 
   createNewBoard() {
@@ -81,10 +81,10 @@ export class AddNewBoardComponent {
 
     const createBoardData = {
       name: this.form.value.name,
-      statusesNames: this.form.value.statusesNames
-    } as CreateBoardData;
+      boardStatusesNames: this.form.value.boardStatusesNames,
+    } as BoardCreateData;
 
-    this.abstractBoardsService()!.createBoard(createBoardData).pipe(
+    this.abstractBoardsService()!.boardCreate(createBoardData).pipe(
       catchError(() => {
         this.form.enable();
         return NEVER;
@@ -96,6 +96,8 @@ export class AddNewBoardComponent {
   }
 
   close() {
-    this._dialogRef.close();
+    try {
+      this._dialogRef.close();
+    } catch {/* empty */}
   }
 }

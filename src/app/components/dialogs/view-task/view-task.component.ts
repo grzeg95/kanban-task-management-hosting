@@ -1,16 +1,18 @@
 import {Dialog, DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {Component, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
+import {Firestore, limit} from '@angular/fire/firestore';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import cloneDeep from 'lodash/cloneDeep';
-import {catchError, NEVER} from 'rxjs';
+import {catchError, map, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {Task, UpdateTaskData} from '../../../models/task';
-import {AuthService} from '../../../services/auth/auth.service';
+import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
+import {BoardTaskSubtask} from '../../../models/board-task-subtask';
 import {BoardsService} from '../../../services/boards/boards.service';
-import {FirebaseBoardsService} from '../../../services/boards/firebase-boards.service';
 import {InMemoryBoardsService} from '../../../services/boards/in-memory-boards.service';
+import {collectionData} from '../../../services/firebase/firestore';
+import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
 import {ButtonComponent} from '../../button/button.component';
 import {CheckboxComponent} from '../../form/checkbox/checkbox.component';
@@ -57,127 +59,151 @@ export class ViewTaskComponent {
 
   protected isLoading = signal(false);
   protected board = toSignal(this._boardsService.board$);
-  protected task: Task | undefined;
-  protected statuses: PopMenuItem[] = [];
-  protected statusId = signal('');
-  protected taskId = '';
+  protected boardTasks = toSignal(this._boardsService.boardTasks$);
+  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
+  protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
+  protected boardId = '';
+  protected boardTaskId = '';
+  protected boardStatusId = signal('');
   protected showMenuOptions = signal(false);
   protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
-  protected storeType = toSignal(this._boardsService.storeType$);
-  protected wasUpdated = false;
+  protected boardTask = computed(() => this.boardTasks()?.[this.boardTaskId]);
+
+  protected boardTaskSubtasks = toSignal(
+    collectionData(BoardTaskSubtask.refs(this._firestore, this.boardId, this.boardTaskId), limit(5)).pipe(
+      map((boardTaskSubtasks) => {
+
+        const boardTaskSubtasksMap: { [key in string]: BoardTaskSubtask } = {};
+
+        for (const boardTaskSubtask of boardTaskSubtasks) {
+          Object.assign(boardTaskSubtasksMap, {[boardTaskSubtask.id]: boardTaskSubtask});
+        }
+
+        return boardTaskSubtasksMap;
+      })
+    )
+  );
 
   constructor(
     @Inject(DIALOG_DATA) readonly data: {
-      statusId: string,
-      taskId: string
+      boardId: string
+      boardTaskId: string
     },
     private readonly _boardsService: BoardsService,
     private readonly _dialogRef: DialogRef<ViewTaskComponent>,
     private readonly _dialog: Dialog,
-    private readonly _authService: AuthService
+    private readonly _snackBarService: SnackBarService,
+    private readonly _firestore: Firestore
   ) {
 
-    this.statusId.set(data.statusId);
-    this.taskId = data.taskId;
+    this.boardId = data.boardId;
+    this.boardTaskId = data.boardTaskId;
 
     effect(() => {
 
-      if (this.wasUpdated) {
-        this.wasUpdated = false;
-        return;
-      }
-
       const board = this.board();
-      const statusId = this.statusId();
+      const boardStatuses = this.boardStatuses();
 
-      if (!board && board !== undefined) {
+      if (
+        (!board && board !== undefined) ||
+        (!boardStatuses && boardStatuses !== undefined)
+      ) {
+        this._snackBarService.open(`This board want's found`, 3000);
         this.close();
         return;
       }
 
-      if (board === undefined) {
+      if (board === undefined || boardStatuses === undefined) {
         return;
       }
 
-      this.task = cloneDeep(board.statuses[statusId].tasks[this.taskId]);
+      const boardTask = this.boardTask();
 
-      if (!this.task) {
+      if (!boardTask && boardTask !== undefined) {
+        this._snackBarService.open(`This board task want's found`, 3000);
         this.close();
         return;
       }
 
-      this.statuses = board.statusesIdsSequence.map((statusId) => board.statuses[statusId]).map((status) => {
+      if (boardTask === undefined) {
+        return;
+      }
+
+      this.boardStatusId.set(boardTask.boardStatusId);
+
+      const boardTaskSubtasks = this.boardTaskSubtasks();
+
+      if (!boardTaskSubtasks) {
+        return;
+      }
+
+      const boardStatusesPopMenuItems = board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
         return {
           value: status.id,
           label: status.name
         } as PopMenuItem;
       });
+
+      this.boardStatusesPopMenuItems.set(boardStatusesPopMenuItems);
+
+      if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
+        this.boardStatusId.set(boardStatusesPopMenuItems[0].value);
+      }
     });
   }
 
-  getCompletedSubtasks(task: Task) {
-    return task.subtasksIdsSequence.reduce((cnt, subtaskId) => cnt + (+task.subtasks[subtaskId].isCompleted! || 0), 0) || 0;
-  }
-
-  toggleSubtaskCompletion($event: MouseEvent, subtasksId: string, checked: boolean) {
+  updateBoardTaskSubtaskIsCompleted($event: MouseEvent, boardTaskSubtaskId: string, checked: boolean) {
 
     $event.preventDefault();
     $event.stopPropagation();
 
-    if (this.storeType() === 'firebase') {
-
-      const path = `users/${this._authService.user$.value?.id}/boards/${this.board()?.id}`;
-
-      (this.abstractBoardsService() as FirebaseBoardsService).updateDoc(path, {
-        [`statuses.${this.statusId()}.tasks.${this.taskId}.subtasks.${subtasksId}.isCompleted`]: checked
-      }).subscribe();
-    } else {
-      (this.abstractBoardsService() as InMemoryBoardsService).toggleSubtaskCompletion(this.board()!.id, this.statusId(), this.taskId, subtasksId, checked).subscribe();
-    }
+    (this.abstractBoardsService() as InMemoryBoardsService).updateBoardTaskSubtaskIsCompleted(checked, this.boardId, this.boardTaskId, boardTaskSubtaskId).subscribe();
   }
 
-  onStatusChange(boardStatusId: string) {
+  onBoardTaskStatusChange(newBoardStatusId: string) {
 
     const board = this.board();
-    const task = this.task;
+    const boardTask = this.boardTask();
+    const boardTaskSubtasks = this.boardTaskSubtasks();
 
-    if (!board || !task) {
+    if (!board || !boardTask || !boardTaskSubtasks) {
       return;
     }
 
-    if (this.statusId() === boardStatusId) {
+    const currentBoardStatusId = this.boardStatusId();
+
+    if (this.boardStatusId() === newBoardStatusId) {
       return;
     }
 
-    const updateTaskData: UpdateTaskData = {
-      id: task.id,
+    const updateTaskData: BoardTaskUpdateData = {
+      id: boardTask.id,
       boardId: board.id,
-      description: task.description,
-      title: task.title,
-      status: {
-        id: this.statusId(),
-        newId: boardStatusId
+      description: boardTask.description,
+      title: boardTask.title,
+      boardStatus: {
+        id: currentBoardStatusId,
+        newId: newBoardStatusId
       },
-      subtasks: task.subtasksIdsSequence.map((subtaskId) => ({
-        id: task.subtasks[subtaskId].id,
-        title: task.subtasks[subtaskId].title
+      boardTaskSubtasks: boardTask.boardTaskSubtasksIds.map((boardTaskSubtaskId) => boardTaskSubtasks[boardTaskSubtaskId]).filter((boardTaskSubtask) => !!boardTaskSubtask).map((boardTaskSubtask) => ({
+        id: boardTaskSubtask.id,
+        title: boardTaskSubtask.title
       }))
     };
 
     this.isLoading.set(true);
-    this.wasUpdated = true;
-    this.abstractBoardsService()!.updateTask(updateTaskData).pipe(
+    this.abstractBoardsService()!.boardTaskUpdate(updateTaskData).pipe(
       catchError(() => {
         this.isLoading.set(false);
         return NEVER;
       })
     ).subscribe(() => {
       this.isLoading.set(false);
-      this.statusId.set(boardStatusId);
+      this.boardStatusId.set(newBoardStatusId);
     });
   }
 
-  openEditTaskDialog($event: KeyboardEvent | MouseEvent) {
+  openBoardTaskEditDialog($event: KeyboardEvent | MouseEvent) {
 
     if (handleTabIndex($event)) return;
     $event.preventDefault();
@@ -186,15 +212,15 @@ export class ViewTaskComponent {
     this._dialog.open(EditTaskComponent, {
       data: {
         _boardsService: this._boardsService,
-        statusId: this.statusId(),
-        taskId: this.taskId
+        boardId: this.boardId,
+        boardTaskId: this.boardTaskId
       }
     });
 
     this.close();
   }
 
-  openDeleteTaskDialog($event: MouseEvent) {
+  openBoardTaskDeleteDialog($event: MouseEvent) {
 
     $event.preventDefault();
     $event.stopPropagation();
@@ -202,8 +228,7 @@ export class ViewTaskComponent {
     this._dialog.open(DeleteTaskComponent, {
       data: {
         _boardsService: this._boardsService,
-        statusId: this.statusId(),
-        taskId: this.taskId
+        boardTaskId: this.boardTaskId
       }
     });
 

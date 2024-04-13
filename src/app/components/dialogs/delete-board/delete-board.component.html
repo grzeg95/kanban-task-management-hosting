@@ -1,7 +1,7 @@
 <div class="app-delete-board__title">Delete this board?</div>
 
 <div class="app-delete-board__description">
-  Are you sure you want to delete the '{{ boardTitle() }}' board? This action will remove all columns and tasks and cannot be reversed.
+  Are you sure you want to delete the '{{ board()?.name || '' }}' board? This action will remove all columns and tasks and cannot be reversed.
 </div>
 
 <button

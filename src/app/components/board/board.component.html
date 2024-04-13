@@ -1,24 +1,25 @@
-@if (!selectingBoard() && board(); as board) {
+@if (!isBoardLoaded() && board(); as board) {
 
-  @for (statusId of board.statusesIdsSequence; track statusId; let index = $index; let count = $count) {
-    @if (board.statuses[statusId]; as status) {
+  @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
+
+    @if (boardStatuses()?.[boardStatusId]; as boardStatus) {
 
       <div class="app-board__status">
         <div class="app-board__status__title-wrapper">
           <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
-          <div class="app-board__status__title-wrapper__title">({{ status.tasksIdsSequence.length }}) {{ status.name }}</div>
+          <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
         </div>
 
-        @for (taskId of status.tasksIdsSequence; track taskId) {
-          @if (status.tasks[taskId]; as task) {
+        @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
 
-            <div class="app-board__task" tabindex="{{tabIndex()}}" (click)="openTaskDialog($event, statusId, taskId)" (keydown)="openTaskDialog($event,statusId,taskId)">
+          @if (boardTasks()?.[boardStatusTaskId]; as boardStatusTask) {
+            <div class="app-board__task" tabindex="{{tabIndex()}}" (click)="openTaskDialog($event, boardStatusId, boardStatusTaskId)" (keydown)="openTaskDialog($event, boardStatusId, boardStatusTaskId)">
               <div class="app-board__task__title-wrapper">
-                <div class="app-board__task__title-wrapper__title">{{ task.title }}</div>
+                <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
               </div>
 
-              @if (task.subtasksIdsSequence.length > 0) {
-                <div class="app-board__task__done-of">{{ getCompletedSubtasks(board.statuses[statusId].tasks[taskId]) }} of {{ task.subtasksIdsSequence.length }} subtasks</div>
+              @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
+                <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
               }
             </div>
           }
@@ -27,14 +28,14 @@
     }
   }
 
-  @if (board.statusesIdsSequence.length === 0) {
+  @if (board.boardStatusesIds.length === 0) {
     <div class="app-board__empty">
       <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
       <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
     </div>
   }
 
-  @if (board.statusesIdsSequence.length > 0) {
+  @if (board.boardStatusesIds.length > 0) {
     <div
       class="app-board__status-new"
       tabindex="{{tabIndex()}}"

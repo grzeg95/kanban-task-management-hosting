@@ -14,7 +14,6 @@ import {
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {Task} from '../../models/task';
 import {AppService} from '../../services/app.service';
 import {BoardsService} from '../../services/boards/boards.service';
 import {LayoutService} from '../../services/layout.service';
@@ -51,9 +50,22 @@ export class BoardComponent implements OnDestroy {
   protected heightNav = toSignal(this._layoutService.heightNav$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
 
-  protected boards = toSignal(this._boardsService.boards$);
   protected board = toSignal(this._boardsService.board$);
+  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
+  protected boardTasks = toSignal(this._boardsService.boardTasks$);
+
   protected selectingBoard = toSignal(this._boardsService.selectingBoard$);
+  protected selectingBoardStatuses = toSignal(this._boardsService.selectingBoardStatuses$);
+  protected selectingBoardTasks = toSignal(this._boardsService.selectingBoardTasks$);
+
+  protected isBoardLoaded = computed(() => {
+
+    const selectingBoard = this.selectingBoard();
+    const selectingBoardStatuses = this.selectingBoardStatuses();
+    const selectingBoardTasks = this.selectingBoardTasks();
+
+    return !(selectingBoard || selectingBoardStatuses || selectingBoardTasks);
+  });
 
   protected tabIndex = computed(() => {
 
@@ -85,7 +97,7 @@ export class BoardComponent implements OnDestroy {
       let height = '';
 
       if (!selectingBoard && board) {
-        if (board.statusesIdsSequence.length === 0) {
+        if (board.boardStatusesIds.length === 0) {
           height = '100%';
         }
       } else {
@@ -115,10 +127,6 @@ export class BoardComponent implements OnDestroy {
         this._router.navigate(['/']);
       }
     });
-  }
-
-  getCompletedSubtasks(task: Task) {
-    return task.subtasksIdsSequence.reduce((cnt, subtaskId) => cnt + +task.subtasks[subtaskId].isCompleted, 0) || 0;
   }
 
   openTaskDialog($event: KeyboardEvent | MouseEvent, statusId: string, taskId: string) {

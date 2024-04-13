@@ -1,7 +1,7 @@
-@if (task; as task) {
+@if (boardTask(); as boardTask) {
 
   <div class="app-view-task__header">
-    <div class="app-view-task__header__title">{{ task.title }}</div>
+    <div class="app-view-task__header__title">{{ boardTask.title }}</div>
 
     <div
       tabindex="0"
@@ -31,40 +31,46 @@
       (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); showMenuOptions.set(false);"
     >
       <app-pop-menu [style.min-width.px]="192">
-        <app-pop-menu-item (click)="showMenuOptions.set(false); this.openEditTaskDialog($event);">Edit Task</app-pop-menu-item>
-        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openDeleteTaskDialog($event);">Delete Task</app-pop-menu-item>
+        <app-pop-menu-item (click)="showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit BoardTask</app-pop-menu-item>
+        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete BoardTask</app-pop-menu-item>
       </app-pop-menu>
     </ng-template>
 
   </div>
 
-  @if (task.description) {
-    <div class="app-view-task__description">{{ task.description }}</div>
+  @if (boardTask.description) {
+    <div class="app-view-task__description">{{ boardTask.description }}</div>
   }
 
-  @if (task.subtasksIdsSequence.length) {
+  @if (boardTask.boardTaskSubtasksIds.length) {
 
-    <app-label>Subtasks ({{ getCompletedSubtasks(task) }} of {{ task.subtasksIdsSequence.length}})</app-label>
+    <app-label>Subtasks ({{ boardTask.completedBoardTaskSubtasks }} of {{ boardTask.boardTaskSubtasksIds.length}})</app-label>
 
-    @for (subtaskId of task.subtasksIdsSequence; track subtaskId) {
-      <app-checkbox
-        class="app-view-task__subtask"
-        (click)="toggleSubtaskCompletion($event, subtaskId, appCheckbox.checked)"
-        #appCheckbox
-        [checked]="task.subtasks[subtaskId].isCompleted"
-        [disabled]="isLoading()"
-      >{{ task.subtasks[subtaskId].title }}
-      </app-checkbox>
+    @for (boardTaskSubtaskId of boardTask.boardTaskSubtasksIds; track boardTaskSubtaskId) {
+
+      @if (boardTaskSubtasks(); as boardTaskSubtasks) {
+
+        @if (boardTaskSubtasks[boardTaskSubtaskId]; as boardTaskSubtask) {
+          <app-checkbox
+            class="app-view-task__subtask"
+            (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtaskId, appCheckbox.checked)"
+            #appCheckbox
+            [checked]="boardTaskSubtask.isCompleted"
+            [disabled]="isLoading()"
+          >{{ boardTaskSubtask.title }}
+          </app-checkbox>
+        }
+      }
     }
   }
 
   <app-form-field>
-    <app-label>Current Status</app-label>
+    <app-label>Current board status</app-label>
     <app-select
-      [ngModel]="statusId()"
-      [items]="statuses"
+      [ngModel]="boardStatusId()"
+      [items]="boardStatusesPopMenuItems()"
       [disabled]="isLoading()"
-      (ngModelChange)="onStatusChange($event)"
+      (ngModelChange)="onBoardTaskStatusChange($event)"
     />
   </app-form-field>
 }

@@ -1,4 +1,4 @@
-<div class="app-view-task__title">Add New Task</div>
+<div class="app-view-task__title">Add New BoardTask</div>
 
 <form [formGroup]="form">
 
@@ -25,13 +25,13 @@
 
   <app-label>Subtasks</app-label>
 
-  @for (subtask of form.controls.subtasks.controls; track subtask; let i = $index) {
+  @for (subtask of form.controls.boardTaskSubtasksTitles.controls; track subtask; let i = $index) {
     <app-form-field>
       <app-input
         [formControl]="subtask"
         placeholder="e.g. Make coffee"
         [removeAble]="true"
-        (remove)="form.controls.subtasks.removeAt(i)"
+        (remove)="form.controls.boardTaskSubtasksTitles.removeAt(i)"
       />
     </app-form-field>
   }
@@ -42,10 +42,11 @@
     appearance="secondary"
     (click)="addNewSubtask()"
     [disabled]="form.disabled"
-  >+ Add New Subtask</button>
+  >+ Add New BoardTaskSubtask
+  </button>
 
   <app-form-field>
-    <app-label>Status</app-label>
+    <app-label>BoardStatus</app-label>
     <app-select
       placeholder="e.g. Take coffee break"
       [formControl]="form.controls.boardStatusId"
@@ -61,7 +62,7 @@
     (click)="createTask()"
     [disabled]="form.disabled"
   >
-    Create Task
+    Create BoardTask
     @if (form.disabled) {
       <app-loader/>
     }

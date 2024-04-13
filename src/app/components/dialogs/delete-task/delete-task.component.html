@@ -1,7 +1,7 @@
 <div class="app-delete-task__title">Delete this task?</div>
 
 <div class="app-delete-task__description">
-  Are you sure you want to delete the '{{ taskTitle() }}' task and its subtasks? This action cannot be reversed.
+  Are you sure you want to delete the '{{ task()?.title || '' }}' task and its subtasks? This action cannot be reversed.
 </div>
 
 <button

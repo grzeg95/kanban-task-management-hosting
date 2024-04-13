@@ -2,7 +2,6 @@ import {DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
 import {Component, computed, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ReactiveFormsModule} from '@angular/forms';
-import cloneDeep from 'lodash/cloneDeep';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardsService} from '../../../services/boards/boards.service';
@@ -37,30 +36,31 @@ import {LoaderComponent} from '../../loader/loader.component';
 export class DeleteTaskComponent {
 
   protected board = toSignal(this._boardsService.board$);
+  protected boardTasks = toSignal(this._boardsService.boardTasks$);
+  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
   protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
   protected isLoading = signal(false);
-  protected statusId = '';
-  protected taskId = '';
-  protected taskTitle = computed(() => this.board()?.statuses[this.statusId]?.tasks[this.taskId]?.title || '' );
+  protected boardTaskId = '';
+  protected task = computed(() => this.boardTasks()?.[this.boardTaskId]);
 
   constructor(
     @Inject(DIALOG_DATA) readonly data: {
-      statusId: string,
-      taskId: string
+      boardTaskId: string
     },
     private readonly _boardsService: BoardsService,
     private readonly _dialogRef: DialogRef<DeleteTaskComponent>,
     private readonly _snackBarService: SnackBarService
   ) {
 
-    this.statusId = data.statusId;
-    this.taskId = data.statusId;
+    this.boardTaskId = data.boardTaskId;
 
     effect(() => {
 
       const board = this.board();
+      const task = this.task();
 
       if (!board && board !== undefined) {
+        this._snackBarService.open(`This board want's found`, 3000);
         this.close();
         return;
       }
@@ -69,9 +69,8 @@ export class DeleteTaskComponent {
         return;
       }
 
-      const task = cloneDeep(board.statuses[this.statusId].tasks[this.taskId]);
-
-      if (!task) {
+      if (!task && task !== undefined) {
+        this._snackBarService.open(`This board task want's found`, 3000);
         this.close();
         return;
       }
@@ -81,10 +80,9 @@ export class DeleteTaskComponent {
   deleteTask() {
 
     this.isLoading.set(true);
-    this.abstractBoardsService()!.deleteTask({
-      id: this.taskId,
-      boardId: this.board()!.id,
-      boardStatusId: this.statusId
+    this.abstractBoardsService()!.boardTaskDelete({
+      id: this.boardTaskId,
+      boardId: this.board()!.id
     }).pipe(
       catchError(() => {
         this.isLoading.set(false);

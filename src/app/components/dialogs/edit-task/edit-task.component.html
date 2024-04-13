@@ -1,4 +1,4 @@
-<div class="app-edit-task__title">Edit Task</div>
+<div class="app-edit-task__title">Edit BoardTask</div>
 
 <form [formGroup]="form">
 
@@ -25,13 +25,13 @@
 
   <app-label>Subtasks</app-label>
 
-  @for (subtask of form.controls.subtasks.controls; track subtask; let i = $index) {
+  @for (subtask of form.controls.boardTaskSubtasks.controls; track subtask; let i = $index) {
     <app-form-field>
       <app-input
         [formControl]="subtask.controls.title"
         placeholder="e.g. Make coffee"
         [removeAble]="true"
-        (remove)="form.controls.subtasks.removeAt(i)"
+        (remove)="form.controls.boardTaskSubtasks.removeAt(i)"
       />
     </app-form-field>
   }
@@ -40,17 +40,17 @@
     class="app-edit-task__add-new-subtask-button"
     app-button
     appearance="secondary"
-    (click)="addNewSubtask()"
+    (click)="addNewBoardTaskSubtask()"
     [disabled]="form.disabled"
-  >+ Add New Subtask
+  >+ Add New BoardTaskSubtask
   </button>
 
   <app-form-field>
-    <app-label>Status</app-label>
+    <app-label>BoardStatus</app-label>
     <app-select
       placeholder="e.g. Take coffee break"
       [formControl]="form.controls.boardStatusId"
-      [items]="statuses"
+      [items]="boardStatusesPopMenuItems()"
       [withHint]="true"
     />
   </app-form-field>

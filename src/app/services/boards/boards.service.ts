@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {filter, map, switchMap} from 'rxjs';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
-import {ObservedValuesOfBoardsService} from './boards-service.types';
+import {ObservedValuesOfBoardsService} from './boards-service.abstract';
 import {FirebaseBoardsService} from './firebase-boards.service';
 import {InMemoryBoardsService} from './in-memory-boards.service';
 
@@ -27,17 +27,29 @@ export class BoardsService {
     })
   );
 
-  boards$ = this._getObservedValueOf('user$').pipe(map((user) => user?.boards));
-  board$ = this._getObservedValueOf('board$');
   boardId$ = this._getObservedValueOf('boardId$');
   user$ = this._getObservedValueOf('user$');
+  userBoards$ = this._getObservedValueOf('userBoards$');
+  board$ = this._getObservedValueOf('board$');
+  darkMode$ = this.user$.pipe(map((user) => user?.darkMode));
+  boardStatuses$ = this._getObservedValueOf('boardStatuses$');
+  boardTasks$ = this._getObservedValueOf('boardTasks$');
+
+  selectingUser$ = this._getObservedValueOf('selectingUser$');
+  selectingUserBoards$ = this._getObservedValueOf('selectingUserBoards$');
   selectingBoard$ = this._getObservedValueOf('selectingBoard$');
+  selectingBoardStatuses$ = this._getObservedValueOf('selectingBoardStatuses$');
+  selectingBoardTasks$ = this._getObservedValueOf('selectingBoardTasks$');
 
   set boardId(boardId: string | undefined) {
     this._firebaseBoardsService.boardId$.next(boardId);
     this._inMemoryBoardsService.boardId$.next(boardId);
     this._firebaseBoardsService.selectingBoard$.next(true);
     this._inMemoryBoardsService.selectingBoard$.next(true);
+    this._firebaseBoardsService.selectingBoardStatuses$.next(true);
+    this._inMemoryBoardsService.selectingBoardStatuses$.next(true);
+    this._firebaseBoardsService.selectingBoardTasks$.next(true);
+    this._inMemoryBoardsService.selectingBoardTasks$.next(true);
   }
 
   constructor(

@@ -74,7 +74,7 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
-  protected boards = toSignal(this._boardsService.boards$);
+  protected userBoards = toSignal(this._boardsService.userBoards$);
   protected board = toSignal(this._boardsService.board$);
   protected boardId = toSignal(this._boardsService.boardId$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
@@ -87,11 +87,11 @@ export class AppComponent {
 
   protected navTitle = computed(() => {
 
-    const boards = this.boards();
+    const userBoards = this.userBoards();
     const board = this.board();
     const selectingBoard = this.selectingBoard();
 
-    if (!boards) {
+    if (!userBoards) {
       return 'Loading boards...';
     }
 
@@ -103,7 +103,7 @@ export class AppComponent {
       return board.name;
     }
 
-    if (boards.length === 0) {
+    if (userBoards.length === 0) {
       return 'Create Board';
     }
 

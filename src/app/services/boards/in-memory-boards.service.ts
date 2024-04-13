@@ -1,523 +1,596 @@
 import {Injectable} from '@angular/core';
-import cloneDeep from 'lodash/cloneDeep';
-import {BehaviorSubject, map, Observable, of, switchMap, throwError} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, map, Observable, of, switchMap, take, tap} from 'rxjs';
 import {
   Board,
-  CreateBoardData,
-  CreateBoardResult,
-  DeleteBoardData,
-  DeleteBoardResult,
-  UpdateBoardData,
-  UpdateBoardResult
+  BoardCreateData,
+  BoardCreateResult,
+  BoardDeleteData,
+  BoardDeleteResult,
+  BoardUpdateData,
+  BoardUpdateResult
 } from '../../models/board';
-import {Status} from '../../models/status';
-import {Subtask} from '../../models/subtask';
+import {BoardStatus} from '../../models/board-status';
 import {
-  CreateTaskData,
-  CreateTaskResult,
-  DeleteTaskData,
-  DeleteTaskResult,
-  Task,
-  UpdateTaskData,
-  UpdateTaskResult
-} from '../../models/task';
+  BoardTask,
+  BoardTaskCreateData,
+  BoardTaskCreateResult,
+  BoardTaskDeleteData,
+  BoardTaskDeleteResult,
+  BoardTaskUpdateData,
+  BoardTaskUpdateResult,
+} from '../../models/board-task';
+import {BoardTaskSubtask} from '../../models/board-task-subtask';
+import {InMemoryError} from '../../models/in-memory-error';
+import {getDocId} from '../../utils/create-doc-id';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {User} from '../auth/user.model';
-import {BoardsServiceTypes} from './boards-service.types';
-import {defaultBoards, defaultUser} from './data';
+import {User} from '../auth/models/user';
+import {UserBoard} from '../auth/models/user-board';
+import {BoardsServiceAbstract} from './boards-service.abstract';
+import {defaultInMemoryBoards, defaultInMemoryUsers, InMemoryStore} from './data';
 
 @Injectable({
   providedIn: 'root'
 })
-export class InMemoryBoardsService extends BoardsServiceTypes {
+export class InMemoryBoardsService extends BoardsServiceAbstract {
 
-  private _store$ = new BehaviorSubject<{ [key in string]: Board }>(cloneDeep(defaultBoards));
-  private _user$ = new BehaviorSubject<User>(cloneDeep(defaultUser));
-  override user$ = this._user$.pipe(getProtectedRxjsPipe());
+  private _emptyInMemoryStore: InMemoryStore = {
+    boards: {},
+    users: {}
+  }
+  private _userId = '0';
+  private _inMemoryStore$ = new BehaviorSubject<InMemoryStore>(this._emptyInMemoryStore);
 
-  override board$ = this.boardId$.pipe(
+  override user$ = this._inMemoryStore$.pipe(
+    getProtectedRxjsPipe(),
+    map((inMemoryStore) => {
+
+      if (!inMemoryStore) {
+        return null;
+      }
+
+      const inMemoryUser = inMemoryStore.users[this._userId];
+
+      if (!inMemoryUser) {
+        return null;
+      }
+
+      const user: User = {
+        id: inMemoryUser.id,
+        disabled: inMemoryUser.disabled,
+        boardsIds: inMemoryUser.boardsIds,
+        darkMode: inMemoryUser.darkMode
+      };
+
+      return user;
+    }),
+    tap(() => this.resetSelectingUser()),
+    getProtectedRxjsPipe()
+  );
+
+  override userBoards$ = combineLatest([
+    this._inMemoryStore$.pipe(getProtectedRxjsPipe()),
+    this.user$
+  ]).pipe(
+    map(([inMemoryStore, user]) => {
+
+      if (!inMemoryStore || !user) {
+        return null;
+      }
+
+      return inMemoryStore.users[this._userId].boardsIds.map((boardId) => {
+        return inMemoryStore.users[this._userId].userBoards[boardId];
+      });
+    }),
+    tap(() => this.resetSelectingUserBoards()),
+    getProtectedRxjsPipe()
+  );
+
+  private _board$ = this.boardId$.pipe(
     getProtectedRxjsPipe(),
     switchMap((boardId) => {
 
       if (!boardId) {
-        this.resetSelectingOfBoard();
         return of(null);
       }
 
-      return this._store$.pipe(
+      return this._inMemoryStore$.pipe(
         getProtectedRxjsPipe(),
-        map((store) => {
-          this.resetSelectingOfBoard();
-          return store[boardId] || null;
+        map((inMemoryStore) => {
+          return inMemoryStore.boards[boardId];
         })
       );
-    })
+    }),
+    getProtectedRxjsPipe()
+  );
+
+  override board$ = this._board$.pipe(
+    getProtectedRxjsPipe(),
+    map((inMemoryBoard) => {
+
+      if (!inMemoryBoard) {
+        return null;
+      }
+
+      const board: Board = {
+        id: inMemoryBoard.id,
+        name: inMemoryBoard.name,
+        boardStatusesIds: inMemoryBoard.boardStatusesIds,
+        boardTasksIds: inMemoryBoard.boardTasksIds
+      };
+
+      return board;
+    }),
+    tap(() => this.resetSelectingBoard()),
+    getProtectedRxjsPipe()
+  );
+
+  override boardStatuses$ = this._board$.pipe(
+    getProtectedRxjsPipe(),
+    map((inMemoryBoard) => {
+      return inMemoryBoard?.boardStatuses || null;
+    }),
+    tap(() => this.resetSelectingBoardStatuses()),
+    getProtectedRxjsPipe()
+  );
+
+  override boardTasks$ = this._board$.pipe(
+    getProtectedRxjsPipe(),
+    map((inMemoryBoard) => {
+
+      const inMemoryBoardTasks = inMemoryBoard?.boardTasks;
+
+      if (!inMemoryBoardTasks) {
+        return null;
+      }
+
+      const boardTasks: { [key in string]: BoardTask } = {};
+
+      for (const inMemoryBoardTaskId of Object.getOwnPropertyNames(inMemoryBoardTasks)) {
+
+        const inMemoryBoardTask = inMemoryBoardTasks[inMemoryBoardTaskId];
+
+        const boardTask: BoardTask = {
+          id: inMemoryBoardTask.id,
+          title: inMemoryBoardTask.title,
+          description: inMemoryBoardTask.description,
+          boardTaskSubtasksIds: inMemoryBoardTask.boardTaskSubtasksIds,
+          boardStatusId: inMemoryBoardTask.boardStatusId,
+          completedBoardTaskSubtasks: inMemoryBoardTask.completedBoardTaskSubtasks
+        };
+
+        Object.assign(boardTasks, {[boardTask.id]: {boardTask}});
+      }
+
+      return boardTasks;
+    }),
+    tap(() => this.resetSelectingBoardTasks()),
+    getProtectedRxjsPipe()
   );
 
   constructor() {
     super();
   }
 
-  createBoard(data: CreateBoardData): Observable<CreateBoardResult> {
+  private _InMemoryStoreRequest = this._inMemoryStore$.pipe(getProtectedRxjsPipe());
 
-    const boards = cloneDeep(this._store$.value);
-    let maxId = -Infinity;
-
-    for (const [id] of Object.entries(boards)) {
-      if (+id > maxId) {
-        maxId = +id;
-      }
-    }
-
-    if (maxId === -Infinity) {
-      maxId = 0;
-    }
-
-    const boardId = (maxId + 1) + '';
-
-    const statuses = data.statusesNames.map((statusName, index) => {
-
-      const status: Status = {
-        id: (+index + 1) + '',
-        name: statusName,
-        tasksIdsSequence: [] as string[],
-        tasks: {} as { [key in string]: Task }
-      };
-
-      return status;
-    });
-
-    const statusesIdsSequence = statuses.map((status) => status.id);
-
-    const board: Board = {
-      id: boardId,
-      name: data.name,
-      statusesIdsSequence,
-      statuses: statuses.reduce((acc, status) => {
-        acc[status.id] = status;
-        return acc;
-      }, {} as { [key in string]: Status })
-    };
-
-    const user = cloneDeep({
-      ...defaultUser,
-      ...this.user$
-    });
-    user.boards = [...user.boards || [], {name: data.name, id: boardId}];
-    this._user$.next(user);
-
-    boards[boardId] = board;
-    this._store$.next(boards);
-
-    const createBoardResult: CreateBoardResult = {
-      id: boardId,
-      boards: user.boards,
-      statusesIdsSequence
-    };
-
-    return of(cloneDeep(createBoardResult));
+  private _Request<RequestResult>(request: (inMemoryStore: InMemoryStore) => {
+    data: RequestResult;
+    inMemoryStore: InMemoryStore;
+  }) {
+    return this._InMemoryStoreRequest.pipe(
+      take(1),
+      map(request),
+      catchError((error) => {
+        InMemoryError.testRequirement(!(error instanceof InMemoryError));
+        throw error;
+      }),
+      tap((result) => this._inMemoryStore$.next(result.inMemoryStore)),
+      map((result) => result.data),
+    );
   }
 
-  deleteBoard(data: DeleteBoardData): Observable<DeleteBoardResult> {
+  boardCreate(data: BoardCreateData) {
 
-    const boards = cloneDeep(this._store$.value);
+    return this._Request<BoardCreateResult>((inMemoryStore) => {
 
-    const board = boards[data.id];
+      const user = inMemoryStore.users[this._userId];
 
-    if (!board) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }))
-    }
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(user.boardsIds.length >= 5, {
+        code: 'resource-exhausted',
+        message: 'User can have 5 boards'
+      });
 
-    delete boards[data.id];
+      const boardId = getDocId(Object.getOwnPropertyNames(inMemoryStore.boards).toSet());
 
-    this._store$.next(boards);
+      const boardStatusesIdsSet = new Set<string>();
+      const boardStatuses = {};
 
-    const user = cloneDeep({
-      ...defaultUser,
-      ...this.user$
-    });
-    user.boards = (user.boards || []).filter((board) => board.id !== data.id);
-    this._user$.next(user);
-
-    return of(undefined);
-  }
-
-  updateBoard(data: UpdateBoardData): Observable<UpdateBoardResult> {
-
-    const boards = cloneDeep(this._store$.value);
-
-    const board = boards[data.id];
-
-    if (!board) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
-
-    board.name = data.name;
-
-    const user = cloneDeep({
-      ...defaultUser,
-      ...this.user$
-    });
-    user.boards.find((board) => board.id === data.id)!.name = data.name;
-
-    this._user$.next(user);
-
-    const statusesIdsSequence = board.statusesIdsSequence;
-    const newStatusesIds = data.statuses.filter((s) => s.id).map((s) => s.id) as string[];
-
-    const statusesIdsToRemove = statusesIdsSequence.toSet().difference(newStatusesIds.toSet());
-
-    for (const statusIdRemove of statusesIdsToRemove) {
-      if (Object.prototype.hasOwnProperty.call(board.statuses, statusIdRemove)) {
-        delete board.statuses[statusIdRemove];
-      }
-    }
-
-    let maxStatusId = -Infinity;
-
-    for (const [id] of Object.entries(board.statuses)) {
-      if (+id > maxStatusId) {
-        maxStatusId = +id;
-      }
-    }
-
-    if (maxStatusId === -Infinity) {
-      maxStatusId = 0;
-    }
-
-    const newStatusesIdsSequence: string[] = [];
-
-    for (let i = 0; i < data.statuses.length; ++i) {
-
-      const statusId = data.statuses[i].id;
-
-      if (!statusId || statusId && !Object.prototype.hasOwnProperty.call(board.statuses, statusId)) {
-
-        const id = ++maxStatusId + '';
-
-        const status: Status = {
-          id,
-          name: data.statuses[i].name,
-          tasksIdsSequence: [] as string[],
-          tasks: {} as { [key in string]: Task }
+      for (const boardStatusName of data.boardStatusesNames) {
+        const boardStatusId = getDocId(boardStatusesIdsSet);
+        const boardStatus: BoardStatus = {
+          id: boardStatusId,
+          name: boardStatusName,
+          boardTasksIds: [] as string[]
         };
-
-        board.statuses[status.id] = status;
-        newStatusesIdsSequence.push(status.id);
+        Object.assign(boardStatuses, {[boardStatusId]: boardStatus});
+        boardStatusesIdsSet.add(boardStatusId);
       }
 
-      if (statusId && Object.prototype.hasOwnProperty.call(board.statuses, statusId)) {
-        board.statuses[statusId].name = data.statuses[i].name;
-        newStatusesIdsSequence.push(statusId);
-      }
-    }
+      const boardStatusesIds = boardStatusesIdsSet.toArray();
 
-    board.statusesIdsSequence = newStatusesIdsSequence;
+      const board: Board = {
+        id: boardId,
+        name: data.name,
+        boardStatusesIds,
+        boardTasksIds: [] as string[]
+      };
+      Object.assign(inMemoryStore.boards, {[boardId]: board});
 
-    this._store$.next(boards);
+      user.boardsIds.push(boardId);
 
-    const updateBoardResult: UpdateBoardResult = {
-      id: board.id,
-      statusesIdsSequence: newStatusesIdsSequence
-    };
+      const userBoard: UserBoard = {
+        id: boardId,
+        name: data.name
+      };
+      Object.assign(user.userBoards, {[boardId]: userBoard});
 
-    return of(updateBoardResult);
-  }
+      const createBoardResult: BoardCreateResult = {
+        id: boardId,
+        boardsIds: [...user.boardsIds],
+        boardStatusesIds
+      };
 
-  createTask(data: CreateTaskData): Observable<CreateTaskResult> {
-
-    const boards = cloneDeep(this._store$.value);
-
-    const board = boards[data.boardId];
-
-    if (!board) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
-
-    const status = board.statuses[data.boardStatusId];
-
-    if (!status) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
-
-    let maxTaskId = -Infinity;
-
-    for (const id of status.tasksIdsSequence) {
-      if (+id > maxTaskId) {
-        maxTaskId = +id;
-      }
-    }
-
-    if (maxTaskId === -Infinity) {
-      maxTaskId = 0;
-    }
-
-    const taskId = ++maxTaskId + '';
-
-    const tasksIdsSequence = [taskId, ...board.statuses[data.boardStatusId].tasksIdsSequence];
-    board.statuses[data.boardStatusId].tasksIdsSequence = tasksIdsSequence;
-
-    const subtasksIdsSequence: string[] = [];
-    const subtasks: { [key in string]: Subtask } = {};
-
-    data.subtasks.forEach((subtask, index) => {
-
-      const id = index + '';
-
-      subtasksIdsSequence.push(id);
-
-      subtasks[id] = {
-        id,
-        title: subtask,
-        isCompleted: false
+      return {
+        data: createBoardResult,
+        inMemoryStore
       };
     });
-
-    const task: Task = {
-      id: taskId,
-      title: data.title,
-      description: data.description,
-      subtasks,
-      subtasksIdsSequence
-    };
-
-    board.statuses[data.boardStatusId].tasks[taskId] = task;
-
-    this._store$.next(boards);
-
-    const createTaskResult: CreateTaskResult = {
-      id: taskId,
-      tasksIdsSequence,
-      subtasksIdsSequence
-    }
-
-    return of(createTaskResult);
   }
 
-  deleteTask(data: DeleteTaskData): Observable<DeleteTaskResult> {
+  boardDelete(data: BoardDeleteData) {
 
-    const boards = cloneDeep(this._store$.value);
+    return this._Request<BoardDeleteResult>((inMemoryStore) => {
 
-    const board = boards[data.boardId];
+      const user = inMemoryStore.users[this._userId];
 
-    if (!board) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
+        code: 'permission-denied',
+        message: 'User do not have access to this board'
+      });
 
-    const status = board.statuses[data.boardStatusId];
+      delete inMemoryStore.boards[data.id];
 
-    if (!status) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      user.boardsIds = user.boardsIds.toSet().difference([data.id].toSet()).toArray();
+      delete user.userBoards[data.id];
 
-    const task = status.tasks[data.id];
+      this._inMemoryStore$.next(inMemoryStore);
 
-    if (!task) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
-
-    delete status.tasks[data.id];
-    status.tasksIdsSequence = status.tasksIdsSequence.filter((id) => id !== data.id);
-
-    this._store$.next(boards);
-
-    return of(undefined);
+      return {
+        data: {
+          boardsIds: [...user.boardsIds]
+        },
+        inMemoryStore
+      };
+    });
   }
 
-  updateTask(data: UpdateTaskData): Observable<UpdateTaskResult> {
+  boardUpdate(data: BoardUpdateData) {
 
-    const boards = cloneDeep(this._store$.value);
+    return this._Request<BoardUpdateResult>((inMemoryStore) => {
 
-    const board = boards[data.boardId];
+      const user = inMemoryStore.users[this._userId];
 
-    if (!board) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
+        code: 'permission-denied',
+        message: 'User do not have access to this board'
+      });
 
-    const status = board.statuses[data.status.id];
+      const board = inMemoryStore.boards[data.id];
 
-    if (!status) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      board.name = data.name;
 
-    const task = status.tasks[data.id];
+      const currentBoardStatusesIds = board.boardStatusesIds || [];
+      const newBordStatusesIdsFromData = data.boardStatuses.filter((s) => s.id).map((s) => s.id) as string[];
 
-    if (!task) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      const boardStatusesIdsToRemove = currentBoardStatusesIds.toSet().difference(newBordStatusesIdsFromData.toSet()).toArray();
 
-    task.title = data.title;
-    task.description = data.description;
+      const boardStatusesTasksIdsToRemove = [];
+      const tasksIdsToRemove = [];
 
-    const subtasksIdsSequence = task.subtasksIdsSequence || [];
-    const newSubtasksIds = data.subtasks.filter((s) => s.id).map((s) => s.id) as string[];
-
-    const subtasksIdsToRemove = subtasksIdsSequence.toSet().difference(newSubtasksIds.toSet());
-
-    for (const subtaskIdToRemove of subtasksIdsToRemove) {
-      if (Object.prototype.hasOwnProperty.call(task.subtasks, subtaskIdToRemove)) {
-        delete task.subtasks[subtaskIdToRemove];
+      for (const boardStatusesIdToRemove of boardStatusesIdsToRemove) {
+        const boardStatusToRemove = board.boardStatuses[boardStatusesIdToRemove];
+        boardStatusesTasksIdsToRemove.push(...boardStatusToRemove.boardTasksIds);
+        delete board.boardStatuses[boardStatusesIdToRemove];
       }
-    }
 
-    let maxSubtaskId = -Infinity;
-
-    for (const id of task.subtasksIdsSequence) {
-      if (+id > maxSubtaskId) {
-        maxSubtaskId = +id;
+      for (const boardStatusesTaskIdToRemove of boardStatusesTasksIdsToRemove) {
+        delete board.boardTasks[boardStatusesTaskIdToRemove];
+        tasksIdsToRemove.push(boardStatusesTaskIdToRemove);
       }
-    }
 
-    if (maxSubtaskId === -Infinity) {
-      maxSubtaskId = 0;
-    }
+      const boardStatusesIdsSet = new Set<string>(currentBoardStatusesIds.toSet().difference(boardStatusesIdsToRemove.toSet()));
 
-    const newSubtasksIdsSequence: string[] = [];
+      const boardStatuses = board.boardStatuses;
 
-    for (let i = 0; i < data.subtasks.length; ++i) {
+      for (let i = 0; i < data.boardStatuses.length; ++i) {
 
-      const subtaskId = data.subtasks[i].id;
+        let boardStatusId = data.boardStatuses[i].id;
+        let boardStatus = board.boardStatuses[boardStatusId || ''];
 
-      if (!subtaskId || subtaskId && !Object.prototype.hasOwnProperty.call(task.subtasks, subtaskId)) {
+        if (!boardStatus) {
+          boardStatusId = getDocId(boardStatusesIdsSet);
+          boardStatusesIdsSet.add(boardStatusId);
+          boardStatus = {
+            id: boardStatusId,
+            name: data.boardStatuses[i].name,
+            boardTasksIds: []
+          };
+          Object.assign(boardStatuses, {[boardStatusId]: boardStatus});
+        } else {
+          boardStatus.name = data.boardStatuses[i].name;
+        }
+      }
 
-        const id = ++maxSubtaskId + '';
+      const boardStatusesIds = boardStatusesIdsSet.toArray();
 
-        const subtask: Subtask = {
-          id,
-          title: data.subtasks[i].title,
+      InMemoryError.testRequirement(boardStatusesIds.length > 5, {
+        code: 'resource-exhausted',
+        message: 'Board can have 5 statuses'
+      })
+
+      const boardTasksIds = board.boardTasksIds.toSet().difference(tasksIdsToRemove.toSet()).toArray();
+      board.boardTasksIds = boardTasksIds;
+
+      user.userBoards[data.id].name = data.name;
+
+      return {
+        data: {
+          boardStatusesIds,
+          boardTasksIds
+        },
+        inMemoryStore
+      };
+    });
+  }
+
+  boardTaskCreate(data: BoardTaskCreateData) {
+
+    return this._Request<BoardTaskCreateResult>((inMemoryStore) => {
+
+      const user = inMemoryStore.users[this._userId];
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
+        code: 'permission-denied',
+        message: 'User do not have access to this board'
+      });
+
+      const board = inMemoryStore.boards[data.boardId];
+
+      InMemoryError.testRequirement(board.boardTasksIds.length >= 20, {
+        code: 'resource-exhausted',
+        message: 'Selected board can have 20 tasks'
+      });
+
+      InMemoryError.testRequirement(!board.boardStatusesIds.toSet().has(data.boardStatusId), {
+        code: 'not-found',
+        message: 'Selected status do not exist'
+      });
+
+      InMemoryError.testRequirement(data.boardTaskSubtasksTitles.length > 5, {
+        code: 'resource-exhausted',
+        message: 'BoardTask can have 5 subtasks'
+      });
+
+      const boardStatus = board.boardStatuses[data.boardStatusId];
+
+      const boardTaskId = getDocId(Object.getOwnPropertyNames(board.boardTasks).toSet());
+
+      const boardTasksIds = [boardTaskId, ...board.boardTasksIds];
+      const boardStatusBoardTasksIds = [boardTaskId, ...boardStatus.boardTasksIds];
+
+      board.boardTasksIds = boardTasksIds;
+      boardStatus.boardTasksIds = boardStatusBoardTasksIds;
+
+      const boardTaskSubtasksIdsSet = new Set<string>();
+      const boardTaskSubtasks = {};
+
+      for (const boardTaskSubtaskTitle of data.boardTaskSubtasksTitles) {
+        const boardTaskSubtaskId = getDocId(boardTaskSubtasksIdsSet);
+        const boardTaskSubtask: BoardTaskSubtask = {
+          id: boardTaskSubtaskId,
+          title: boardTaskSubtaskTitle,
           isCompleted: false
         };
-
-        task.subtasks[subtask.id] = subtask;
-        newSubtasksIdsSequence.push(subtask.id);
+        Object.assign(boardTaskSubtasks, {[boardTaskSubtaskId]: boardTaskSubtask});
+        boardTaskSubtasksIdsSet.add(boardTaskSubtaskId);
       }
 
-      if (subtaskId && Object.prototype.hasOwnProperty.call(task.subtasks, subtaskId)) {
-        newSubtasksIdsSequence.push(subtaskId);
+      const boardTaskSubtasksIds = boardTaskSubtasksIdsSet.toArray();
+
+      const boardTask: BoardTask = {
+        id: boardTaskId,
+        title: data.title,
+        description: data.description,
+        boardTaskSubtasksIds,
+        boardStatusId: data.boardStatusId,
+        completedBoardTaskSubtasks: 0
+      };
+
+      Object.assign(board.boardTasks, {[boardTaskId]: boardTask});
+
+      return {
+        data: {
+          id: boardTaskId,
+          boardTasksIds,
+          boardStatusBoardTasksIds,
+          boardTaskSubtasksIds
+        },
+        inMemoryStore
       }
-    }
-
-    task.subtasksIdsSequence = newSubtasksIdsSequence;
-
-    if (data.status.newId) {
-
-      if (!board.statuses[data.status.newId]) {
-        return throwError(() => ({
-          code: 'not-found',
-          message: 'Not found'
-        }));
-      }
-
-      if (data.status.id === data.status.newId) {
-        return throwError(() => ({
-          code: 'invalid-argument',
-          message: 'Invalid argument'
-        }));
-      }
-
-      delete board.statuses[data.status.id].tasks[task.id];
-      board.statuses[data.status.id].tasksIdsSequence = board.statuses[data.status.id].tasksIdsSequence.filter((taskId) => task.id !== taskId);
-
-      board.statuses[data.status.newId].tasks[task.id] = task;
-      board.statuses[data.status.newId].tasksIdsSequence.unshift(task.id);
-    }
-
-    this._store$.next(boards);
-
-    const updateTaskResult: UpdateTaskResult = {
-      id: data.id,
-      subtasksIdsSequence: newSubtasksIdsSequence
-    }
-
-    return of(updateTaskResult);
+    });
   }
 
-  toggleSubtaskCompletion(boardId: string, statusId: string, taskId: string, subtaskId: string, isCompleted: boolean) {
+  boardTaskDelete(data: BoardTaskDeleteData): Observable<BoardTaskDeleteResult> {
 
-    const boards = cloneDeep(this._store$.value);
+    return this._Request<BoardTaskDeleteResult>((inMemoryStore) => {
 
-    if (!boards) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      const user = inMemoryStore.users[this._userId];
 
-    const board = boards[boardId];
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
+        code: 'permission-denied',
+        message: 'User do not have access to this board'
+      });
 
-    if (!board) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      const board = inMemoryStore.boards[data.boardId];
 
-    const status = board.statuses[statusId];
+      const boardTask = board.boardTasks[data.id];
+      InMemoryError.testRequirement(!boardTask, {code: 'not-found', message: 'Board task not found'});
 
-    if (!status) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      const boardStatus = board.boardStatuses[boardTask.boardStatusId];
 
-    const task = status.tasks[taskId];
+      boardStatus.boardTasksIds = boardStatus.boardTasksIds.toSet().difference([board.id].toSet()).toArray();
 
-    if (!task) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      delete board.boardTasks[boardTask.id];
 
-    const subtask = task.subtasks[subtaskId];
+      board.boardTasksIds = board.boardTasksIds.toSet().difference([boardTask.id].toSet()).toArray();
 
-    if (!subtask) {
-      return throwError(() => ({
-        code: 'not-found',
-        message: 'Not found'
-      }));
-    }
+      return {
+        data: undefined,
+        inMemoryStore
+      };
+    });
+  }
 
-    subtask.isCompleted = isCompleted;
+  boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult> {
 
-    this._store$.next(boards);
+    return this._Request((inMemoryStore) => {
 
-    return of(undefined);
+      const user = inMemoryStore.users[this._userId];
+
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
+        code: 'permission-denied',
+        message: 'User do not have access to this board'
+      });
+
+      const board = inMemoryStore.boards[data.boardId];
+
+      const boardStatus = board.boardStatuses[data.boardStatus.id];
+      InMemoryError.testRequirement(!boardStatus, {code: 'not-found', message: 'Board status not found'});
+
+      const boardTask = board.boardTasks[data.id];
+      InMemoryError.testRequirement(!boardTask, {code: 'not-found', message: 'Board task not found'});
+
+      let newBoardStatus;
+
+      if (data.boardStatus.newId) {
+        boardStatus.boardTasksIds = boardStatus.boardTasksIds.filter((boardTaskId) => boardTaskId !== data.id)
+        newBoardStatus = board.boardStatuses[data.boardStatus.newId];
+        InMemoryError.testRequirement(!newBoardStatus, {code: 'not-found', message: 'New status not found'});
+        newBoardStatus.boardTasksIds = [data.id, ...newBoardStatus.boardTasksIds];
+      }
+
+      const currentBoardTaskSubtasksIds = boardTask.boardTaskSubtasksIds || [];
+      const newBoardTaskSubtasksIds = data.boardTaskSubtasks.filter((s) => s.id).map((s) => s.id) as string[];
+
+      const boardTaskSubtasksIdsToRemove = currentBoardTaskSubtasksIds.toSet().difference(newBoardTaskSubtasksIds.toSet()).toArray();
+
+      for (const boardTaskSubtaskIdToRemove of boardTaskSubtasksIdsToRemove) {
+        delete boardTask.boardTaskSubtasks[boardTaskSubtaskIdToRemove];
+      }
+
+      const boardTaskSubtasksIdsSet = new Set<string>(currentBoardTaskSubtasksIds.toSet().difference(boardTaskSubtasksIdsToRemove.toSet()));
+
+      for (let i = 0; i < data.boardTaskSubtasks.length; ++i) {
+
+        let boardTaskSubtaskId = data.boardTaskSubtasks[i].id;
+        let boardTaskSubtask = boardTask.boardTaskSubtasks[boardTaskSubtaskId || ''];
+
+        if (!boardTaskSubtask) {
+          boardTaskSubtaskId = getDocId(boardTaskSubtasksIdsSet);
+          boardTaskSubtasksIdsSet.add(boardTaskSubtaskId);
+          boardTaskSubtask = {
+            id: boardTaskSubtaskId,
+            title: data.boardTaskSubtasks[i].title,
+            isCompleted: false
+          };
+          Object.assign(boardTaskSubtask, {[boardTaskSubtaskId]: boardTaskSubtask});
+        } else {
+          boardTaskSubtask.title = data.boardTaskSubtasks[i].title;
+        }
+      }
+
+      const boardTaskSubtasksIds = boardTaskSubtasksIdsSet.toArray();
+      InMemoryError.testRequirement(boardTaskSubtasksIds.length > 5, {
+        code: 'resource-exhausted',
+        message: 'Board task can have 5 subtasks'
+      });
+
+      boardTask.title = data.title;
+      boardTask.description = data.description;
+      boardTask.boardTaskSubtasksIds = boardTaskSubtasksIds;
+      boardTask.boardStatusId = newBoardStatus ? newBoardStatus.id : boardTask.boardStatusId
+
+      return {
+        data: {
+          boardTaskSubtasksIds
+        },
+        inMemoryStore
+      }
+    });
+  }
+
+  updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string) {
+
+    return this._Request((inMemoryStore) => {
+
+      const user = inMemoryStore.users[this._userId];
+
+      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
+      InMemoryError.testRequirement(!user.boardsIds.find((_boardId) => _boardId === boardId), {
+        code: 'permission-denied',
+        message: 'User do not have access to this board'
+      });
+
+      const board = inMemoryStore.boards[boardId];
+
+      const boardTask = board.boardTasks[boardTaskId];
+      InMemoryError.testRequirement(!boardTask, {code: 'not-found', message: 'Board task not found'});
+
+      const boardTaskSubtask = boardTask.boardTaskSubtasks[boardTaskSubtaskId];
+      InMemoryError.testRequirement(!boardTaskSubtask, {code: 'not-found', message: 'Board task subtask not found'});
+
+      const isCompletedBefore = boardTaskSubtask.isCompleted;
+      const isCompletedAfter = isCompleted;
+
+      boardTaskSubtask.isCompleted = isCompleted;
+
+      if (isCompletedBefore !== isCompletedAfter) {
+        boardTask.completedBoardTaskSubtasks = boardTask.completedBoardTaskSubtasks + (isCompletedAfter ? 1 : -1)
+      }
+
+      return {
+        data: undefined,
+        inMemoryStore
+      }
+    });
   }
 
   loadDefault() {
-    this._user$.next(cloneDeep(defaultUser));
-    this._store$.next(cloneDeep(defaultBoards));
+    this._inMemoryStore$.next({
+      users: defaultInMemoryUsers,
+      boards: defaultInMemoryBoards,
+    });
   }
 }

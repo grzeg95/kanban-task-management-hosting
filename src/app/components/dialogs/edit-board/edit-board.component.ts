@@ -1,10 +1,10 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, ViewEncapsulation} from '@angular/core';
+import {Component, effect, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {UpdateBoardData} from '../../../models/board';
+import {BoardUpdateData} from '../../../models/board';
 import {BoardsService} from '../../../services/boards/boards.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
@@ -36,13 +36,14 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class EditBoardComponent {
 
-  protected board$ = this._boardsService.board$;
+  protected board = toSignal(this._boardsService.board$);
+  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
   protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
 
   protected form = new FormGroup({
     id: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required]),
-    statuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
+    boardStatuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
   });
 
   constructor(
@@ -51,12 +52,21 @@ export class EditBoardComponent {
     private readonly _snackBarService: SnackBarService
   ) {
 
-    this.board$.pipe(
-      takeUntilDestroyed()
-    ).subscribe((board) => {
+    effect(() => {
 
-      if (!board) {
+      const board = this.board();
+      const boardStatuses = this.boardStatuses();
+
+      if (
+        (!board && board !== undefined) ||
+        (!boardStatuses && boardStatuses !== undefined)
+      ) {
+        this._snackBarService.open(`This board want's found`, 3000);
         this.close();
+        return;
+      }
+
+      if (!board || !boardStatuses) {
         return;
       }
 
@@ -66,18 +76,18 @@ export class EditBoardComponent {
         this.form.controls.name.setValue(board.name);
       }
 
-      if (!this.form.controls.statuses.dirty) {
-        this.form.controls.statuses.reset();
+      if (!this.form.controls.boardStatuses.dirty) {
+        this.form.controls.boardStatuses.reset();
 
-        board.statusesIdsSequence.map((statusId) => board.statuses[statusId]).forEach((status) => {
-          this.addNewStatusName(status.id, status.name);
+        board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).forEach((boardStatus) => {
+          this.addNewStatusName(boardStatus.id, boardStatus.name);
         });
       }
     });
   }
 
   addNewStatusName(id: null | string = null, name = '') {
-    this.form.controls.statuses.push(
+    this.form.controls.boardStatuses.push(
       new FormGroup({
         id: new FormControl(id),
         name: new FormControl(name, [Validators.required])
@@ -99,17 +109,17 @@ export class EditBoardComponent {
     const updateBoardData = {
       id: this.form.value.id,
       name: this.form.value.name,
-      statuses: this.form.value.statuses?.map((status) => {
+      boardStatuses: this.form.value.boardStatuses?.map((boardStatus) => {
 
-        if (!status.id) {
-          delete status.id;
+        if (!boardStatus.id) {
+          delete boardStatus.id;
         }
 
-        return status;
-      })
-    } as UpdateBoardData;
+        return boardStatus;
+      }),
+    } as BoardUpdateData;
 
-    this.abstractBoardsService()!.updateBoard(updateBoardData).pipe(
+    this.abstractBoardsService()!.boardUpdate(updateBoardData).pipe(
       catchError(() => {
         this.form.enable();
         return NEVER;

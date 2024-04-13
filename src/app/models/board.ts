@@ -1,43 +1,77 @@
-import {User, UserBoards} from '../services/auth/user.model';
-import {Status} from './status';
+import {doc, DocumentSnapshot, Firestore} from '@angular/fire/firestore';
+import {FirestoreDataConverter} from '@firebase/firestore';
+import cloneDeep from 'lodash/cloneDeep';
+import {Collections} from '../services/firebase/collections';
 
 export type BoardDoc = {
   name: string;
-  statusesIdsSequence: string[];
-  statuses: {[key in string]: Status};
+  boardStatusesIds: string[];
+  boardTasksIds: string[];
 };
 
-export type Board = {
-  id: string;
-} & BoardDoc;
+export class Board implements BoardDoc {
 
-export type CreateBoardData = {
+  constructor(
+    public id: string = '',
+    public name: string = '',
+    public boardStatusesIds: string[] = [],
+    public boardTasksIds: string[] = [],
+  ) {
+  }
+
+  private static _conventer = {
+    toFirestore: (boardDoc: BoardDoc) => cloneDeep(boardDoc),
+    fromFirestore: (snap) => {
+
+      const data = cloneDeep(snap.data()) as BoardDoc;
+
+      return new Board(
+        snap.id,
+        data.name,
+        data.boardStatusesIds,
+        data.boardTasksIds
+      );
+    }
+  } as FirestoreDataConverter<Board, BoardDoc>;
+
+  static ref(firestore: Firestore, id: string) {
+    return doc(firestore, Collections.boards, id).withConverter(Board._conventer);
+  }
+
+  static data(boardSnap: DocumentSnapshot<Board, BoardDoc>) {
+    return boardSnap.data() || new Board(boardSnap.id);
+  }
+}
+
+export type BoardCreateData = {
   name: string;
-  statusesNames: string[];
+  boardStatusesNames: string[];
 };
 
-export type CreateBoardResult = {
+export type BoardCreateResult = {
   id: string;
-  boards: UserBoards;
-  statusesIdsSequence: string[];
+  boardsIds: string[];
+  boardStatusesIds: string[];
 };
 
-export type UpdateBoardData = {
+export type BoardDeleteData = {
+  id: string;
+};
+
+export type BoardDeleteResult = {
+  boardsIds: string[];
+};
+
+export type BoardUpdateData = {
   id: string;
   name: string;
-  statuses: {
+  boardStatuses: {
     id?: string;
     name: string;
   }[];
 };
 
-export type UpdateBoardResult = {
-  id: string;
-  statusesIdsSequence: string[];
+export type BoardUpdateResult = {
+  boardStatusesIds: string[];
+  boardTasksIds: string[];
 };
-
-export type DeleteBoardData = {
-  id: string;
-};
-
-export type DeleteBoardResult = undefined;

@@ -1,10 +1,10 @@
 import {Injectable, NgZone} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from '@angular/fire/auth';
-import cloneDeep from 'lodash/cloneDeep';
+import {Firestore} from '@angular/fire/firestore';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
-import {FirestoreService} from '../firebase/firestore.service';
-import {User} from './user.model';
+import {docOnSnapshot} from '../firebase/firestore';
+import {User, UserDoc} from './models/user';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +21,7 @@ export class AuthService {
 
   constructor(
     private readonly _auth: Auth,
-    private readonly _firestoreService: FirestoreService,
+    private readonly _firestore: Firestore,
     private readonly _ngZone: NgZone
   ) {
     this._auth.authStateReady().then(() => {
@@ -34,20 +34,12 @@ export class AuthService {
 
           if (nextFirebaseUser) {
 
-            this._userDocSnapSub = this._firestoreService.docOnSnapshot<User>(`users/${nextFirebaseUser.uid}`)
-              .pipe(
-                map((userDoc) => {
-
-                  const user: User = {
-                    boards: userDoc.data()?.boards || [],
-                    id: userDoc.id,
-                  };
-
-                  return user;
-                }),
-              ).subscribe((user) => {
-                this.user$.next(cloneDeep(user));
-              });
+            const userRef = User.ref(this._firestore, nextFirebaseUser.uid);
+            this._userDocSnapSub = docOnSnapshot<User, UserDoc>(userRef).pipe(
+              map(User.data),
+            ).subscribe((user) => {
+              this.user$.next(user);
+            });
 
           } else {
             this.user$.next(null);

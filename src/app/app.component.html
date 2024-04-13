@@ -44,12 +44,12 @@
 
 <!-- appSideBarItemsTitleTemplateRef -->
 <ng-template #appSideBarItemsTitleTemplateRef>
-  All Boards ({{boards()?.length || 0}})
+  All Boards ({{userBoards()?.length || 0}})
 </ng-template>
 
 <!-- appSideBarItemsContainerTemplateRef -->
 <ng-template #appSideBarItemsContainerTemplateRef>
-  @if (boards(); as boards) {
+  @if (userBoards(); as boards) {
     @for (board of boards; track board) {
       <button
         [tabIndex]="tabIndexSideBar()"
@@ -86,12 +86,12 @@
 
 <!-- appSideBarPhoneItemsTitleTemplateRef -->
 <ng-template #appSideBarPhoneItemsTitleTemplateRef>
-  All Boards ({{boards()?.length || 0}})
+  All Boards ({{userBoards()?.length || 0}})
 </ng-template>
 
 <!-- appSideBarPhoneItemsContainerTemplateRef -->
 <ng-template #appSideBarPhoneItemsContainerTemplateRef>
-  @if (boards(); as boards) {
+  @if (userBoards(); as boards) {
     @for (board of boards; track board) {
       <button
         class="app-root__app-side-bar-mobile__items__container__button"
@@ -147,7 +147,7 @@
 >
   <router-outlet/>
 
-  @if (boards()?.length === 0) {
+  @if (userBoards()?.length === 0) {
     <div class="app-root__boards__empty">
       <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
       <button
@@ -158,7 +158,7 @@
     </div>
   }
 
-  @if ((boards()?.length || 0) > 0 && !board()) {
+  @if ((userBoards()?.length || 0) > 0 && !board()) {
     <div class="app-root__boards__empty">
       <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
       @if (!showSideBar()) {

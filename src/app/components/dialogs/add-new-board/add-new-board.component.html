@@ -16,13 +16,13 @@
 
   <app-label>Board columns</app-label>
 
-  @for (bordName of form.controls.statusesNames.controls; track bordName; let i = $index) {
+  @for (bordName of form.controls.boardStatusesNames.controls; track bordName; let i = $index) {
     <app-form-field>
       <app-input
         [formControl]="bordName"
         placeholder="e.g. Web Design"
         [removeAble]="true"
-        (remove)="form.controls.statusesNames.removeAt(i)"
+        (remove)="form.controls.boardStatusesNames.removeAt(i)"
       />
     </app-form-field>
   }

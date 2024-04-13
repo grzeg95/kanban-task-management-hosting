@@ -38,7 +38,6 @@ export class DeleteBoardComponent {
   protected board = toSignal(this._boardsService.board$);
   protected isLoading = signal(false);
   protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
-  protected boardTitle = computed(() => this.board()?.name || '');
 
   constructor(
     private readonly _dialogRef: DialogRef<DeleteBoardComponent>,
@@ -51,6 +50,7 @@ export class DeleteBoardComponent {
       const board = this.board();
 
       if (!board && board !== undefined) {
+        this._snackBarService.open(`This board want's found`, 3000);
         this.close();
         return;
       }
@@ -60,7 +60,7 @@ export class DeleteBoardComponent {
   deleteBoard() {
 
     this.isLoading.set(true);
-    this.abstractBoardsService()!.deleteBoard({id: this.board()!.id}).pipe(
+    this.abstractBoardsService()!.boardDelete({id: this.board()!.id}).pipe(
       catchError(() => {
         this.isLoading.set(false);
         return NEVER;

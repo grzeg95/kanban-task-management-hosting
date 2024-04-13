@@ -1,38 +1,73 @@
 import {Injectable} from '@angular/core';
-import {combineLatest, filter, map, Observable, of, switchMap} from 'rxjs';
+import {DocumentReference, Firestore, limit, where} from '@angular/fire/firestore';
+import {combineLatest, filter, map, Observable, of, switchMap, tap} from 'rxjs';
 import {
   Board,
+  BoardCreateData,
+  BoardCreateResult,
+  BoardDeleteData,
+  BoardDeleteResult,
   BoardDoc,
-  CreateBoardData,
-  CreateBoardResult,
-  DeleteBoardData,
-  DeleteBoardResult,
-  UpdateBoardData,
-  UpdateBoardResult
+  BoardUpdateData,
+  BoardUpdateResult
 } from '../../models/board';
+import {BoardStatus} from '../../models/board-status';
 import {
-  CreateTaskData,
-  CreateTaskResult,
-  DeleteTaskData,
-  DeleteTaskResult,
-  UpdateTaskData,
-  UpdateTaskResult
-} from '../../models/task';
+  BoardTask,
+  BoardTaskCreateData,
+  BoardTaskCreateResult,
+  BoardTaskDeleteData,
+  BoardTaskDeleteResult,
+  BoardTaskUpdateData,
+  BoardTaskUpdateResult
+} from '../../models/board-task';
+import {BoardTaskSubtask, BoardTaskSubtaskDoc} from '../../models/board-task-subtask';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
-import {User} from '../auth/user.model';
-import {FirestoreService} from '../firebase/firestore.service';
+import {User} from '../auth/models/user';
+import {UserBoard, UserBoardDoc} from '../auth/models/user-board';
+import {collectionOnSnapshot, docOnSnapshot, updateDoc} from '../firebase/firestore';
 import {FunctionsService} from '../firebase/functions.service';
-import {BoardsServiceTypes} from './boards-service.types';
+import {BoardsServiceAbstract} from './boards-service.abstract';
 
 @Injectable({
   providedIn: 'root'
 })
-export class FirebaseBoardsService extends BoardsServiceTypes {
+export class FirebaseBoardsService extends BoardsServiceAbstract {
 
   override user$ = this._authService.user$.pipe(
     getProtectedRxjsPipe(),
-    filter((user): user is User | null => !!user)
+    filter((user): user is User | null => !!user),
+    tap(() => this.resetSelectingUser()),
+    getProtectedRxjsPipe()
+  );
+
+  override userBoards$ = this.user$.pipe(
+    switchMap((user) => {
+
+      if (!user) {
+        return of(null);
+      }
+
+      const userBoardCollectionRef = UserBoard.collectionRef(User.ref(this._firestore, user.id));
+
+      return collectionOnSnapshot(userBoardCollectionRef, limit(5)).pipe(
+        map((querySnapUserBoard) => {
+
+          const querySnapUserBoardMap = new Map<string, UserBoard>();
+
+          for (const queryDocSnapUserBoard of querySnapUserBoard.docs) {
+            querySnapUserBoardMap.set(queryDocSnapUserBoard.id, UserBoard.data(queryDocSnapUserBoard));
+          }
+
+          return user.boardsIds.map((boardId) => {
+            return querySnapUserBoardMap.get(boardId);
+          }).filter((userBoard) => !!userBoard) as UserBoard[];
+        })
+      );
+    }),
+    tap(() => this.resetSelectingUserBoards()),
+    getProtectedRxjsPipe()
   );
 
   override board$ = combineLatest([
@@ -45,60 +80,115 @@ export class FirebaseBoardsService extends BoardsServiceTypes {
         return of(null);
       }
 
-      return this._firestoreService.docOnSnapshot<BoardDoc>(`/users/${user.id}/boards/${boardId}`).pipe(
-        map((boardDocSnap) => {
+      const boardRef = Board.ref(this._firestore, boardId);
+      return docOnSnapshot(boardRef).pipe(
+        map((boardSnap) => {
 
-          if (!boardDocSnap.exists()) {
-            this.resetSelectingOfBoard();
+          if (!boardSnap.exists()) {
             return null;
           }
 
-          const board: Board = {
-            ...boardDocSnap.data()!,
-            id: boardDocSnap.id
-          };
+          return Board.data(boardSnap);
+        }),
+      );
+    }),
+    tap(() => this.resetSelectingBoard()),
+    getProtectedRxjsPipe()
+  );
 
-          this.resetSelectingOfBoard();
-          return board;
+  override boardStatuses$ = combineLatest([
+    this.board$,
+    this.user$
+  ]).pipe(
+    switchMap(([board, user]) => {
+
+      if (!board || !user) {
+        return of(null);
+      }
+
+      const boardRef = Board.ref(this._firestore, board.id);
+      const boardStatusesRef = BoardStatus.collectionRef(boardRef);
+
+      return collectionOnSnapshot(boardStatusesRef, limit(5)).pipe(
+        map((querySnapBoardStatuses) => {
+
+          const boardStatuses: {[key in string]: BoardStatus} = {};
+
+          for (const querySnapDocBoardStatus of querySnapBoardStatuses.docs) {
+            Object.assign(boardStatuses, {[querySnapDocBoardStatus.id]: BoardStatus.data(querySnapDocBoardStatus)});
+          }
+
+          return boardStatuses;
         })
       );
     }),
+    tap(() => this.resetSelectingBoardStatuses()),
+    getProtectedRxjsPipe()
+  );
+
+  override boardTasks$ = combineLatest([
+    this.board$,
+    this.user$
+  ]).pipe(
+    switchMap(([board, user]) => {
+
+      if (!board || !user) {
+        return of(null);
+      }
+
+      const boardRef = Board.ref(this._firestore, board.id);
+      const boardTasksRef = BoardTask.collectionRef(boardRef);
+
+      return collectionOnSnapshot(boardTasksRef, limit(20)).pipe(
+        map((querySnapBoardTasks) => {
+
+          const boardTasks: {[key in string]: BoardTask} = {};
+
+          for (const querySnapDocBoardTask of querySnapBoardTasks.docs) {
+            Object.assign(boardTasks, {[querySnapDocBoardTask.id]: BoardTask.data(querySnapDocBoardTask)});
+          }
+
+          return boardTasks;
+        })
+      );
+    }),
+    tap(() => this.resetSelectingBoardTasks()),
     getProtectedRxjsPipe()
   );
 
   constructor(
     private readonly _authService: AuthService,
-    private readonly _firestoreService: FirestoreService,
+    private readonly _firestore: Firestore,
     private readonly _functionsService: FunctionsService
   ) {
     super();
   }
 
-  createBoard(data: CreateBoardData): Observable<CreateBoardResult> {
-    return this._functionsService.httpsCallable<CreateBoardData, CreateBoardResult>('board-create', data);
+  boardCreate(data: BoardCreateData): Observable<BoardCreateResult> {
+    return this._functionsService.httpsCallable<BoardCreateData, BoardCreateResult>('board-create', data);
   }
 
-  deleteBoard(data: DeleteBoardData): Observable<DeleteBoardResult> {
-    return this._functionsService.httpsCallable<DeleteBoardData, DeleteBoardResult>('board-delete', data);
+  boardDelete(data: BoardDeleteData): Observable<BoardDeleteResult> {
+    return this._functionsService.httpsCallable<BoardDeleteData, BoardDeleteResult>('board-delete', data);
   }
 
-  updateBoard(data: UpdateBoardData): Observable<UpdateBoardResult> {
-    return this._functionsService.httpsCallable<UpdateBoardData, UpdateBoardResult>('board-update', data);
+  boardUpdate(data: BoardUpdateData): Observable<BoardUpdateResult> {
+    return this._functionsService.httpsCallable<BoardUpdateData, BoardUpdateResult>('board-update', data);
   }
 
-  createTask(data: CreateTaskData): Observable<CreateTaskResult> {
-    return this._functionsService.httpsCallable<CreateTaskData, CreateTaskResult>('task-create', data);
+  boardTaskCreate(data: BoardTaskCreateData): Observable<BoardTaskCreateResult> {
+    return this._functionsService.httpsCallable<BoardTaskCreateData, BoardTaskCreateResult>('board-task-create', data);
   }
 
-  deleteTask(data: DeleteTaskData): Observable<DeleteTaskResult> {
-    return this._functionsService.httpsCallable<DeleteTaskData, DeleteTaskResult>('task-delete', data);
+  boardTaskDelete(data: BoardTaskDeleteData): Observable<BoardTaskDeleteResult> {
+    return this._functionsService.httpsCallable<BoardTaskDeleteData, BoardTaskDeleteResult>('board-task-delete', data);
   }
 
-  updateTask(data: UpdateTaskData): Observable<UpdateTaskResult> {
-    return this._functionsService.httpsCallable<UpdateTaskData, UpdateTaskResult>('task-update', data);
+  boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult> {
+    return this._functionsService.httpsCallable<BoardTaskUpdateData, BoardTaskUpdateResult>('board-task-update', data);
   }
 
-  updateDoc(path: string, data: any): Observable<void> {
-    return this._firestoreService.updateDoc(path, data);
+  updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardTaskSubtaskRef: DocumentReference<BoardTaskSubtask, BoardTaskSubtaskDoc>) {
+    return updateDoc(boardTaskSubtaskRef, {isCompleted});
   }
 }
