@@ -5,7 +5,7 @@ import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskCreateData} from '../../../models/board-task';
-import {BoardsService} from '../../../services/boards/boards.service';
+import {BoardService} from '../../../services/board/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
@@ -18,7 +18,7 @@ import {LoaderComponent} from '../../loader/loader.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 
 @Component({
-  selector: 'app-view-task',
+  selector: 'app-view-board-task',
   standalone: true,
   imports: [
     InputComponent,
@@ -32,19 +32,19 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
     SelectComponent,
     LoaderComponent
   ],
-  templateUrl: './add-new-task.component.html',
-  styleUrl: './add-new-task.component.scss',
+  templateUrl: './add-new-bord-task.component.html',
+  styleUrl: './add-new-bord-task.component.scss',
   encapsulation: ViewEncapsulation.None,
   host: {
-    class: 'app-view-task'
+    class: 'app-view-board-task'
   }
 })
-export class AddNewTaskComponent {
+export class AddNewBordTaskComponent {
 
   protected statuses: PopMenuItem[] = [];
-  protected board = toSignal(this._boardsService.board$);
-  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
-  protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$)
+  protected board = toSignal(this._boardService.board$);
+  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$)
 
   protected form = new FormGroup({
     boardId: new FormControl(''),
@@ -55,8 +55,8 @@ export class AddNewTaskComponent {
   });
 
   constructor(
-    private readonly _boardsService: BoardsService,
-    private readonly _dialogRef: DialogRef<AddNewTaskComponent>,
+    private readonly _boardService: BoardService,
+    private readonly _dialogRef: DialogRef<AddNewBordTaskComponent>,
     private readonly _snackBarService: SnackBarService
   ) {
 
@@ -99,7 +99,7 @@ export class AddNewTaskComponent {
     this.form.controls.boardTaskSubtasksTitles.push(new FormControl('', [Validators.required]));
   }
 
-  createTask() {
+  boardTaskCreate() {
 
     this.form.updateValueAndValidity();
     this.form.markAllAsTouched();
@@ -108,30 +108,42 @@ export class AddNewTaskComponent {
       return;
     }
 
-    this.form.disable();
+    const abstractBoardService = this.abstractBoardService();
 
-    const createTaskData = {
-      boardId: this.form.value.boardId,
-      boardStatusId: this.form.value.boardStatusId,
-      title: this.form.value.title,
-      description: this.form.value.description,
-      boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
-    } as BoardTaskCreateData;
+    if (abstractBoardService) {
 
-    this.abstractBoardsService()!.boardTaskCreate(createTaskData).pipe(
-      catchError(() => {
-        this.form.enable();
-        return NEVER;
-      })
-    ).subscribe(() => {
-      this.close();
-      this._snackBarService.open('Task has been created', 3000);
-    });
+      const createTaskData = {
+        boardId: this.form.value.boardId,
+        boardStatusId: this.form.value.boardStatusId,
+        title: this.form.value.title,
+        description: this.form.value.description,
+        boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
+      } as BoardTaskCreateData;
+
+      this.form.disable();
+
+      abstractBoardService.boardTaskCreate(createTaskData).pipe(
+        catchError(() => {
+
+          try {
+            this.form.enable();
+          } catch {
+            /* empty */
+          }
+
+          return NEVER;
+        })
+      ).subscribe(() => {
+        this.close();
+      });
+    }
   }
 
   close() {
     try {
       this._dialogRef.close();
-    } catch {/* empty */}
+    } catch {
+      /* empty */
+    }
   }
 }

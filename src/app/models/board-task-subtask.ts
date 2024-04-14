@@ -3,7 +3,7 @@ import {FirestoreDataConverter} from '@firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {Board, BoardDoc} from './board';
-import {BoardTask} from './board-task';
+import {BoardTask, BoardTaskDoc} from './board-task';
 
 export type BoardTaskSubtaskDoc = {
   title: string;
@@ -33,8 +33,8 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     }
   } as FirestoreDataConverter<BoardTaskSubtask, BoardTaskSubtaskDoc>;
 
-  static ref(boardRef: DocumentReference<Board, BoardDoc>, id: string) {
-    return doc(boardRef, Collections.boardTasks, id).withConverter(BoardTaskSubtask._conventer);
+  static ref(boardTaskRef: DocumentReference<BoardTask, BoardTaskDoc>, id: string) {
+    return doc(boardTaskRef, Collections.boardTasks, id).withConverter(BoardTaskSubtask._conventer);
   }
 
   static refs(firestore: Firestore, boardId: string, boardTaskId: string) {

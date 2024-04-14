@@ -1,7 +1,7 @@
 @use 'styles/typography-mixins' as typography;
 @use '../dialog' as dialog;
 
-.app-delete-task {
+.app-delete-board-task {
 
   @include dialog.basic();
 

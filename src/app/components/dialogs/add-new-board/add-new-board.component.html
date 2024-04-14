@@ -31,7 +31,7 @@
     class="app-add-new-board__add-new-status-name-button"
     app-button
     appearance="secondary"
-    (click)="addNewStatusName()"
+    (click)="addNewBoardStatusName()"
     [disabled]="form.disabled"
   >+ Add New Column</button>
 
@@ -39,7 +39,7 @@
     class="app-add-new-board__add-new-board-button"
     app-button
     appearance="primary"
-    (click)="createNewBoard()"
+    (click)="boardCreate()"
     [disabled]="form.disabled"
   >
     Create New Board

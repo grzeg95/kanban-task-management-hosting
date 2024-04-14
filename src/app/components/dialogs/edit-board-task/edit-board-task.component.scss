@@ -1,15 +1,20 @@
 @use '../dialog' as dialog;
 
-.app-view-task {
+.app-edit-board-task {
 
   @include dialog.basic();
+
+  &__subtask {
+    width: 100%;
+    margin-bottom: 8px;
+  }
 
   &__add-new-subtask-button {
     width: 100%;
     margin-bottom: 24px;
   }
 
-  &__create-task-button {
+  &__update-task-button {
     width: 100%;
   }
 }

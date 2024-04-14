@@ -1,5 +1,5 @@
 import {Dialog} from '@angular/cdk/dialog';
-import {NgStyle} from '@angular/common';
+import {JsonPipe, NgStyle} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -15,20 +15,21 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {AppService} from '../../services/app.service';
-import {BoardsService} from '../../services/boards/boards.service';
+import {BoardService} from '../../services/board/board.service';
 import {LayoutService} from '../../services/layout.service';
 import {Color} from '../../utils/color';
 import {handleTabIndex} from '../../utils/handle-tabindex';
 import {ButtonComponent} from '../button/button.component';
 import {EditBoardComponent} from '../dialogs/edit-board/edit-board.component';
-import {ViewTaskComponent} from '../dialogs/view-task/view-task.component';
+import {ViewBoardTaskComponent} from '../dialogs/view-board-task/view-board-task.component';
 
 @Component({
   selector: 'app-board',
   standalone: true,
   imports: [
     NgStyle,
-    ButtonComponent
+    ButtonComponent,
+    JsonPipe
   ],
   templateUrl: './board.component.html',
   styleUrl: './board.component.scss',
@@ -50,22 +51,13 @@ export class BoardComponent implements OnDestroy {
   protected heightNav = toSignal(this._layoutService.heightNav$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
 
-  protected board = toSignal(this._boardsService.board$);
-  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
-  protected boardTasks = toSignal(this._boardsService.boardTasks$);
+  protected board = toSignal(this._boardService.board$);
+  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
+  protected boardTasks = toSignal(this._boardService.boardTasks$);
 
-  protected selectingBoard = toSignal(this._boardsService.selectingBoard$);
-  protected selectingBoardStatuses = toSignal(this._boardsService.selectingBoardStatuses$);
-  protected selectingBoardTasks = toSignal(this._boardsService.selectingBoardTasks$);
-
-  protected isBoardLoaded = computed(() => {
-
-    const selectingBoard = this.selectingBoard();
-    const selectingBoardStatuses = this.selectingBoardStatuses();
-    const selectingBoardTasks = this.selectingBoardTasks();
-
-    return !(selectingBoard || selectingBoardStatuses || selectingBoardTasks);
-  });
+  protected selectingBoard = toSignal(this._boardService.selectingBoard$);
+  protected selectingBoardStatuses = toSignal(this._boardService.selectingBoardStatuses$);
+  protected selectingBoardTasks = toSignal(this._boardService.selectingBoardTasks$);
 
   protected tabIndex = computed(() => {
 
@@ -81,7 +73,7 @@ export class BoardComponent implements OnDestroy {
 
   constructor(
     private readonly _appService: AppService,
-    private readonly _boardsService: BoardsService,
+    private readonly _boardService: BoardService,
     private readonly _activatedRoute: ActivatedRoute,
     private readonly _router: Router,
     private readonly _layoutService: LayoutService,
@@ -111,7 +103,7 @@ export class BoardComponent implements OnDestroy {
     this._activatedRoute.params.pipe(
       map((params) => params['id'])
     ).subscribe((id) => {
-      this._boardsService.boardId = id;
+      this._boardService.boardId = id;
     });
 
     effect(() => {
@@ -129,44 +121,23 @@ export class BoardComponent implements OnDestroy {
     });
   }
 
-  openTaskDialog($event: KeyboardEvent | MouseEvent, statusId: string, taskId: string) {
+  openTaskDialog($event: KeyboardEvent | MouseEvent, boardTaskId: string) {
 
     if (handleTabIndex($event)) return;
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._dialog.open(ViewTaskComponent, {
-      data: {
-        _boardsService: this._boardsService,
-        statusId,
-        taskId
-      }
-    });
+    this._boardService.boardTaskId = boardTaskId;
+    this._dialog.open(ViewBoardTaskComponent);
   }
 
-  openNewStatusDialog($event: KeyboardEvent | MouseEvent) {
+  openEditBoardDialog($event: KeyboardEvent | MouseEvent) {
 
     if (handleTabIndex($event)) return;
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._dialog.open(EditBoardComponent, {
-      data: {
-        _boardsService: this._boardsService
-      }
-    });
-  }
-
-  openEditBoardDialog($event: MouseEvent) {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    this._dialog.open(EditBoardComponent, {
-      data: {
-        _boardsService: this._boardsService
-      }
-    });
+    this._dialog.open(EditBoardComponent);
   }
 
   colorShift(progress: number): string {
@@ -174,6 +145,6 @@ export class BoardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this._boardsService.boardId = undefined;
+    this._boardService.boardId = undefined;
   }
 }

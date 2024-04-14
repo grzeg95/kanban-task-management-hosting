@@ -1,14 +1,11 @@
 import {DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
-import {Component, computed, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
+import {Component, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {Firestore, limit} from '@angular/fire/firestore';
 import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, map, NEVER} from 'rxjs';
+import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskUpdateData} from '../../../models/board-task';
-import {BoardTaskSubtask} from '../../../models/board-task-subtask';
-import {BoardsService} from '../../../services/boards/boards.service';
-import {collectionData} from '../../../services/firebase/firestore';
+import {BoardService} from '../../../services/board/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {CheckboxComponent} from '../../form/checkbox/checkbox.component';
@@ -22,7 +19,7 @@ import {LoaderComponent} from '../../loader/loader.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 
 @Component({
-  selector: 'app-edit-task',
+  selector: 'app-edit-board-task',
   standalone: true,
   imports: [
     InputComponent,
@@ -38,39 +35,22 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
     FormsModule,
     LoaderComponent
   ],
-  templateUrl: './edit-task.component.html',
-  styleUrl: './edit-task.component.scss',
+  templateUrl: './edit-board-task.component.html',
+  styleUrl: './edit-board-task.component.scss',
   encapsulation: ViewEncapsulation.None,
   host: {
-    class: 'app-edit-task'
+    class: 'app-edit-board-task'
   }
 })
-export class EditTaskComponent {
+export class EditBoardTaskComponent {
 
-  protected board = toSignal(this._boardsService.board$);
-  protected boardTasks = toSignal(this._boardsService.boardTasks$);
-  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
+  protected board = toSignal(this._boardService.board$);
+  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
-  protected boardId = '';
-  protected boardTaskId = '';
-  protected boardStatusId = '';
-  protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
-  protected boardTask = computed(() => this.boardTasks()?.[this.boardTaskId]);
-
-  protected boardTaskSubtasks = toSignal(
-    collectionData(BoardTaskSubtask.refs(this._firestore, this.boardId, this.boardTaskId), limit(5)).pipe(
-      map((boardTaskSubtasks) => {
-
-        const boardTaskSubtasksMap: { [key in string]: BoardTaskSubtask } = {};
-
-        for (const boardTaskSubtask of boardTaskSubtasks) {
-          Object.assign(boardTaskSubtasksMap, {[boardTaskSubtask.id]: boardTaskSubtask});
-        }
-
-        return boardTaskSubtasksMap;
-      })
-    )
-  );
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected boardTask = toSignal(this._boardService.boardTask$);
+  protected boardTaskSubtasks = toSignal(this._boardService.boardTaskSubtasks$);
+  protected boardStatusId = signal('');
 
   protected form = new FormGroup({
     id: new FormControl<string | null>(null, Validators.required),
@@ -82,18 +62,10 @@ export class EditTaskComponent {
   });
 
   constructor(
-    @Inject(DIALOG_DATA) readonly data: {
-      boardId: string,
-      boardTaskId: string
-    },
-    private readonly _boardsService: BoardsService,
-    private readonly _dialogRef: DialogRef<EditTaskComponent>,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _firestore: Firestore
+    private readonly _boardService: BoardService,
+    private readonly _dialogRef: DialogRef<EditBoardTaskComponent>,
+    private readonly _snackBarService: SnackBarService
   ) {
-
-    this.boardId = data.boardId;
-    this.boardTaskId = data.boardTaskId;
 
     effect(() => {
 
@@ -125,7 +97,7 @@ export class EditTaskComponent {
         return;
       }
 
-      this.boardStatusId = boardTask.boardStatusId;
+      this.boardStatusId.set(boardTask.boardStatusId);
 
       const boardTaskSubtasks = this.boardTaskSubtasks();
 
@@ -173,8 +145,7 @@ export class EditTaskComponent {
           this.addNewBoardTaskSubtask(boardTaskSubtask.id, boardTaskSubtask.title);
         });
       }
-
-    });
+    }, {allowSignalWrites: true});
   }
 
   addNewBoardTaskSubtask(id: null | string = null, title = '') {
@@ -186,7 +157,7 @@ export class EditTaskComponent {
     );
   }
 
-  updateTask() {
+  boardTaskUpdate() {
 
     this.form.updateValueAndValidity();
     this.form.markAllAsTouched();
@@ -195,43 +166,60 @@ export class EditTaskComponent {
       return;
     }
 
-    this.form.disable();
+    const abstractBoardService = this.abstractBoardService();
 
-    const formValue = this.form.value;
+    if (abstractBoardService) {
 
-    const boardTaskUpdateData = {
-      id: formValue.id,
-      boardId: formValue.boardId,
-      boardStatus: {
-        id: this.boardStatusId,
-        newId: formValue.boardStatusId
-      },
-      title: formValue.title,
-      description: formValue.description,
-      boardTaskSubtasks: formValue.boardTaskSubtasks?.map((boardTaskSubtask) => {
+      this.form.disable();
 
-        if (!boardTaskSubtask.id) {
-          delete boardTaskSubtask.id;
-        }
+      const formValue = this.form.value;
 
-        return boardTaskSubtask
-      })
-    } as BoardTaskUpdateData;
+      const boardTaskUpdateData = {
+        id: formValue.id,
+        boardId: formValue.boardId,
+        boardStatus: {
+          id: this.boardStatusId(),
+          newId: formValue.boardStatusId
+        },
+        title: formValue.title,
+        description: formValue.description,
+        boardTaskSubtasks: formValue.boardTaskSubtasks!.map((boardTaskSubtask) => {
 
-    this.form.disable();
+          if (!boardTaskSubtask.id) {
+            delete boardTaskSubtask.id;
+          }
 
-    this.abstractBoardsService()!.boardTaskUpdate(boardTaskUpdateData).pipe(
-      catchError(() => {
-        this.form.enable();
-        return NEVER;
-      })
-    ).subscribe(() => {
-      this._snackBarService.open('Task has been updated', 3000);
-      this.close();
-    });
+          return boardTaskSubtask
+        })
+      } as BoardTaskUpdateData;
+
+      if (boardTaskUpdateData.boardStatus.id === boardTaskUpdateData.boardStatus.newId) {
+        delete boardTaskUpdateData.boardStatus.newId;
+      }
+
+      abstractBoardService.boardTaskUpdate(boardTaskUpdateData).pipe(
+        catchError(() => {
+
+          try {
+            this.form.enable();
+          } catch {
+            /* empty */
+          }
+
+          return NEVER;
+        })
+      ).subscribe(() => {
+        this._snackBarService.open('Task has been updated', 3000);
+        this.close();
+      });
+    }
   }
 
   close() {
-    this._dialogRef.close();
+    try {
+      this._dialogRef.close();
+    } catch {
+      /* empty */
+    }
   }
 }

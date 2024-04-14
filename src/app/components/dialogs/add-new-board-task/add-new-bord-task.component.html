@@ -1,4 +1,4 @@
-<div class="app-view-task__title">Add New BoardTask</div>
+<div class="app-view-board-task__title">Add New Board Task</div>
 
 <form [formGroup]="form">
 
@@ -37,12 +37,12 @@
   }
 
   <button
-    class="app-view-task__add-new-subtask-button"
+    class="app-view-board-task__add-new-subtask-button"
     app-button
     appearance="secondary"
     (click)="addNewSubtask()"
     [disabled]="form.disabled"
-  >+ Add New BoardTaskSubtask
+  >+ Add New Board Task Subtask
   </button>
 
   <app-form-field>
@@ -56,13 +56,13 @@
   </app-form-field>
 
   <button
-    class="app-view-task__create-task-button"
+    class="app-view-board-task__create-task-button"
     app-button
     appearance="primary"
-    (click)="createTask()"
+    (click)="boardTaskCreate()"
     [disabled]="form.disabled"
   >
-    Create BoardTask
+    Create Board Task
     @if (form.disabled) {
       <app-loader/>
     }

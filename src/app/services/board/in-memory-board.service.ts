@@ -1,5 +1,6 @@
-import {Injectable} from '@angular/core';
+import {Inject, Injectable} from '@angular/core';
 import {BehaviorSubject, catchError, combineLatest, map, Observable, of, switchMap, take, tap} from 'rxjs';
+import {KanbanConfig} from '../../kanban-config.token';
 import {
   Board,
   BoardCreateData,
@@ -25,13 +26,14 @@ import {getDocId} from '../../utils/create-doc-id';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {User} from '../auth/models/user';
 import {UserBoard} from '../auth/models/user-board';
-import {BoardsServiceAbstract} from './boards-service.abstract';
-import {defaultInMemoryBoards, defaultInMemoryUsers, InMemoryStore} from './data';
+import {SnackBarService} from '../snack-bar.service';
+import {BoardServiceAbstract} from './board-service.abstract';
+import {defaultInMemoryBoards, defaultInMemoryUsers, InMemoryBoard, InMemoryBoardTask, InMemoryStore} from './data';
 
 @Injectable({
   providedIn: 'root'
 })
-export class InMemoryBoardsService extends BoardsServiceAbstract {
+export class InMemoryBoardService extends BoardServiceAbstract {
 
   private _emptyInMemoryStore: InMemoryStore = {
     boards: {},
@@ -40,18 +42,33 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
   private _userId = '0';
   private _inMemoryStore$ = new BehaviorSubject<InMemoryStore>(this._emptyInMemoryStore);
 
-  override user$ = this._inMemoryStore$.pipe(
+  private _inMemoryUser$ = this._inMemoryStore$.pipe(
     getProtectedRxjsPipe(),
     map((inMemoryStore) => {
 
-      if (!inMemoryStore) {
+      if (inMemoryStore === null) {
         return null;
       }
 
-      const inMemoryUser = inMemoryStore.users[this._userId];
+      if (inMemoryStore === undefined) {
+        return undefined;
+      }
 
-      if (!inMemoryUser) {
+      return inMemoryStore.users?.[this._userId];
+    }),
+    getProtectedRxjsPipe()
+  )
+
+  override user$ = this._inMemoryUser$.pipe(
+    map((inMemoryUser) => {
+
+      if (inMemoryUser === null) {
+        this.resetSelectingUser();
         return null;
+      }
+
+      if (inMemoryUser === undefined) {
+        return undefined;
       }
 
       const user: User = {
@@ -61,54 +78,65 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         darkMode: inMemoryUser.darkMode
       };
 
+      this.resetSelectingUser()
       return user;
     }),
-    tap(() => this.resetSelectingUser()),
     getProtectedRxjsPipe()
   );
 
-  override userBoards$ = combineLatest([
-    this._inMemoryStore$.pipe(getProtectedRxjsPipe()),
-    this.user$
-  ]).pipe(
-    map(([inMemoryStore, user]) => {
+  override userBoards$ = this._inMemoryUser$.pipe(
+    map((inMemoryUser) => {
 
-      if (!inMemoryStore || !user) {
+      if (inMemoryUser === null) {
+        this.resetSelectingUserBoards();
         return null;
       }
 
-      return inMemoryStore.users[this._userId].boardsIds.map((boardId) => {
-        return inMemoryStore.users[this._userId].userBoards[boardId];
+      if (inMemoryUser === undefined) {
+        return undefined;
+      }
+
+      this.resetSelectingUserBoards();
+
+      return inMemoryUser.boardsIds.map((boardId) => {
+        return inMemoryUser.userBoards[boardId];
       });
     }),
-    tap(() => this.resetSelectingUserBoards()),
     getProtectedRxjsPipe()
   );
 
-  private _board$ = this.boardId$.pipe(
+  private _inMemoryBoard$ = this.boardId$.pipe(
     getProtectedRxjsPipe(),
     switchMap((boardId) => {
 
-      if (!boardId) {
+      if (boardId === null) {
         return of(null);
+      }
+
+      if (boardId === undefined) {
+        return of(undefined);
       }
 
       return this._inMemoryStore$.pipe(
         getProtectedRxjsPipe(),
         map((inMemoryStore) => {
-          return inMemoryStore.boards[boardId];
+          return inMemoryStore.boards?.[boardId];
         })
       );
     }),
     getProtectedRxjsPipe()
   );
 
-  override board$ = this._board$.pipe(
-    getProtectedRxjsPipe(),
+  override board$ = this._inMemoryBoard$.pipe(
     map((inMemoryBoard) => {
 
-      if (!inMemoryBoard) {
+      if (inMemoryBoard === null) {
+        this.resetSelectingBoard();
         return null;
+      }
+
+      if (inMemoryBoard == undefined) {
+        return undefined;
       }
 
       const board: Board = {
@@ -118,29 +146,42 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         boardTasksIds: inMemoryBoard.boardTasksIds
       };
 
+      this.resetSelectingBoard();
       return board;
     }),
-    tap(() => this.resetSelectingBoard()),
     getProtectedRxjsPipe()
   );
 
-  override boardStatuses$ = this._board$.pipe(
-    getProtectedRxjsPipe(),
+  override boardStatuses$ = this._inMemoryBoard$.pipe(
     map((inMemoryBoard) => {
-      return inMemoryBoard?.boardStatuses || null;
+
+      if (inMemoryBoard === null) {
+        this.resetSelectingBoardStatuses();
+        return null;
+      }
+
+      if (inMemoryBoard?.boardStatuses === undefined) {
+        return undefined;
+      }
+
+      this.resetSelectingBoardStatuses();
+      return inMemoryBoard.boardStatuses;
     }),
-    tap(() => this.resetSelectingBoardStatuses()),
     getProtectedRxjsPipe()
   );
 
-  override boardTasks$ = this._board$.pipe(
-    getProtectedRxjsPipe(),
+  override boardTasks$ = this._inMemoryBoard$.pipe(
     map((inMemoryBoard) => {
 
       const inMemoryBoardTasks = inMemoryBoard?.boardTasks;
 
-      if (!inMemoryBoardTasks) {
+      if (inMemoryBoardTasks === null) {
+        this.resetSelectingBoardTasks();
         return null;
+      }
+
+      if (inMemoryBoardTasks === undefined) {
+        return undefined;
       }
 
       const boardTasks: { [key in string]: BoardTask } = {};
@@ -158,16 +199,96 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
           completedBoardTaskSubtasks: inMemoryBoardTask.completedBoardTaskSubtasks
         };
 
-        Object.assign(boardTasks, {[boardTask.id]: {boardTask}});
+        Object.assign(boardTasks, {[boardTask.id]: boardTask});
       }
 
+      this.resetSelectingBoardTasks()
       return boardTasks;
     }),
-    tap(() => this.resetSelectingBoardTasks()),
     getProtectedRxjsPipe()
   );
 
-  constructor() {
+  private _inMemoryBoardTask$ = combineLatest([
+    this._inMemoryBoard$,
+    this.boardTaskId$.pipe(getProtectedRxjsPipe())
+  ]).pipe(
+    map(([inMemoryBoard, boardTaskId]) => {
+
+      if (inMemoryBoard === undefined) {
+        return undefined;
+      }
+
+      if (inMemoryBoard === null) {
+        return null;
+      }
+
+      if (boardTaskId === undefined) {
+        return undefined;
+      }
+
+      if (boardTaskId === null) {
+        return undefined;
+      }
+
+      const inMemoryBoardTasks = inMemoryBoard.boardTasks;
+
+      if (!inMemoryBoardTasks) {
+        return null;
+      }
+
+      return inMemoryBoardTasks[boardTaskId] || null;
+    }),
+    getProtectedRxjsPipe()
+  );
+
+  override boardTask$ = this._inMemoryBoardTask$.pipe(
+    map((inMemoryBoardTask) => {
+
+      if (inMemoryBoardTask === null) {
+        this.resetSelectingBoardTask();
+        return null;
+      }
+
+      if (inMemoryBoardTask === undefined) {
+        return undefined;
+      }
+
+      const boardTask: BoardTask = {
+        id: inMemoryBoardTask.id,
+        title: inMemoryBoardTask.title,
+        description: inMemoryBoardTask.description,
+        boardTaskSubtasksIds: inMemoryBoardTask.boardTaskSubtasksIds,
+        boardStatusId: inMemoryBoardTask.boardStatusId,
+        completedBoardTaskSubtasks: inMemoryBoardTask.completedBoardTaskSubtasks
+      };
+
+      return boardTask;
+    }),
+    getProtectedRxjsPipe()
+  );
+
+  override boardTaskSubtasks$ = this._inMemoryBoardTask$.pipe(
+    map((inMemoryBoardTask) => {
+
+      if (inMemoryBoardTask === null) {
+        this.resetSelectingBoardTaskSubtasks();
+        return null;
+      }
+
+      if (inMemoryBoardTask === undefined) {
+        return undefined;
+      }
+
+      this.resetSelectingBoardTaskSubtasks();
+      return inMemoryBoardTask.boardTaskSubtasks || null;
+    }),
+    getProtectedRxjsPipe()
+  )
+
+  constructor(
+    private readonly _snackBarService: SnackBarService,
+    @Inject(KanbanConfig) private readonly _kanbanConfig: KanbanConfig
+  ) {
     super();
   }
 
@@ -180,8 +301,14 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
     return this._InMemoryStoreRequest.pipe(
       take(1),
       map(request),
-      catchError((error) => {
-        InMemoryError.testRequirement(!(error instanceof InMemoryError));
+      catchError((error: Error) => {
+
+        if (!(error instanceof InMemoryError)) {
+          error = new InMemoryError();
+        }
+
+        this._snackBarService.open(error.message, 3000);
+
         throw error;
       }),
       tap((result) => this._inMemoryStore$.next(result.inMemoryStore)),
@@ -197,9 +324,9 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
 
       InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(user.boardsIds.length >= 5, {
+      InMemoryError.testRequirement(user.boardsIds.length >= this._kanbanConfig.maxBoardUser, {
         code: 'resource-exhausted',
-        message: 'User can have 5 boards'
+        message: `User can have ${this._kanbanConfig.maxBoardUser} board`
       });
 
       const boardId = getDocId(Object.getOwnPropertyNames(inMemoryStore.boards).toSet());
@@ -220,11 +347,13 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
 
       const boardStatusesIds = boardStatusesIdsSet.toArray();
 
-      const board: Board = {
+      const board: InMemoryBoard = {
         id: boardId,
         name: data.name,
         boardStatusesIds,
-        boardTasksIds: [] as string[]
+        boardTasksIds: [] as string[],
+        boardStatuses,
+        boardTasks: {}
       };
       Object.assign(inMemoryStore.boards, {[boardId]: board});
 
@@ -246,7 +375,11 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         data: createBoardResult,
         inMemoryStore
       };
-    });
+    }).pipe(
+      tap(() => {
+        this._snackBarService.open('Board has been created', 3000);
+      })
+    );
   }
 
   boardDelete(data: BoardDeleteData) {
@@ -267,15 +400,17 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
       user.boardsIds = user.boardsIds.toSet().difference([data.id].toSet()).toArray();
       delete user.userBoards[data.id];
 
-      this._inMemoryStore$.next(inMemoryStore);
-
       return {
         data: {
           boardsIds: [...user.boardsIds]
         },
         inMemoryStore
       };
-    });
+    }).pipe(
+      tap(() => {
+        this._snackBarService.open('Board has been deleted', 3000);
+      })
+    );
   }
 
   boardUpdate(data: BoardUpdateData) {
@@ -339,13 +474,15 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
 
       const boardStatusesIds = boardStatusesIdsSet.toArray();
 
-      InMemoryError.testRequirement(boardStatusesIds.length > 5, {
+      InMemoryError.testRequirement(boardStatusesIds.length > this._kanbanConfig.maxBoardStatuses, {
         code: 'resource-exhausted',
-        message: 'Board can have 5 statuses'
+        message: `Board can have ${this._kanbanConfig.maxBoardStatuses} statuses`
       })
 
       const boardTasksIds = board.boardTasksIds.toSet().difference(tasksIdsToRemove.toSet()).toArray();
+
       board.boardTasksIds = boardTasksIds;
+      board.boardStatusesIds = boardStatusesIds;
 
       user.userBoards[data.id].name = data.name;
 
@@ -356,7 +493,11 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         },
         inMemoryStore
       };
-    });
+    }).pipe(
+      tap(() => {
+        this._snackBarService.open('Board has been updated', 3000);
+      })
+    );
   }
 
   boardTaskCreate(data: BoardTaskCreateData) {
@@ -373,19 +514,19 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
 
       const board = inMemoryStore.boards[data.boardId];
 
-      InMemoryError.testRequirement(board.boardTasksIds.length >= 20, {
+      InMemoryError.testRequirement(board.boardTasksIds.length >= this._kanbanConfig.maxBoardTasks, {
         code: 'resource-exhausted',
-        message: 'Selected board can have 20 tasks'
+        message: `Board can have ${this._kanbanConfig.maxBoardTasks} tasks`
       });
 
       InMemoryError.testRequirement(!board.boardStatusesIds.toSet().has(data.boardStatusId), {
         code: 'not-found',
-        message: 'Selected status do not exist'
+        message: 'Board status do not exist'
       });
 
-      InMemoryError.testRequirement(data.boardTaskSubtasksTitles.length > 5, {
+      InMemoryError.testRequirement(data.boardTaskSubtasksTitles.length > this._kanbanConfig.maxBoardTaskSubtasks, {
         code: 'resource-exhausted',
-        message: 'BoardTask can have 5 subtasks'
+        message: `Board task can have ${this._kanbanConfig.maxBoardTaskSubtasks} subtasks`
       });
 
       const boardStatus = board.boardStatuses[data.boardStatusId];
@@ -414,16 +555,17 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
 
       const boardTaskSubtasksIds = boardTaskSubtasksIdsSet.toArray();
 
-      const boardTask: BoardTask = {
+      const inMemoryBoardTask: InMemoryBoardTask = {
         id: boardTaskId,
         title: data.title,
         description: data.description,
         boardTaskSubtasksIds,
         boardStatusId: data.boardStatusId,
-        completedBoardTaskSubtasks: 0
+        completedBoardTaskSubtasks: 0,
+        boardTaskSubtasks
       };
 
-      Object.assign(board.boardTasks, {[boardTaskId]: boardTask});
+      Object.assign(board.boardTasks, {[boardTaskId]: inMemoryBoardTask});
 
       return {
         data: {
@@ -434,7 +576,11 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         },
         inMemoryStore
       }
-    });
+    }).pipe(
+      tap(() => {
+        this._snackBarService.open('Board task has been created', 3000);
+      })
+    );
   }
 
   boardTaskDelete(data: BoardTaskDeleteData): Observable<BoardTaskDeleteResult> {
@@ -445,7 +591,7 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
 
       InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
         code: 'permission-denied',
         message: 'User do not have access to this board'
       });
@@ -467,7 +613,11 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         data: undefined,
         inMemoryStore
       };
-    });
+    }).pipe(
+      tap(() => {
+        this._snackBarService.open('Board task has been deleted', 3000);
+      })
+    );
   }
 
   boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult> {
@@ -531,9 +681,10 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
       }
 
       const boardTaskSubtasksIds = boardTaskSubtasksIdsSet.toArray();
-      InMemoryError.testRequirement(boardTaskSubtasksIds.length > 5, {
+
+      InMemoryError.testRequirement(boardTaskSubtasksIds.length > this._kanbanConfig.maxBoardTaskSubtasks, {
         code: 'resource-exhausted',
-        message: 'Board task can have 5 subtasks'
+        message: `Board task can have ${this._kanbanConfig.maxBoardTaskSubtasks} subtasks`
       });
 
       boardTask.title = data.title;
@@ -547,7 +698,11 @@ export class InMemoryBoardsService extends BoardsServiceAbstract {
         },
         inMemoryStore
       }
-    });
+    }).pipe(
+      tap(() => {
+        this._snackBarService.open('Board task has been updated', 3000);
+      })
+    );
   }
 
   updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string) {

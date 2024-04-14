@@ -1,11 +1,11 @@
 @if (boardTask(); as boardTask) {
 
-  <div class="app-view-task__header">
-    <div class="app-view-task__header__title">{{ boardTask.title }}</div>
+  <div class="app-view-board-task__header">
+    <div class="app-view-board-task__header__title">{{ boardTask.title }}</div>
 
     <div
       tabindex="0"
-      class="app-view-task__header__menu__trigger"
+      class="app-view-board-task__header__menu__trigger"
       (click)="setShowMenuOptions($event, !showMenuOptions())"
       (keydown)="setShowMenuOptions($event, !showMenuOptions())"
     >
@@ -31,15 +31,15 @@
       (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); showMenuOptions.set(false);"
     >
       <app-pop-menu [style.min-width.px]="192">
-        <app-pop-menu-item (click)="showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit BoardTask</app-pop-menu-item>
-        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete BoardTask</app-pop-menu-item>
+        <app-pop-menu-item (click)="showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
+        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
       </app-pop-menu>
     </ng-template>
 
   </div>
 
   @if (boardTask.description) {
-    <div class="app-view-task__description">{{ boardTask.description }}</div>
+    <div class="app-view-board-task__description">{{ boardTask.description }}</div>
   }
 
   @if (boardTask.boardTaskSubtasksIds.length) {
@@ -52,11 +52,11 @@
 
         @if (boardTaskSubtasks[boardTaskSubtaskId]; as boardTaskSubtask) {
           <app-checkbox
-            class="app-view-task__subtask"
+            class="app-view-board-task__subtask"
             (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtaskId, appCheckbox.checked)"
             #appCheckbox
             [checked]="boardTaskSubtask.isCompleted"
-            [disabled]="isLoading()"
+            [disabled]="isRequesting()"
           >{{ boardTaskSubtask.title }}
           </app-checkbox>
         }
@@ -69,8 +69,8 @@
     <app-select
       [ngModel]="boardStatusId()"
       [items]="boardStatusesPopMenuItems()"
-      [disabled]="isLoading()"
-      (ngModelChange)="onBoardTaskStatusChange($event)"
+      [disabled]="isRequesting()"
+      (ngModelChange)="onBoardTaskStatusIdChange($event)"
     />
   </app-form-field>
 }

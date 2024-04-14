@@ -10,12 +10,12 @@
 @use 'app/components/snack-bar/snack-bar' as snack-bar;
 
 @use 'app/components/dialogs/add-new-board/add-new-board' as add-new-board;
-@use 'app/components/dialogs/add-new-task/add-new-task' as add-new-task;
+@use 'app/components/dialogs/add-new-board-task/add-new-board-task' as add-new-board-task;
 @use 'app/components/dialogs/delete-board/delete-board' as delete-board;
-@use 'app/components/dialogs/delete-task/delete-task' as delete-task;
+@use 'app/components/dialogs/delete-board-task/delete-board-task' as delete-board-task;
 @use 'app/components/dialogs/edit-board/edit-board' as edit-board;
-@use 'app/components/dialogs/edit-task/edit-task' as edit-task;
-@use 'app/components/dialogs/view-task/view-task' as view-task;
+@use 'app/components/dialogs/edit-board-task/edit-board-task' as edit-board-task;
+@use 'app/components/dialogs/view-board-task/view-board-task' as view-board-task;
 
 @use 'app/components/form/checkbox/checkbox' as checkbox;
 @use 'app/components/form/error/error' as error;
@@ -138,7 +138,7 @@ body {
     title-color: $white
   ));
 
-  @include add-new-task.theme((
+  @include add-new-board-task.theme((
     background: $dark-gray,
     title-color: $white
   ));
@@ -149,7 +149,7 @@ body {
     description-color: $medium-gray
   ));
 
-  @include delete-task.theme((
+  @include delete-board-task.theme((
     background: $dark-gray,
     title-color: $red,
     description-color: $medium-gray
@@ -160,12 +160,12 @@ body {
     title-color: $white
   ));
 
-  @include edit-task.theme((
+  @include edit-board-task.theme((
     background: $dark-gray,
     title-color: $white
   ));
 
-  @include view-task.theme((
+  @include view-board-task.theme((
     background: $dark-gray,
     title-color: $white,
     description-color: $medium-gray
@@ -333,7 +333,7 @@ body {
     title-color: $black
   ));
 
-  @include add-new-task.theme((
+  @include add-new-board-task.theme((
     background: $white,
     title-color: $black
   ));
@@ -344,7 +344,7 @@ body {
     description-color: $medium-gray
   ));
 
-  @include delete-task.theme((
+  @include delete-board-task.theme((
     background: $white,
     title-color: $red,
     description-color: $medium-gray
@@ -355,12 +355,12 @@ body {
     title-color: $black
   ));
 
-  @include edit-task.theme((
+  @include edit-board-task.theme((
     background: $white,
     title-color: $black
   ));
 
-  @include view-task.theme((
+  @include view-board-task.theme((
     background: $white,
     title-color: $black,
     description-color: $medium-gray

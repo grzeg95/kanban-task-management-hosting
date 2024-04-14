@@ -559,7 +559,7 @@ export const defaultInMemoryBoards: { [key in string]: InMemoryBoard } = {
     },
     boardTasks: {
       '0-0': {
-        id: '0',
+        id: '0-0',
         title: 'Launch version one',
         description: '',
         boardTaskSubtasksIds: ['0', '1'],
@@ -579,7 +579,7 @@ export const defaultInMemoryBoards: { [key in string]: InMemoryBoard } = {
         }
       },
       '0-1': {
-        id: '1',
+        id: '0-1',
         title: 'Review early feedback and plan next steps for roadmap',
         description: 'Beyond the initial launch, we\'re keeping the initial roadmap completely empty. This meeting will help us plan out our next steps based on actual customer feedback.',
         boardTaskSubtasksIds: ['0', '1', '2'],

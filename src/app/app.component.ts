@@ -4,9 +4,10 @@ import {AsyncPipe, NgStyle} from '@angular/common';
 import {Component, computed, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {Router, RouterOutlet} from '@angular/router';
+import {combineLatest, take} from 'rxjs';
 import {ButtonComponent} from './components/button/button.component';
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
-import {AddNewTaskComponent} from './components/dialogs/add-new-task/add-new-task.component';
+import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
 import {DeleteBoardComponent} from './components/dialogs/delete-board/delete-board.component';
 import {EditBoardComponent} from './components/dialogs/edit-board/edit-board.component';
 import {NavComponent} from './components/nav/nav.component';
@@ -17,9 +18,10 @@ import {
 import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {SvgDirective} from './directives/svg.directive';
 import {AppService} from './services/app.service';
-import {BoardsService} from './services/boards/boards.service';
-import {InMemoryBoardsService} from './services/boards/in-memory-boards.service';
+import {BoardService} from './services/board/board.service';
+import {InMemoryBoardService} from './services/board/in-memory-board.service';
 import {LayoutService} from './services/layout.service';
+import {getProtectedRxjsPipe} from './utils/get-protected.rxjs-pipe';
 import {handleTabIndex} from './utils/handle-tabindex';
 
 @Component({
@@ -74,16 +76,16 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
-  protected userBoards = toSignal(this._boardsService.userBoards$);
-  protected board = toSignal(this._boardsService.board$);
-  protected boardId = toSignal(this._boardsService.boardId$);
+  protected userBoards = toSignal(this._boardService.userBoards$);
+  protected board = toSignal(this._boardService.board$);
+  protected boardId = toSignal(this._boardService.boardId$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
   protected moveRouterOutletForSideBar = toSignal(this._appService.moveForSideBarState$);
   protected heightNav = toSignal(this._layoutService.heightNav$);
   protected showSideBar = toSignal(this._appService.showSideBar$);
-  protected storeType = toSignal(this._boardsService.storeType$);
-  protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
-  protected selectingBoard = toSignal(this._boardsService.selectingBoard$);
+  protected storeType = toSignal(this._boardService.storeType$);
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected selectingBoard = toSignal(this._boardService.selectingBoard$);
 
   protected navTitle = computed(() => {
 
@@ -92,7 +94,7 @@ export class AppComponent {
     const selectingBoard = this.selectingBoard();
 
     if (!userBoards) {
-      return 'Loading boards...';
+      return 'Loading board...';
     }
 
     if (selectingBoard) {
@@ -124,11 +126,19 @@ export class AppComponent {
 
   constructor(
     private readonly _appService: AppService,
-    private readonly _boardsService: BoardsService,
+    private readonly _boardService: BoardService,
     private readonly _layoutService: LayoutService,
     private readonly _dialog: Dialog,
     private readonly _router: Router
   ) {
+
+    this._boardService.abstractBoardService$.pipe(
+      take(1)
+    ).subscribe((abstractBoardService) => {
+      if (abstractBoardService instanceof InMemoryBoardService) {
+        abstractBoardService.loadDefault();
+      }
+    });
   }
 
   openAddBoardDialog($event: MouseEvent) {
@@ -138,7 +148,7 @@ export class AppComponent {
 
     this._dialog.open(AddNewBoardComponent, {
       data: {
-        _boardsService: this._boardsService
+        _boardService: this._boardService
       }
     });
   }
@@ -150,7 +160,7 @@ export class AppComponent {
 
     this._dialog.open(EditBoardComponent, {
       data: {
-        _boardsService: this._boardsService
+        _boardService: this._boardService
       }
     });
   }
@@ -162,7 +172,7 @@ export class AppComponent {
 
     this._dialog.open(DeleteBoardComponent, {
       data: {
-        _boardsService: this._boardsService
+        _boardService: this._boardService
       }
     });
   }
@@ -172,9 +182,9 @@ export class AppComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._dialog.open(AddNewTaskComponent, {
+    this._dialog.open(AddNewBordTaskComponent, {
       data: {
-        _boardsService: this._boardsService
+        _boardService: this._boardService
       }
     });
   }
@@ -203,6 +213,6 @@ export class AppComponent {
   }
 
   restoreDefault() {
-    (this.abstractBoardsService() as InMemoryBoardsService)?.loadDefault();
+    (this.abstractBoardService() as InMemoryBoardService)?.loadDefault();
   }
 }

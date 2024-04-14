@@ -1,12 +1,11 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, DestroyRef, effect, ViewEncapsulation} from '@angular/core';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {Component, effect, ViewEncapsulation} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardCreateData} from '../../../models/board';
-import {BoardsService} from '../../../services/boards/boards.service';
-import {SnackBarService} from '../../../services/snack-bar.service';
+import {BoardService} from '../../../services/board/board.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
@@ -36,9 +35,9 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class AddNewBoardComponent {
 
-  protected user = toSignal(this._boardsService.user$);
-  protected storeType = toSignal(this._boardsService.storeType$);
-  protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
+  protected user = toSignal(this._boardService.user$);
+  protected storeType = toSignal(this._boardService.storeType$);
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
 
   protected form = new FormGroup({
     name: new FormControl('', [Validators.required]),
@@ -47,8 +46,7 @@ export class AddNewBoardComponent {
 
   constructor(
     private readonly _dialogRef: DialogRef<AddNewBoardComponent>,
-    private readonly _boardsService: BoardsService,
-    private readonly _snackBarService: SnackBarService
+    private readonly _boardService: BoardService
   ) {
 
     effect(() => {
@@ -61,14 +59,14 @@ export class AddNewBoardComponent {
       }
     });
 
-    this.addNewStatusName();
+    this.addNewBoardStatusName();
   }
 
-  addNewStatusName() {
+  addNewBoardStatusName() {
     this.form.controls.boardStatusesNames.push(new FormControl('', [Validators.required]));
   }
 
-  createNewBoard() {
+  boardCreate() {
 
     this.form.updateValueAndValidity();
     this.form.markAllAsTouched();
@@ -77,27 +75,39 @@ export class AddNewBoardComponent {
       return;
     }
 
-    this.form.disable();
+    const abstractBoardService = this.abstractBoardService();
 
-    const createBoardData = {
-      name: this.form.value.name,
-      boardStatusesNames: this.form.value.boardStatusesNames,
-    } as BoardCreateData;
+    if (abstractBoardService) {
 
-    this.abstractBoardsService()!.boardCreate(createBoardData).pipe(
-      catchError(() => {
-        this.form.enable();
-        return NEVER;
-      })
-    ).subscribe(() => {
-      this.close();
-      this._snackBarService.open('Board has been created', 3000);
-    });
+      this.form.disable();
+
+      const createBoardData = {
+        name: this.form.value.name,
+        boardStatusesNames: this.form.value.boardStatusesNames,
+      } as BoardCreateData;
+
+      abstractBoardService.boardCreate(createBoardData).pipe(
+        catchError(() => {
+
+          try {
+            this.form.enable();
+          } catch {
+            /* empty */
+          }
+
+          return NEVER;
+        })
+      ).subscribe(() => {
+        this.close();
+      });
+    }
   }
 
   close() {
     try {
       this._dialogRef.close();
-    } catch {/* empty */}
+    } catch {
+      /* empty */
+    }
   }
 }

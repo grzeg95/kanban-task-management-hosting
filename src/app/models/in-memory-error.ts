@@ -12,7 +12,7 @@ export type InMemoryErrorAbstractConstructor = {
   details?: string
 };
 
-export class InMemoryError {
+export class InMemoryError extends Error {
 
   private static InMemoryErrorCodeMap = new Map<InMemoryErrorCode, string>([
     ['invalid-argument', 'Invalid argument'],
@@ -24,10 +24,11 @@ export class InMemoryError {
   ]);
 
   constructor(
-    private code: InMemoryErrorCode,
-    private message?: string,
+    private code: InMemoryErrorCode = 'internal',
+    message?: string,
     private details?: string
   ) {
+    super(message);
   }
 
   toJSON() {
@@ -41,7 +42,7 @@ export class InMemoryError {
   static testRequirement(failed: boolean, error?: InMemoryErrorAbstractConstructor) {
     if (failed) {
       throw new InMemoryError(
-        error?.code || 'internal',
+        error?.code,
         error?.message,
         error?.details
       )

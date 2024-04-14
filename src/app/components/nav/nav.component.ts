@@ -7,7 +7,7 @@ import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
 import {AuthService} from '../../services/auth/auth.service';
-import {BoardsService} from '../../services/boards/boards.service';
+import {BoardService} from '../../services/board/board.service';
 import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
@@ -79,14 +79,14 @@ export class NavComponent {
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
   protected moveBrandingForSideBarState = toSignal(this._appService.moveForSideBarState$);
   protected showSideBar = toSignal(this._appService.showSideBar$);
-  protected storeType = toSignal(this._boardsService.storeType$)
+  protected storeType = toSignal(this._boardService.storeType$)
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _authService: AuthService,
     private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
-    private readonly _boardsService: BoardsService,
+    private readonly _boardService: BoardService,
     private readonly _router: Router
   ) {
   }

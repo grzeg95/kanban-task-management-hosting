@@ -14,7 +14,7 @@ import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
 
 @Component({
-  selector: 'app-delete-board',
+  selector: 'app-delete-board-task',
   standalone: true,
   imports: [
     InputComponent,
@@ -26,42 +26,56 @@ import {LoaderComponent} from '../../loader/loader.component';
     ErrorComponent,
     LoaderComponent
   ],
-  templateUrl: './delete-board.component.html',
-  styleUrl: './delete-board.component.scss',
+  templateUrl: './delete-board-task.component.html',
+  styleUrl: './delete-board-task.component.scss',
   encapsulation: ViewEncapsulation.None,
   host: {
-    class: 'app-delete-board'
+    class: 'app-delete-board-task'
   }
 })
-export class DeleteBoardComponent {
+export class DeleteBoardTaskComponent {
 
   protected isRequesting = signal(false);
   protected board = toSignal(this._boardService.board$);
+  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected boardTask = toSignal(this._boardService.boardTask$);
 
   constructor(
-    private readonly _dialogRef: DialogRef<DeleteBoardComponent>,
     private readonly _boardService: BoardService,
+    private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>,
     private readonly _snackBarService: SnackBarService
   ) {
 
     effect(() => {
 
       const board = this.board();
+      const boardTask = this.boardTask();
 
       if (!board && board !== undefined) {
         this._snackBarService.open(`This board want's found`, 3000);
         this.close();
         return;
       }
+
+      if (board === undefined) {
+        return;
+      }
+
+      if (!boardTask && boardTask !== undefined) {
+        this._snackBarService.open(`This board task want's found`, 3000);
+        this.close();
+        return;
+      }
     });
   }
 
-  boardDelete() {
+  boardTaskDelete() {
 
     const board = this.board();
+    const boardTask = this.boardTask();
 
-    if (!board) {
+    if (!board || !boardTask) {
       return;
     }
 
@@ -71,7 +85,10 @@ export class DeleteBoardComponent {
 
       this.isRequesting.set(true);
 
-      abstractBoardService.boardDelete({id: board.id}).pipe(
+      abstractBoardService.boardTaskDelete({
+        id: boardTask.id,
+        boardId: board.id
+      }).pipe(
         catchError(() => {
 
           try {
@@ -84,7 +101,7 @@ export class DeleteBoardComponent {
         })
       ).subscribe(() => {
         this.close();
-      });
+      })
     }
   }
 

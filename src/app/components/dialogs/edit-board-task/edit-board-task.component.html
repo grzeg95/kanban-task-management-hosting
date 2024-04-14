@@ -1,4 +1,4 @@
-<div class="app-edit-task__title">Edit BoardTask</div>
+<div class="app-edit-board-task__title">Edit Board Task</div>
 
 <form [formGroup]="form">
 
@@ -37,12 +37,12 @@
   }
 
   <button
-    class="app-edit-task__add-new-subtask-button"
+    class="app-edit-board-task__add-new-subtask-button"
     app-button
     appearance="secondary"
     (click)="addNewBoardTaskSubtask()"
     [disabled]="form.disabled"
-  >+ Add New BoardTaskSubtask
+  >+ Add New Board Task Subtask
   </button>
 
   <app-form-field>
@@ -56,10 +56,10 @@
   </app-form-field>
 
   <button
-    class="app-edit-task__update-task-button"
+    class="app-edit-board-task__update-task-button"
     app-button
     appearance="primary"
-    (click)="updateTask()"
+    (click)="boardTaskUpdate()"
     [disabled]="form.disabled"
   >
     Save Changes

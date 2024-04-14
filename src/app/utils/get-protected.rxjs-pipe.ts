@@ -11,8 +11,7 @@ export const getProtectedRxjsPipe = <T>(): OperatorFunction<T, T> => {
         complete: () => observer.complete()
       });
     }).pipe(
-      distinctUntilChanged((p, c) => isEqual(p, c)),
-      shareReplay()
+      distinctUntilChanged((p, c) => isEqual(p, c))
     );
   };
 }

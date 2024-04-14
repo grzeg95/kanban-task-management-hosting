@@ -1,11 +1,11 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, ViewEncapsulation} from '@angular/core';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardUpdateData} from '../../../models/board';
-import {BoardsService} from '../../../services/boards/boards.service';
+import {BoardService} from '../../../services/board/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
@@ -36,9 +36,9 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class EditBoardComponent {
 
-  protected board = toSignal(this._boardsService.board$);
-  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
-  protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
+  protected board = toSignal(this._boardService.board$);
+  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
 
   protected form = new FormGroup({
     id: new FormControl('', [Validators.required]),
@@ -47,7 +47,7 @@ export class EditBoardComponent {
   });
 
   constructor(
-    private readonly _boardsService: BoardsService,
+    private readonly _boardService: BoardService,
     private readonly _dialogRef: DialogRef<EditBoardComponent>,
     private readonly _snackBarService: SnackBarService
   ) {
@@ -95,7 +95,7 @@ export class EditBoardComponent {
     );
   }
 
-  updateBoard() {
+  boardUpdate() {
 
     this.form.updateValueAndValidity();
     this.form.markAllAsTouched();
@@ -104,33 +104,47 @@ export class EditBoardComponent {
       return;
     }
 
-    this.form.disable();
+    const abstractBoardService = this.abstractBoardService();
 
-    const updateBoardData = {
-      id: this.form.value.id,
-      name: this.form.value.name,
-      boardStatuses: this.form.value.boardStatuses?.map((boardStatus) => {
+    if (abstractBoardService) {
 
-        if (!boardStatus.id) {
-          delete boardStatus.id;
-        }
+      this.form.disable();
 
-        return boardStatus;
-      }),
-    } as BoardUpdateData;
+      const updateBoardData = {
+        id: this.form.value.id,
+        name: this.form.value.name,
+        boardStatuses: this.form.value.boardStatuses?.map((boardStatus) => {
 
-    this.abstractBoardsService()!.boardUpdate(updateBoardData).pipe(
-      catchError(() => {
-        this.form.enable();
-        return NEVER;
-      })
-    ).subscribe(() => {
-      this.close();
-      this._snackBarService.open('Board has been updated', 3000);
-    });
+          if (!boardStatus.id) {
+            delete boardStatus.id;
+          }
+
+          return boardStatus;
+        }),
+      } as BoardUpdateData;
+
+      abstractBoardService.boardUpdate(updateBoardData).pipe(
+        catchError(() => {
+
+          try {
+            this.form.enable();
+          } catch {
+            /* empty */
+          }
+
+          return NEVER;
+        })
+      ).subscribe(() => {
+        this.close();
+      });
+    }
   }
 
   close() {
-    this._dialogRef.close();
+    try {
+      this._dialogRef.close();
+    } catch {
+      /* empty */
+    }
   }
 }

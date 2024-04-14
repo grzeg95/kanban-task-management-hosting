@@ -8,11 +8,11 @@
   class="app-delete-board__delete-board-button"
   app-button
   appearance="warn"
-  (click)="deleteBoard()"
-  [disabled]="isLoading()"
+  (click)="boardDelete()"
+  [disabled]="isRequesting()"
 >
   Delete
-  @if (isLoading()) {
+  @if (isRequesting()) {
     <app-loader/>
   }
 </button>
@@ -22,5 +22,5 @@
   app-button
   appearance="secondary"
   (click)="close()"
-  [disabled]="isLoading()"
+  [disabled]="isRequesting()"
 >Cancel</button>

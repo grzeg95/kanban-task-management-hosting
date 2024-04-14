@@ -1,17 +1,14 @@
-import {Dialog, DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
+import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {Component, computed, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
+import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {Firestore, limit} from '@angular/fire/firestore';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import cloneDeep from 'lodash/cloneDeep';
-import {catchError, map, NEVER} from 'rxjs';
+import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
-import {BoardTaskSubtask} from '../../../models/board-task-subtask';
-import {BoardsService} from '../../../services/boards/boards.service';
-import {InMemoryBoardsService} from '../../../services/boards/in-memory-boards.service';
-import {collectionData} from '../../../services/firebase/firestore';
+import {Board} from '../../../models/board';
+import {BoardTaskUpdateData} from '../../../models/board-task';
+import {BoardService} from '../../../services/board/board.service';
+import {InMemoryBoardService} from '../../../services/board/in-memory-board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
 import {ButtonComponent} from '../../button/button.component';
@@ -25,11 +22,11 @@ import {TextareaComponent} from '../../form/textarea/textarea.component';
 import {PopMenuItemComponent} from '../../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
-import {DeleteTaskComponent} from '../delete-task/delete-task.component';
-import {EditTaskComponent} from '../edit-task/edit-task.component';
+import {DeleteBoardTaskComponent} from '../delete-board-task/delete-board-task.component';
+import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.component';
 
 @Component({
-  selector: 'app-view-task',
+  selector: 'app-view-board-task',
   standalone: true,
   imports: [
     InputComponent,
@@ -48,56 +45,31 @@ import {EditTaskComponent} from '../edit-task/edit-task.component';
     PopMenuItemComponent,
     CdkOverlayOrigin
   ],
-  templateUrl: './view-task.component.html',
-  styleUrl: './view-task.component.scss',
+  templateUrl: './view-board-task.component.html',
+  styleUrl: './view-board-task.component.scss',
   encapsulation: ViewEncapsulation.None,
   host: {
-    class: 'app-view-task'
+    class: 'app-view-board-task'
   }
 })
-export class ViewTaskComponent {
+export class ViewBoardTaskComponent {
 
-  protected isLoading = signal(false);
-  protected board = toSignal(this._boardsService.board$);
-  protected boardTasks = toSignal(this._boardsService.boardTasks$);
-  protected boardStatuses = toSignal(this._boardsService.boardStatuses$);
+  protected isRequesting = signal(false);
+  protected board = toSignal(this._boardService.board$);
+  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
-  protected boardId = '';
-  protected boardTaskId = '';
   protected boardStatusId = signal('');
   protected showMenuOptions = signal(false);
-  protected abstractBoardsService = toSignal(this._boardsService.abstractBoardsService$);
-  protected boardTask = computed(() => this.boardTasks()?.[this.boardTaskId]);
-
-  protected boardTaskSubtasks = toSignal(
-    collectionData(BoardTaskSubtask.refs(this._firestore, this.boardId, this.boardTaskId), limit(5)).pipe(
-      map((boardTaskSubtasks) => {
-
-        const boardTaskSubtasksMap: { [key in string]: BoardTaskSubtask } = {};
-
-        for (const boardTaskSubtask of boardTaskSubtasks) {
-          Object.assign(boardTaskSubtasksMap, {[boardTaskSubtask.id]: boardTaskSubtask});
-        }
-
-        return boardTaskSubtasksMap;
-      })
-    )
-  );
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected boardTask = toSignal(this._boardService.boardTask$);
+  protected boardTaskSubtasks = toSignal(this._boardService.boardTaskSubtasks$);
 
   constructor(
-    @Inject(DIALOG_DATA) readonly data: {
-      boardId: string
-      boardTaskId: string
-    },
-    private readonly _boardsService: BoardsService,
-    private readonly _dialogRef: DialogRef<ViewTaskComponent>,
+    private readonly _boardService: BoardService,
+    private readonly _dialogRef: DialogRef<ViewBoardTaskComponent>,
     private readonly _dialog: Dialog,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _firestore: Firestore
+    private readonly _snackBarService: SnackBarService
   ) {
-
-    this.boardId = data.boardId;
-    this.boardTaskId = data.boardTaskId;
 
     effect(() => {
 
@@ -149,7 +121,7 @@ export class ViewTaskComponent {
       if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
         this.boardStatusId.set(boardStatusesPopMenuItems[0].value);
       }
-    });
+    }, {allowSignalWrites: true});
   }
 
   updateBoardTaskSubtaskIsCompleted($event: MouseEvent, boardTaskSubtaskId: string, checked: boolean) {
@@ -157,10 +129,21 @@ export class ViewTaskComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    (this.abstractBoardsService() as InMemoryBoardsService).updateBoardTaskSubtaskIsCompleted(checked, this.boardId, this.boardTaskId, boardTaskSubtaskId).subscribe();
+    const board = this.board();
+    const boardTask = this.boardTask();
+
+    if (!board || !boardTask) {
+      return
+    }
+
+    const abstractBoardService = this.abstractBoardService();
+
+    if (abstractBoardService) {
+      abstractBoardService.updateBoardTaskSubtaskIsCompleted(checked, board.id, boardTask.id, boardTaskSubtaskId).subscribe();
+    }
   }
 
-  onBoardTaskStatusChange(newBoardStatusId: string) {
+  onBoardTaskStatusIdChange(newBoardStatusId: string) {
 
     const board = this.board();
     const boardTask = this.boardTask();
@@ -191,16 +174,33 @@ export class ViewTaskComponent {
       }))
     };
 
-    this.isLoading.set(true);
-    this.abstractBoardsService()!.boardTaskUpdate(updateTaskData).pipe(
-      catchError(() => {
-        this.isLoading.set(false);
-        return NEVER;
-      })
-    ).subscribe(() => {
-      this.isLoading.set(false);
-      this.boardStatusId.set(newBoardStatusId);
-    });
+    const abstractBoardService = this.abstractBoardService();
+
+    if (abstractBoardService) {
+
+      this.isRequesting.set(true);
+
+      abstractBoardService.boardTaskUpdate(updateTaskData).pipe(
+        catchError(() => {
+
+          try {
+            this.isRequesting.set(false);
+          } catch {
+            /* empty */
+          }
+
+          return NEVER;
+        })
+      ).subscribe(() => {
+
+        try {
+          this.isRequesting.set(false);
+          this.boardStatusId.set(newBoardStatusId);
+        } catch {
+          /* empty */
+        }
+      });
+    }
   }
 
   openBoardTaskEditDialog($event: KeyboardEvent | MouseEvent) {
@@ -209,15 +209,14 @@ export class ViewTaskComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._dialog.open(EditTaskComponent, {
-      data: {
-        _boardsService: this._boardsService,
-        boardId: this.boardId,
-        boardTaskId: this.boardTaskId
-      }
-    });
+    const boardTask = this.boardTask();
 
-    this.close();
+    if (boardTask) {
+      this._boardService.boardTaskId = boardTask.id;
+      this._dialog.open(EditBoardTaskComponent);
+
+      this.close();
+    }
   }
 
   openBoardTaskDeleteDialog($event: MouseEvent) {
@@ -225,14 +224,14 @@ export class ViewTaskComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._dialog.open(DeleteTaskComponent, {
-      data: {
-        _boardsService: this._boardsService,
-        boardTaskId: this.boardTaskId
-      }
-    });
+    const boardTask = this.boardTask();
 
-    this.close();
+    if (boardTask) {
+      this._boardService.boardTaskId = boardTask.id;
+      this._dialog.open(DeleteBoardTaskComponent);
+
+      this.close();
+    }
   }
 
   setShowMenuOptions($event: KeyboardEvent | MouseEvent, showMenuOptions: boolean) {
@@ -251,6 +250,10 @@ export class ViewTaskComponent {
   }
 
   close() {
-    this._dialogRef.close();
+    try {
+      this._dialogRef.close();
+    } catch {
+      /* empty */
+    }
   }
 }
