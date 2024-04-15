@@ -3,7 +3,7 @@ import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUs
 import {Firestore} from '@angular/fire/firestore';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
-import {docOnSnapshot} from '../firebase/firestore';
+import {docSnapshots} from '../firebase/firestore';
 import {User, UserDoc} from './models/user';
 
 @Injectable({
@@ -35,7 +35,7 @@ export class AuthService {
           if (nextFirebaseUser) {
 
             const userRef = User.ref(this._firestore, nextFirebaseUser.uid);
-            this._userDocSnapSub = docOnSnapshot<User, UserDoc>(userRef).pipe(
+            this._userDocSnapSub = docSnapshots<User, UserDoc>(userRef).pipe(
               map(User.data),
             ).subscribe((user) => {
               this.user$.next(user);

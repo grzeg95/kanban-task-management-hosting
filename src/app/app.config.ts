@@ -105,7 +105,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: KanbanConfig,
       useValue: {
-        maxBoardUser: 5,
+        maxUserBoards: 5,
         maxBoardStatuses: 5,
         maxBoardTasks: 20,
         maxBoardTaskSubtasks: 10

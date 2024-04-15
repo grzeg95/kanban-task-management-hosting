@@ -22,7 +22,6 @@ import {
 } from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {InMemoryError} from '../../models/in-memory-error';
-import {getDocId} from '../../utils/create-doc-id';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {User} from '../auth/models/user';
 import {UserBoard} from '../auth/models/user-board';
@@ -35,40 +34,23 @@ import {defaultInMemoryBoards, defaultInMemoryUsers, InMemoryBoard, InMemoryBoar
 })
 export class InMemoryBoardService extends BoardServiceAbstract {
 
-  private _emptyInMemoryStore: InMemoryStore = {
-    boards: {},
-    users: {}
-  }
+  private _emptyInMemoryStore: InMemoryStore = {};
   private _userId = '0';
   private _inMemoryStore$ = new BehaviorSubject<InMemoryStore>(this._emptyInMemoryStore);
 
   private _inMemoryUser$ = this._inMemoryStore$.pipe(
     getProtectedRxjsPipe(),
     map((inMemoryStore) => {
-
-      if (inMemoryStore === null) {
-        return null;
-      }
-
-      if (inMemoryStore === undefined) {
-        return undefined;
-      }
-
-      return inMemoryStore.users?.[this._userId];
+      return inMemoryStore.users?.[this._userId] || null;
     }),
     getProtectedRxjsPipe()
-  )
+  );
 
   override user$ = this._inMemoryUser$.pipe(
     map((inMemoryUser) => {
 
       if (inMemoryUser === null) {
-        this.resetSelectingUser();
         return null;
-      }
-
-      if (inMemoryUser === undefined) {
-        return undefined;
       }
 
       const user: User = {
@@ -78,7 +60,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         darkMode: inMemoryUser.darkMode
       };
 
-      this.resetSelectingUser()
       return user;
     }),
     getProtectedRxjsPipe()
@@ -88,15 +69,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     map((inMemoryUser) => {
 
       if (inMemoryUser === null) {
-        this.resetSelectingUserBoards();
         return null;
       }
-
-      if (inMemoryUser === undefined) {
-        return undefined;
-      }
-
-      this.resetSelectingUserBoards();
 
       return inMemoryUser.boardsIds.map((boardId) => {
         return inMemoryUser.userBoards[boardId];
@@ -120,7 +94,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       return this._inMemoryStore$.pipe(
         getProtectedRxjsPipe(),
         map((inMemoryStore) => {
-          return inMemoryStore.boards?.[boardId];
+          return inMemoryStore.boards?.[boardId] || null;
         })
       );
     }),
@@ -131,7 +105,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     map((inMemoryBoard) => {
 
       if (inMemoryBoard === null) {
-        this.resetSelectingBoard();
         return null;
       }
 
@@ -146,7 +119,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         boardTasksIds: inMemoryBoard.boardTasksIds
       };
 
-      this.resetSelectingBoard();
       return board;
     }),
     getProtectedRxjsPipe()
@@ -156,16 +128,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     map((inMemoryBoard) => {
 
       if (inMemoryBoard === null) {
-        this.resetSelectingBoardStatuses();
         return null;
       }
 
-      if (inMemoryBoard?.boardStatuses === undefined) {
-        return undefined;
-      }
-
-      this.resetSelectingBoardStatuses();
-      return inMemoryBoard.boardStatuses;
+      return inMemoryBoard?.boardStatuses || {};
     }),
     getProtectedRxjsPipe()
   );
@@ -176,7 +142,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const inMemoryBoardTasks = inMemoryBoard?.boardTasks;
 
       if (inMemoryBoardTasks === null) {
-        this.resetSelectingBoardTasks();
         return null;
       }
 
@@ -202,7 +167,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         Object.assign(boardTasks, {[boardTask.id]: boardTask});
       }
 
-      this.resetSelectingBoardTasks()
       return boardTasks;
     }),
     getProtectedRxjsPipe()
@@ -214,20 +178,12 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   ]).pipe(
     map(([inMemoryBoard, boardTaskId]) => {
 
-      if (inMemoryBoard === undefined) {
+      if (inMemoryBoard === undefined || boardTaskId === undefined) {
         return undefined;
       }
 
-      if (inMemoryBoard === null) {
+      if (inMemoryBoard === null || boardTaskId === null) {
         return null;
-      }
-
-      if (boardTaskId === undefined) {
-        return undefined;
-      }
-
-      if (boardTaskId === null) {
-        return undefined;
       }
 
       const inMemoryBoardTasks = inMemoryBoard.boardTasks;
@@ -245,7 +201,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     map((inMemoryBoardTask) => {
 
       if (inMemoryBoardTask === null) {
-        this.resetSelectingBoardTask();
         return null;
       }
 
@@ -271,7 +226,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     map((inMemoryBoardTask) => {
 
       if (inMemoryBoardTask === null) {
-        this.resetSelectingBoardTaskSubtasks();
         return null;
       }
 
@@ -279,11 +233,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return undefined;
       }
 
-      this.resetSelectingBoardTaskSubtasks();
       return inMemoryBoardTask.boardTaskSubtasks || null;
     }),
     getProtectedRxjsPipe()
-  )
+  );
 
   constructor(
     private readonly _snackBarService: SnackBarService,
@@ -320,13 +273,16 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     return this._Request<BoardCreateResult>((inMemoryStore) => {
 
-      const user = inMemoryStore.users[this._userId];
+      if (!inMemoryStore.users) {
+        inMemoryStore.users = {};
+      }
 
+      const user = inMemoryStore.users[this._userId] || null;
       InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(user.boardsIds.length >= this._kanbanConfig.maxBoardUser, {
+      InMemoryError.testRequirement(user.boardsIds.length >= this._kanbanConfig.maxUserBoards, {
         code: 'resource-exhausted',
-        message: `User can have ${this._kanbanConfig.maxBoardUser} board`
+        message: `User can have ${this._kanbanConfig.maxUserBoards} board`
       });
 
       const boardId = getDocId(Object.getOwnPropertyNames(inMemoryStore.boards).toSet());
@@ -346,6 +302,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       }
 
       const boardStatusesIds = boardStatusesIdsSet.toArray();
+
+      if (!inMemoryStore.users) {
+        inMemoryStore.users = {};
+      }
 
       const board: InMemoryBoard = {
         id: boardId,

@@ -610,6 +610,6 @@ export const defaultInMemoryBoards: { [key in string]: InMemoryBoard } = {
 };
 
 export type InMemoryStore = {
-  users: { [key in string]: InMemoryUser },
-  boards: { [key in string]: InMemoryBoard }
+  users?: { [key in string]: InMemoryUser },
+  boards?: { [key in string]: InMemoryBoard }
 }

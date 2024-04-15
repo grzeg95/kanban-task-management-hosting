@@ -55,9 +55,9 @@ export class BoardComponent implements OnDestroy {
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected boardTasks = toSignal(this._boardService.boardTasks$);
 
-  protected selectingBoard = toSignal(this._boardService.selectingBoard$);
-  protected selectingBoardStatuses = toSignal(this._boardService.selectingBoardStatuses$);
-  protected selectingBoardTasks = toSignal(this._boardService.selectingBoardTasks$);
+  protected loadingBoard = toSignal(this._boardService.loadingBoard$);
+  protected loadingBoardStatuses = toSignal(this._boardService.loadingBoardStatuses$);
+  protected loadingBoardTasks = toSignal(this._boardService.loadingBoardTasks$);
 
   protected tabIndex = computed(() => {
 
@@ -84,11 +84,11 @@ export class BoardComponent implements OnDestroy {
 
     effect(() => {
 
-      const selectingBoard = this.selectingBoard();
+      const loadingBoard = this.loadingBoard();
       const board = this.board();
       let height = '';
 
-      if (!selectingBoard && board) {
+      if (!loadingBoard && board) {
         if (board.boardStatusesIds.length === 0) {
           height = '100%';
         }
@@ -109,13 +109,13 @@ export class BoardComponent implements OnDestroy {
     effect(() => {
 
       const board = this.board();
-      const selectingBoard = this.selectingBoard();
+      const loadingBoard = this.loadingBoard();
 
-      if (selectingBoard === undefined) {
+      if (loadingBoard === undefined) {
         return;
       }
 
-      if (!board && !selectingBoard) {
+      if (!board && !loadingBoard) {
         this._router.navigate(['/']);
       }
     });

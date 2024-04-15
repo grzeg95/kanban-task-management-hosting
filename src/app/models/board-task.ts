@@ -42,7 +42,7 @@ export class BoardTask implements BoardTaskDoc {
   } as FirestoreDataConverter<BoardTask, BoardTaskDoc>;
 
   static ref(boardRef: DocumentReference<Board, BoardDoc>, id: string) {
-    return doc(boardRef, id).withConverter(BoardTask._conventer);
+    return doc(boardRef, Collections.boardTasks ,id).withConverter(BoardTask._conventer);
   }
 
   static collectionRef(boardRef: DocumentReference<Board, BoardDoc>) {

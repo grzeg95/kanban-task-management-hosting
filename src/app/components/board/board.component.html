@@ -1,5 +1,5 @@
-@if (!selectingBoard() && board(); as board) {
-  @if (!selectingBoardStatuses() && boardStatuses(); as boardStatuses) {
+@if (!loadingBoard() && board(); as board) {
+  @if (!loadingBoardStatuses() && boardStatuses(); as boardStatuses) {
 
     @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
       @if (boardStatuses[boardStatusId]; as boardStatus) {
@@ -10,7 +10,7 @@
             <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
           </div>
 
-          @if (!selectingBoardTasks() && boardTasks(); as boardTasks) {
+          @if (!loadingBoardTasks() && boardTasks(); as boardTasks) {
 
             @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
               @if (boardTasks[boardStatusTaskId]; as boardStatusTask) {

@@ -1,8 +1,7 @@
-import {collection, doc, DocumentReference, DocumentSnapshot, Firestore} from '@angular/fire/firestore';
+import {collection, doc, DocumentReference, DocumentSnapshot} from '@angular/fire/firestore';
 import {FirestoreDataConverter} from '@firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {Board, BoardDoc} from './board';
 import {BoardTask, BoardTaskDoc} from './board-task';
 
 export type BoardTaskSubtaskDoc = {
@@ -37,11 +36,7 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return doc(boardTaskRef, Collections.boardTasks, id).withConverter(BoardTaskSubtask._conventer);
   }
 
-  static refs(firestore: Firestore, boardId: string, boardTaskId: string) {
-
-    const boardRef = Board.ref(firestore, boardId);
-    const boardTaskRef = BoardTask.ref(boardRef, boardTaskId);
-
+  static refs(boardTaskRef: DocumentReference<BoardTask, BoardTaskDoc>) {
     return collection(boardTaskRef, Collections.boardTaskSubtasks).withConverter(BoardTaskSubtask._conventer);
   }
 

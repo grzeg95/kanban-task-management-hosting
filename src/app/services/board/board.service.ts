@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {filter, map, switchMap} from 'rxjs';
+import {filter, map, shareReplay, switchMap} from 'rxjs';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
 import {ObservedValuesOfBoardService} from './board-service.abstract';
@@ -37,32 +37,32 @@ export class BoardService {
   boardTask$ = this._getObservedValueOf('boardTask$');
   boardTaskSubtasks$ = this._getObservedValueOf('boardTaskSubtasks$');
 
-  selectingUser$ = this._getObservedValueOf('selectingUser$');
-  selectingUserBoards$ = this._getObservedValueOf('selectingUserBoards$');
-  selectingBoard$ = this._getObservedValueOf('selectingBoard$');
-  selectingBoardStatuses$ = this._getObservedValueOf('selectingBoardStatuses$');
-  selectingBoardTasks$ = this._getObservedValueOf('selectingBoardTasks$');
-  selectingBoardTask$ = this._getObservedValueOf('selectingBoardTask$');
-  selectingBoardTaskSubtasks$ = this._getObservedValueOf('selectingBoardTaskSubtasks$');
+  loadingUser$ = this._getObservedValueOf('loadingUser$');
+  loadingUserBoards$ = this._getObservedValueOf('loadingUserBoards$');
+  loadingBoard$ = this._getObservedValueOf('loadingBoard$');
+  loadingBoardStatuses$ = this._getObservedValueOf('loadingBoardStatuses$');
+  loadingBoardTasks$ = this._getObservedValueOf('loadingBoardTasks$');
+  loadingBoardTask$ = this._getObservedValueOf('loadingBoardTask$');
+  loadingBoardTaskSubtasks$ = this._getObservedValueOf('loadingBoardTaskSubtasks$');
 
   set boardId(boardId: string | undefined) {
     this._firebaseBoardService.boardId$.next(boardId);
     this._inMemoryBoardService.boardId$.next(boardId);
-    this._firebaseBoardService.selectingBoard$.next(true);
-    this._inMemoryBoardService.selectingBoard$.next(true);
-    this._firebaseBoardService.selectingBoardStatuses$.next(true);
-    this._inMemoryBoardService.selectingBoardStatuses$.next(true);
-    this._firebaseBoardService.selectingBoardTasks$.next(true);
-    this._inMemoryBoardService.selectingBoardTasks$.next(true);
+    this._firebaseBoardService.loadingBoard$.next(true);
+    this._inMemoryBoardService.loadingBoard$.next(true);
+    this._firebaseBoardService.loadingBoardStatuses$.next(true);
+    this._inMemoryBoardService.loadingBoardStatuses$.next(true);
+    this._firebaseBoardService.loadingBoardTasks$.next(true);
+    this._inMemoryBoardService.loadingBoardTasks$.next(true);
   }
 
   set boardTaskId(boardTaskId: string | undefined) {
     this._firebaseBoardService.boardTaskId$.next(boardTaskId);
     this._inMemoryBoardService.boardTaskId$.next(boardTaskId);
-    this._firebaseBoardService.selectingBoardTask$.next(true);
-    this._inMemoryBoardService.selectingBoardTask$.next(true);
-    this._firebaseBoardService.selectingBoardTaskSubtasks$.next(true);
-    this._inMemoryBoardService.selectingBoardTaskSubtasks$.next(true);
+    this._firebaseBoardService.loadingBoardTask$.next(true);
+    this._inMemoryBoardService.loadingBoardTask$.next(true);
+    this._firebaseBoardService.loadingBoardTaskSubtasks$.next(true);
+    this._inMemoryBoardService.loadingBoardTaskSubtasks$.next(true);
   }
 
   constructor(
@@ -81,6 +81,7 @@ export class BoardService {
         }
         return this._inMemoryBoardService[observedValuesOf];
       }),
+      shareReplay()
     );
   }
 }

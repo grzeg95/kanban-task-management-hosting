@@ -76,7 +76,9 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
+  protected user = toSignal(this._boardService.user$);
   protected userBoards = toSignal(this._boardService.userBoards$);
+  protected loadingUserBoards = toSignal(this._boardService.loadingUserBoards$);
   protected board = toSignal(this._boardService.board$);
   protected boardId = toSignal(this._boardService.boardId$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
@@ -85,28 +87,34 @@ export class AppComponent {
   protected showSideBar = toSignal(this._appService.showSideBar$);
   protected storeType = toSignal(this._boardService.storeType$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
-  protected selectingBoard = toSignal(this._boardService.selectingBoard$);
+  protected loadingBoard = toSignal(this._boardService.loadingBoard$);
 
   protected navTitle = computed(() => {
 
+    const user = this.user();
     const userBoards = this.userBoards();
+    const loadingUserBoards = this.loadingUserBoards();
     const board = this.board();
-    const selectingBoard = this.selectingBoard();
+    const loadingBoard = this.loadingBoard();
 
-    if (!userBoards) {
-      return 'Loading board...';
+    if (!user) {
+      return 'Kanban App';
     }
 
-    if (selectingBoard) {
+    if (loadingUserBoards || loadingUserBoards === undefined) {
+      return 'Loading boards...';
+    }
+
+    if (userBoards === null || userBoards.length === 0) {
+      return 'Create Board';
+    }
+
+    if (loadingBoard) {
       return 'Loading board...';
     }
 
     if (board) {
       return board.name;
-    }
-
-    if (userBoards.length === 0) {
-      return 'Create Board';
     }
 
     return 'Select Board';

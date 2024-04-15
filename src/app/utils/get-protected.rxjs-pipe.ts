@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
-import {distinctUntilChanged, Observable, OperatorFunction, shareReplay} from 'rxjs';
+import {distinctUntilChanged, Observable, OperatorFunction} from 'rxjs';
 
 export const getProtectedRxjsPipe = <T>(): OperatorFunction<T, T> => {
   return (source) => {

@@ -25,6 +25,7 @@ import {UserBoard} from '../auth/models/user-board';
 
 export type ObservedValuesOfBoardService =
   'boardId$'
+  | 'boardTaskId$'
   | 'user$'
   | 'userBoards$'
   | 'board$'
@@ -32,45 +33,24 @@ export type ObservedValuesOfBoardService =
   | 'boardTasks$'
   | 'boardTask$'
   | 'boardTaskSubtasks$'
-  | 'selectingUser$'
-  | 'selectingUserBoards$'
-  | 'selectingBoard$'
-  | 'selectingBoardStatuses$'
-  | 'selectingBoardTasks$'
-  | 'selectingBoardTask$'
-  | 'selectingBoardTaskSubtasks$';
+  | 'loadingUser$'
+  | 'loadingUserBoards$'
+  | 'loadingBoard$'
+  | 'loadingBoardStatuses$'
+  | 'loadingBoardTasks$'
+  | 'loadingBoardTask$'
+  | 'loadingBoardTaskSubtasks$';
 
 export interface BoardServiceInterface {
 
   boardId$: BehaviorSubject<string | null | undefined>;
+  boardTaskId$: BehaviorSubject<string | null | undefined> | undefined;
   user$: Observable<User | null | undefined> | undefined;
   userBoards$: Observable<UserBoard[] | null | undefined> | undefined;
   board$: Observable<Board | null | undefined> | undefined;
   boardStatuses$: Observable<{ [key in string]: BoardStatus } | null | undefined> | undefined;
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
-
-  selectingUser$: BehaviorSubject<boolean>;
-  selectingUserBoards$: BehaviorSubject<boolean>;
-  selectingBoard$: BehaviorSubject<boolean>;
-  selectingBoardStatuses$: BehaviorSubject<boolean>;
-  selectingBoardTasks$: BehaviorSubject<boolean>;
-  selectingBoardTask$: BehaviorSubject<boolean>;
-  selectingBoardTaskSubtasks$: BehaviorSubject<boolean>;
-
-  resetSelectingUser(): void;
-
-  resetSelectingUserBoards(): void;
-
-  resetSelectingBoard(): void;
-
-  resetSelectingBoardStatuses(): void;
-
-  resetSelectingBoardTasks(): void;
-
-  resetSelectingBoardTask(): void;
-
-  resetSelectingBoardTaskSubtasks(): void;
 
   boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 
@@ -84,14 +64,14 @@ export interface BoardServiceInterface {
 
   boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult>;
 
-  updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, ...ref: any): Observable<void>;
+  updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string): Observable<void>;
 }
 
 @Injectable()
 export abstract class BoardServiceAbstract implements BoardServiceInterface {
 
   readonly boardId$ = new BehaviorSubject<string | null | undefined>(undefined);
-  readonly boardTaskId$ = new BehaviorSubject<string | undefined>(undefined);
+  readonly boardTaskId$ = new BehaviorSubject<string | null | undefined>(undefined);
   user$: Observable<User | null | undefined> | undefined;
   userBoards$: Observable<UserBoard[] | null | undefined> | undefined;
   board$: Observable<Board | null | undefined> | undefined;
@@ -99,26 +79,6 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
   boardTasks$: Observable<{ [key in string]: BoardTask } | null | undefined> | undefined;
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
-
-  readonly selectingUser$ = new BehaviorSubject(false);
-  readonly selectingUserBoards$ = new BehaviorSubject(false);
-  readonly selectingBoard$ = new BehaviorSubject(false);
-  readonly selectingBoardStatuses$ = new BehaviorSubject(false);
-  readonly selectingBoardTasks$ = new BehaviorSubject(false);
-  readonly selectingBoardTask$ = new BehaviorSubject(false);
-  readonly selectingBoardTaskSubtasks$ = new BehaviorSubject(false);
-
-  private _resetSelecting(behaviorSubject: BehaviorSubject<boolean>) {
-    setTimeout(() => behaviorSubject.next(false));
-  }
-
-  readonly resetSelectingUser = () => this._resetSelecting(this.selectingUser$);
-  readonly resetSelectingUserBoards = () => this._resetSelecting(this.selectingUserBoards$);
-  readonly resetSelectingBoard = () => this._resetSelecting(this.selectingBoard$);
-  readonly resetSelectingBoardStatuses = () => this._resetSelecting(this.selectingBoardStatuses$);
-  readonly resetSelectingBoardTasks = () => this._resetSelecting(this.selectingBoardTasks$);
-  readonly resetSelectingBoardTask = () => this._resetSelecting(this.selectingBoardTask$);
-  readonly resetSelectingBoardTaskSubtasks = () => this._resetSelecting(this.selectingBoardTaskSubtasks$);
 
   abstract boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 
@@ -132,5 +92,5 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
 
   abstract boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult>;
 
-  abstract updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, ...ref: any): Observable<void>;
+  abstract updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string): Observable<void>;
 }

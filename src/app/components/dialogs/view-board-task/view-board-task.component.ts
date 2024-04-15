@@ -6,7 +6,8 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {Board} from '../../../models/board';
-import {BoardTaskUpdateData} from '../../../models/board-task';
+import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
+import {BoardTaskSubtask} from '../../../models/board-task-subtask';
 import {BoardService} from '../../../services/board/board.service';
 import {InMemoryBoardService} from '../../../services/board/in-memory-board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
@@ -124,7 +125,7 @@ export class ViewBoardTaskComponent {
     }, {allowSignalWrites: true});
   }
 
-  updateBoardTaskSubtaskIsCompleted($event: MouseEvent, boardTaskSubtaskId: string, checked: boolean) {
+  updateBoardTaskSubtaskIsCompleted($event: MouseEvent, boardTaskSubtaskId: string, isCompleted: boolean) {
 
     $event.preventDefault();
     $event.stopPropagation();
@@ -139,7 +140,7 @@ export class ViewBoardTaskComponent {
     const abstractBoardService = this.abstractBoardService();
 
     if (abstractBoardService) {
-      abstractBoardService.updateBoardTaskSubtaskIsCompleted(checked, board.id, boardTask.id, boardTaskSubtaskId).subscribe();
+      abstractBoardService.updateBoardTaskSubtaskIsCompleted(isCompleted, board.id, boardTask.id, boardTaskSubtaskId).subscribe();
     }
   }
 
