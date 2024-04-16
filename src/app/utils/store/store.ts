@@ -1,4 +1,4 @@
-import {from, switchMap, throwError} from 'rxjs';
+import {Subject, from, switchMap, throwError, startWith, map, share} from 'rxjs';
 import {PendingOperations} from './pending-operations';
 import {WriteBatch} from './write-batch';
 
@@ -8,10 +8,12 @@ export type FieldValue = {[key in string]: Field};
 export class DocumentSnapshot {
 
   public readonly parentRef: CollectionRef;
+  public readonly ref: DocumentRef;
 
   constructor(
     public readonly projectId: string,
     public readonly data: FieldValue,
+    public readonly id: string,
     private readonly parentPath: string,
     public readonly createdAt: Date | null,
     public readonly modifiedAt: Date | null,
@@ -19,6 +21,7 @@ export class DocumentSnapshot {
   ) {
     const store = new Store(projectId);
     this.parentRef = collection(store, parentPath);
+    this.ref = doc(this.parentRef, this.id)
   }
 }
 
@@ -29,9 +32,49 @@ export type DocumentJSON = {
   owner: string;
   createdAt: string;
   modifiedAt: string;
+  id: string;
+}
+
+export class Collection {
+
+  constructor(
+    public collectionPath: string
+  ) {
+  }
+
+  getCollectionIndex() {
+
+    let collectionIndexJson;
+    let collectionIndex = [];
+
+    try {
+      collectionIndexJson = JSON.parse(localStorage.getItem(this.collectionPath) || '{}');
+      if (Collection._isJSONCollectionIndex(collectionIndexJson)) {
+        Collection.rebuildIndex();
+      }
+    } catch {
+
+    }
+
+    return
+  }
+
+  addDocumentPath(documentPath): {
+
+  }
+
+  removeDocumentPath(documentPath): {
+
+  }
+
+  static _isJSONCollectionIndex(json: any) {
+
+  }
 }
 
 export class Document {
+
+  private _snapshotsNotifier = new Subject<void>();
 
   constructor(
     public projectId: string,
@@ -39,8 +82,13 @@ export class Document {
     public parentPath: string,
     public owner: string,
     public createdAt: Date | null,
-    public modifiedAt: Date | null
+    public modifiedAt: Date | null,
+    public id: string
   ) {
+  }
+
+  notifyObservers() {
+    this._snapshotsNotifier.next();
   }
 
   private static _isJSONDocument(json: any): boolean {
@@ -74,7 +122,8 @@ export class Document {
         documentRef.parentRef.path,
         '',
         null,
-        null
+        null,
+        documentRef.id
       );
     }
 
@@ -84,7 +133,8 @@ export class Document {
       documentRef.parentRef.path,
       '',
       documentJSON.createdAt ? new Date(documentJSON.createdAt) : null,
-      documentJSON.createdAt ? new Date(documentJSON.createdAt) : null
+      documentJSON.createdAt ? new Date(documentJSON.createdAt) : null,
+      documentRef.id
     );
   }
 
@@ -92,11 +142,37 @@ export class Document {
     return new DocumentSnapshot(
       this.projectId,
       this.data,
+      this.id,
       this.parentPath,
       this.createdAt,
       this.modifiedAt,
       this.createdAt !== null
     );
+  }
+
+  snapshots() {
+    return this._snapshotsNotifier.pipe(
+      startWith(undefined),
+      map(() => {
+        return this.snapshot();
+      }),
+      share()
+    )
+  }
+
+  store() {
+
+    const documentPath = [this.parentPath, this.id].join('/');
+
+    localStorage.setItem(documentPath, JSON.stringify(this.data));
+    const collection = new Collection(this.parentPath);
+    collection.addDocumentPath(documentPath);
+  }
+
+  delete() {
+    localStorage.removeItem([this.parentPath, this.id].join('/'));
+    const collection = new Collection(this.parentPath);
+    collection.removeDocumentPath(documentPath);
   }
 }
 
@@ -151,6 +227,10 @@ export class DocumentRef {
   get() {
     const documentString = localStorage.getItem([this.store.projectId, this.path].join('/')) || '';
     return Document.stringToDocument(this, documentString).snapshot();
+  }
+
+  snapshots() {
+
   }
 
   create(data: FieldValue) {

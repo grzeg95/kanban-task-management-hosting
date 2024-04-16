@@ -1,11 +1,32 @@
 import {id} from '../id';
-import {DocumentRef, FieldValue} from './store';
+import {DocumentRef, DocumentSnapshot, FieldValue, Document} from './store';
+import merge from 'lodash/merge';
 
 export class WriteBatchRespond {
 
   constructor(
     public id: string,
     public message: string
+  ) {
+  }
+}
+
+export class WriteBatchError extends Error {
+
+  constructor(
+    public id: string,
+    message: string
+  ) {
+    super(message);
+  }
+}
+
+export class DocumentChanges {
+
+  constructor(
+    public readonly before: DocumentSnapshot,
+    public readonly after: DocumentSnapshot,
+    public readonly changes: {}
   ) {
   }
 }
@@ -33,29 +54,117 @@ export class WriteBatch {
   }
 
   commit(): Promise<WriteBatchRespond> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
 
       // indexes also
       // get all documents
       // if something go wrong rollback
 
+      const changes = [];
+
       for (const operation of this._operations) {
 
+        const documentSnapshot = operation.documentReference.get();
+
         if (operation.type === 'create') {
-
+          if (documentSnapshot.exists) {
+            reject(new WriteBatchError(this._id, `WriteBatch detected that ${documentSnapshot.id} document exists but was to be created`));
+          }
         }
 
-        if (operation.type === 'set') {
-
-        }
+        if (operation.type === 'set') { /* empty */ }
 
         if (operation.type === 'update') {
-
+          if (documentSnapshot.exists) {
+            reject(new WriteBatchError(this._id, `WriteBatch detected that ${documentSnapshot.id} document doesn't exist but was to be updated`));
+          }
         }
 
         if (operation.type === 'delete') {
-
+          if (documentSnapshot.exists) {
+            reject(new WriteBatchError(this._id, `WriteBatch detected that ${documentSnapshot.id} doesn't exist but was to be deleted`));
+          }
         }
+
+        changes.push({
+          documentSnapshot,
+          data: operation.data,
+          type: operation.type
+        });
+      }
+
+      const date = new Date();
+
+      const documentsChanges = [];
+
+      for (const change of changes) {
+
+        if (change.type === 'create') {
+          const document = new Document(
+            change.documentSnapshot.projectId,
+            change.data!,
+            change.documentSnapshot.parentRef.path,
+            '',
+            date,
+            null,
+            change.documentSnapshot.id
+          );
+
+          documentsChanges.push({document, type: change.type});
+        }
+
+        if (change.type === 'set') {
+          const document = new Document(
+            change.documentSnapshot.projectId,
+            change.data!,
+            change.documentSnapshot.parentRef.path,
+            '',
+            date,
+            null,
+            change.documentSnapshot.id
+          );
+
+          documentsChanges.push({document, type: change.type});
+        }
+
+        if (change.type === 'update') {
+          const document = new Document(
+            change.documentSnapshot.projectId,
+            merge({}, change.documentSnapshot.data, change.data),
+            change.documentSnapshot.parentRef.path,
+            '',
+            date,
+            null,
+            change.documentSnapshot.id
+          );
+
+          documentsChanges.push({document, type: change.type});
+        }
+
+        if (change.type === 'delete') {
+          const document = new Document(
+            change.documentSnapshot.projectId,
+            merge({}, change.documentSnapshot.data, change.data),
+            change.documentSnapshot.parentRef.path,
+            '',
+            date,
+            null,
+            change.documentSnapshot.id
+          );
+
+          documentsChanges.push({document, type: change.type});
+        }
+      }
+
+      for (const documentChange of documentsChanges) {
+
+        if (documentChange.type === 'delete') {
+          documentChange.document.delete();
+        } else {
+          documentChange.document.store();
+        }
+
+        documentChange. document.notifyObservers();
       }
 
       resolve(new WriteBatchRespond(this._id, 'WriteBatch has been done'));
