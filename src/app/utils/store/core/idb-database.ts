@@ -19,13 +19,13 @@ export class IdbDatabase {
     }
 
     idbOpenDbRequest.onblocked = function(ev) {
-      err(ev);
+      err?.(ev);
     }
 
     idbOpenDbRequest.onupgradeneeded = function(ev) {
 
       idbOpenDbRequest.result.onerror = function(ev) {
-        err(ev);
+        err?.(ev);
       };
 
       idbOpenDbRequest.result.createObjectStore('documents', {
@@ -36,7 +36,7 @@ export class IdbDatabase {
     }
 
     idbOpenDbRequest.onerror = function(ev) {
-      err(ev);
+      err?.(ev);
     }
   }
 }
