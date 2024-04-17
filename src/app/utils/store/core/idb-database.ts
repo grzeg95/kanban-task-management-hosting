@@ -1,23 +1,17 @@
-export class IdbDatabaseRequest {}
-
-export class IdbDatabaseResponse {}
-
-export class IdbDatabaseResponseError {}
-
 export class IdbDatabase {
 
   private static _IdbDatabases = new Map<string, IDBDatabase>();
 
-  getInstance(projectId: string) {
+  static async getInstance(projectId: string) {
 
     const instance = IdbDatabase._IdbDatabases.get(projectId);
 
     if (!instance) {
-      return new Promise((resolve, reject) => {
+      return new Promise<IDBDatabase>((resolve, reject) => {
 
         const idbOpenDbRequest = indexedDB.open(projectId, 0);
 
-        idbOpenDbRequest.onsuccess = function(ev) {
+        idbOpenDbRequest.onsuccess = function() {
           IdbDatabase._IdbDatabases.set(projectId, idbOpenDbRequest.result);
           resolve(idbOpenDbRequest.result);
         }
@@ -32,6 +26,9 @@ export class IdbDatabase {
             reject(ev);
           };
 
+          idbOpenDbRequest.result.createObjectStore('documents', {
+            keyPath: ['parentPath', 'id']
+          });
 
           resolve(idbOpenDbRequest.result);
         }
@@ -43,11 +40,5 @@ export class IdbDatabase {
     }
 
     return instance;
-  }
-
-  request(projectId: string, IdbDatabaseRequest: IdbDatabaseRequest) {
-    return new Promise<IdbDatabaseResponse>((resolve, reject) => {
-
-    });
   }
 }
