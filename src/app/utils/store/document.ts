@@ -38,16 +38,11 @@ export type DocumentJSON = {
 
 export type StoreError = NonNullable<unknown>;
 
-export type DocumentRefObserver = {
-  next: (snapshot: DocumentSnapshot) => void;
-  error?: (error: StoreError) => void;
-  complete?: () => void;
-}
-
 export type DocumentObserver = {
   next: (snapshot: DocumentSnapshot) => void;
   error?: (error: StoreError) => void;
   complete?: () => void;
+  unsubscribe?: () => void;
 }
 
 export class Document {
@@ -70,16 +65,7 @@ export class Document {
   ) {
   }
 
-  static get(documentRef: DocumentReference, documentsStore?: IDBObjectStore, cb?: (document: Document) => void) {
-
-    let stopTransaction = false;
-
-    if (!documentsStore) {
-      const db = await IdbDatabase.getInstance(documentRef.store.projectId);
-      const transaction = db.transaction('documents', 'readwrite');
-      documentsStore = transaction.objectStore('documents');
-      stopTransaction = true;
-    }
+  private static _get(documentRef: DocumentReference, documentsStore: IDBObjectStore, stopTransaction: boolean, cb: (document: Document) => void) {
 
     const query = [documentRef.parentRef.path, documentRef.id];
     const index = query.join('|');
@@ -104,7 +90,7 @@ export class Document {
         documentsStore!.transaction.commit();
       }
 
-      cb?.(document);
+      cb(document);
     }
 
     documentCursorRequest.onerror = function () {
@@ -119,7 +105,19 @@ export class Document {
         Document._Documents.set(index, document);
       }
 
-      cb?.(document);
+      cb(document);
+    }
+  }
+
+  static get(documentRef: DocumentReference, documentsStore: IDBObjectStore | undefined, cb: (document: Document) => void) {
+    if (!documentsStore) {
+      IdbDatabase.getInstance(documentRef.store.projectId, (idbDatabase) => {
+        const transaction = idbDatabase.transaction('documents', 'readwrite');
+        documentsStore = transaction.objectStore('documents');
+        Document._get(documentRef, documentsStore, true, cb);
+      });
+    } else {
+      Document._get(documentRef, documentsStore, false, cb);
     }
   }
 
@@ -190,7 +188,7 @@ export class Document {
     } as DocumentJSON;
   }
 
-  snapshot(): DocumentSnapshot {
+  snapshot() {
     return new DocumentSnapshot(
       this.projectId,
       this.data,
@@ -206,13 +204,17 @@ export class Document {
     this._observers.delete(id);
   }
 
-  static snapshots(documentReference: DocumentReference, documentObserver: DocumentObserver, cb: () => ) {
-
-    const _id = id([Document].toSet());
+  static snapshots(documentReference: DocumentReference, documentObserver: DocumentObserver) {
 
     Document.get(documentReference, undefined, (document) => {
-      return {
-        unsubscribe: () => Document.get(documentReference, undefined, documentReference)
+
+      const _id = id([...document._observers.keys()].toSet());
+      documentObserver.next(document.snapshot());
+      document._observers.set(_id, documentObserver);
+
+      documentObserver.unsubscribe = () => {
+        documentObserver.unsubscribe?.();
+        document._unsubscribe(_id);
       };
     });
   }
@@ -256,15 +258,19 @@ export class DocumentReference {
     );
   }
 
-  async get() {
-    return Document.get(this).shapshot();
+  get() {
+    return new Promise<DocumentSnapshot>((resolve) => {
+      Document.get(this, undefined, (document) => {
+        resolve(document.snapshot())
+      })
+    });
   }
 
-  snapshots(observer: DocumentRefObserver) {
-
-    Document.snapshots(this, observer, )
-
-    return {unsubscribe: .unsubscribe};
+  snapshots(observer: DocumentObserver) {
+    Document.snapshots(this, observer);
+    return {
+      unsubscribe: observer.unsubscribe!
+    };
   }
 
   create(data: FieldValue) {
