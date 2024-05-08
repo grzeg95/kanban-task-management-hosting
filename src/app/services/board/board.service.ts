@@ -48,21 +48,11 @@ export class BoardService {
   set boardId(boardId: string | undefined) {
     this._firebaseBoardService.boardId$.next(boardId);
     this._inMemoryBoardService.boardId$.next(boardId);
-    this._firebaseBoardService.loadingBoard$.next(true);
-    this._inMemoryBoardService.loadingBoard$.next(true);
-    this._firebaseBoardService.loadingBoardStatuses$.next(true);
-    this._inMemoryBoardService.loadingBoardStatuses$.next(true);
-    this._firebaseBoardService.loadingBoardTasks$.next(true);
-    this._inMemoryBoardService.loadingBoardTasks$.next(true);
   }
 
   set boardTaskId(boardTaskId: string | undefined) {
     this._firebaseBoardService.boardTaskId$.next(boardTaskId);
     this._inMemoryBoardService.boardTaskId$.next(boardTaskId);
-    this._firebaseBoardService.loadingBoardTask$.next(true);
-    this._inMemoryBoardService.loadingBoardTask$.next(true);
-    this._firebaseBoardService.loadingBoardTaskSubtasks$.next(true);
-    this._inMemoryBoardService.loadingBoardTaskSubtasks$.next(true);
   }
 
   constructor(

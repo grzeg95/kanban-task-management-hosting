@@ -1,5 +1,6 @@
-import {doc, DocumentSnapshot, Firestore} from '@angular/fire/firestore';
+import {doc as firestoreDoc, DocumentSnapshot as firestoreDocumentSnapshot, Firestore} from '@angular/fire/firestore';
 import {FirestoreDataConverter} from '@firebase/firestore';
+import {Data, doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '@npm/store';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../../firebase/collections';
 
@@ -34,11 +35,19 @@ export class User {
     }
   } as FirestoreDataConverter<User, UserDoc>;
 
-  static ref(firestore: Firestore, id: string) {
-    return doc(firestore, Collections.users, id).withConverter(User._conventer);
+  static firestoreRef(firestore: Firestore, id: string) {
+    return firestoreDoc(firestore, Collections.users, id).withConverter(User._conventer);
   }
 
-  static data(userSnap: DocumentSnapshot<User, UserDoc>) {
+  static firestoreData(userSnap: firestoreDocumentSnapshot<User, UserDoc>) {
     return userSnap.data() || new User(userSnap.id);
+  }
+
+  static storeRef(storage: Storage, id: string) {
+    return storeDoc(storage, [Collections.users, id].join('/'));
+  }
+
+  static storeData(userSnap: storeDocumentSnapshot) {
+    return userSnap.data as User & Data || new User(userSnap.id);
   }
 }

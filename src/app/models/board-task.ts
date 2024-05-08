@@ -1,4 +1,5 @@
-import {collection, doc, DocumentReference, DocumentSnapshot} from '@angular/fire/firestore';
+import {collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot} from '@angular/fire/firestore';
+import {collection as storeCollection, doc as storeDoc, DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
 import {FirestoreDataConverter} from '@firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
@@ -41,16 +42,52 @@ export class BoardTask implements BoardTaskDoc {
     }
   } as FirestoreDataConverter<BoardTask, BoardTaskDoc>;
 
-  static ref(boardRef: DocumentReference<Board, BoardDoc>, id: string) {
-    return doc(boardRef, Collections.boardTasks ,id).withConverter(BoardTask._conventer);
+  static firestoreRef(boardRef: firestoreDocumentReference<Board, BoardDoc>, id: string) {
+    return firestoreDoc(boardRef, Collections.boardTasks ,id).withConverter(BoardTask._conventer);
   }
 
-  static collectionRef(boardRef: DocumentReference<Board, BoardDoc>) {
-    return collection(boardRef, Collections.boardTasks).withConverter(BoardTask._conventer);
+  static firestoreCollectionRef(boardRef: firestoreDocumentReference<Board, BoardDoc>) {
+    return firestoreCollection(boardRef, Collections.boardTasks).withConverter(BoardTask._conventer);
   }
 
-  static data(boardTaskSnap: DocumentSnapshot<BoardTask, BoardTaskDoc>) {
+  static firestoreData(boardTaskSnap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc>) {
     return boardTaskSnap.data() || new BoardTask();
+  }
+
+  static storeRef(boardRef: storeDocumentReference, id: string) {
+    return storeDoc(boardRef.parentReference, [boardRef.id, Collections.boardTasks, id].join('/'))
+  }
+
+  static storeRefs(boardRef: storeDocumentReference, board: Board) {
+
+    const boardStatusesCollectionRef = boardRef.collection(Collections.boardStatuses);
+    const boardStatusesRefs = [];
+
+    for (const boardStatusId of board.boardStatusesIds) {
+      boardStatusesRefs.push(boardStatusesCollectionRef.doc(boardStatusId));
+    }
+
+    return boardStatusesRefs;
+  }
+
+  static storeCollectionRef(boardRef: storeDocumentReference) {
+    return storeCollection(boardRef, Collections.boardTasks);
+  }
+
+  static storeData(boardTaskSnap: storeDocumentSnapshot) {
+
+    if (boardTaskSnap.exists) {
+      return new BoardTask(
+        boardTaskSnap.data['id'] as string,
+        boardTaskSnap.data['title'] as string,
+        boardTaskSnap.data['description'] as string,
+        boardTaskSnap.data['boardTaskSubtasksIds'] as string[],
+        boardTaskSnap.data['boardStatusId'] as string,
+        boardTaskSnap.data['completedBoardTaskSubtasks'] as number
+      );
+    }
+
+    return new BoardTask(boardTaskSnap.id);
   }
 }
 

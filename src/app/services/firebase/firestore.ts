@@ -11,7 +11,7 @@ import {
   updateDoc as _updateDoc
 } from '@angular/fire/firestore';
 import {UpdateData} from '@firebase/firestore';
-import {defer, Observable, tap} from 'rxjs';
+import {defer, Observable} from 'rxjs';
 
 export function docSnapshots<AppModelType, DbModelType extends DocumentData>(reference: DocumentReference<AppModelType, DbModelType>) {
   return fromRef(reference);

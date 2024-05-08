@@ -1,3 +1,4 @@
+import {Data} from '@npm/store';
 import {Board} from '../../models/board';
 import {BoardStatus} from '../../models/board-status';
 import {BoardTask} from '../../models/board-task';
@@ -7,7 +8,7 @@ import {UserBoard} from '../auth/models/user-board';
 
 export type InMemoryUser = {
   userBoards: { [key in string]: UserBoard }
-} & User;
+} & User & Data;
 
 export const defaultInMemoryUsers: { [key in string]: InMemoryUser } = {
   '0': {
@@ -39,7 +40,7 @@ export type InMemoryBoardTask = {
 export type InMemoryBoard = {
   boardStatuses: { [key in string]: BoardStatus },
   boardTasks: { [key in string]: InMemoryBoardTask }
-} & Board;
+} & Board & Data;
 
 export const defaultInMemoryBoards: { [key in string]: InMemoryBoard } = {
   '0': {

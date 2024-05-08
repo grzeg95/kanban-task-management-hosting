@@ -1,4 +1,5 @@
-import {doc, DocumentSnapshot, Firestore} from '@angular/fire/firestore';
+import {doc as firestoreDoc, DocumentSnapshot as firestoreDocumentSnapshot, Firestore} from '@angular/fire/firestore';
+import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '@npm/store';
 import {FirestoreDataConverter} from '@firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
@@ -34,12 +35,30 @@ export class Board implements BoardDoc {
     }
   } as FirestoreDataConverter<Board, BoardDoc>;
 
-  static ref(firestore: Firestore, id: string) {
-    return doc(firestore, Collections.boards, id).withConverter(Board._conventer);
+  static firestoreRef(firestore: Firestore, id: string) {
+    return firestoreDoc(firestore, Collections.boards, id).withConverter(Board._conventer);
   }
 
-  static data(boardSnap: DocumentSnapshot<Board, BoardDoc>) {
+  static firestoreData(boardSnap: firestoreDocumentSnapshot<Board, BoardDoc>) {
     return boardSnap.data() || new Board(boardSnap.id);
+  }
+
+  static storeRef(storage: Storage, id?: string) {
+    return storeDoc(storage, [Collections.boards, id].filter(p => !!p).join('/'));
+  }
+
+  static storeData(boardSnap: storeDocumentSnapshot) {
+
+    if (boardSnap.exists) {
+      return new Board(
+        boardSnap.data['id'] as string,
+        boardSnap.data['name'] as string,
+        boardSnap.data['boardStatusesIds'] as string[],
+        boardSnap.data['boardTasksIds'] as string[]
+      );
+    }
+
+    return new Board(boardSnap.id);
   }
 }
 

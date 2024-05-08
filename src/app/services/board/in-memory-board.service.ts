@@ -1,5 +1,20 @@
 import {Inject, Injectable} from '@angular/core';
-import {BehaviorSubject, catchError, combineLatest, map, Observable, of, switchMap, take, tap} from 'rxjs';
+import {DocumentSnapshotError} from '@npm/store/dist/objects';
+import {collection, Data, getInMemory, InMemory, WriteBatch} from '@npm/store';
+import {
+  BehaviorSubject,
+  catchError,
+  combineLatest,
+  from,
+  map,
+  Observable,
+  of,
+  switchMap,
+  take,
+  tap,
+  withLatestFrom
+} from 'rxjs';
+import {environment} from '../../../environments/environment';
 import {KanbanConfig} from '../../kanban-config.token';
 import {
   Board,
@@ -23,25 +38,41 @@ import {
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {InMemoryError} from '../../models/in-memory-error';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {User} from '../auth/models/user';
+import {id} from '../../utils/id';
+import {observerToRxjsObserver} from '../../utils/observer-to-rxjs-obeserver';
+import {User, UserDoc} from '../auth/models/user';
 import {UserBoard} from '../auth/models/user-board';
+import {Collections} from '../firebase/collections';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
-import {defaultInMemoryBoards, defaultInMemoryUsers, InMemoryBoard, InMemoryBoardTask, InMemoryStore} from './data';
+import {
+  defaultInMemoryBoards,
+  defaultInMemoryUsers,
+  InMemoryBoard,
+  InMemoryBoardTask,
+  InMemoryStore,
+  InMemoryUser
+} from './data';
+import {DocumentSnapshot, doc } from '@npm/store';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
+  useFactory: async (_snackBarService: SnackBarService, _kanbanConfig: KanbanConfig) => {
+    const _inMemory = await getInMemory(environment.firebase.projectId);
+    return new InMemoryBoardService(_inMemory, _snackBarService, _kanbanConfig);
+  },
+  deps: [SnackBarService, KanbanConfig]
 })
 export class InMemoryBoardService extends BoardServiceAbstract {
 
-  private _emptyInMemoryStore: InMemoryStore = {};
-  private _userId = '0';
-  private _inMemoryStore$ = new BehaviorSubject<InMemoryStore>(this._emptyInMemoryStore);
+  // conventer
 
-  private _inMemoryUser$ = this._inMemoryStore$.pipe(
+  private _userId = '0';
+
+  private _inMemoryUser$ = observerToRxjsObserver<DocumentSnapshot, DocumentSnapshotError>(doc(this._inMemory, `users/${this._userId}`).snapshots).pipe(
     getProtectedRxjsPipe(),
-    map((inMemoryStore) => {
-      return inMemoryStore.users?.[this._userId] || null;
+    map((value) => {
+      return (value.exists && value.data as InMemoryUser) || null;
     }),
     getProtectedRxjsPipe()
   );
@@ -91,10 +122,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(undefined);
       }
 
-      return this._inMemoryStore$.pipe(
+      return observerToRxjsObserver<DocumentSnapshot, DocumentSnapshotError>(doc(this._inMemory, `boards/${boardId}`).snapshots).pipe(
         getProtectedRxjsPipe(),
-        map((inMemoryStore) => {
-          return inMemoryStore.boards?.[boardId] || null;
+        map((value) => {
+          return (value.exists && value.data as InMemoryBoard) || null;
         })
       );
     }),
@@ -239,21 +270,15 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   );
 
   constructor(
+    private readonly _inMemory: InMemory,
     private readonly _snackBarService: SnackBarService,
     @Inject(KanbanConfig) private readonly _kanbanConfig: KanbanConfig
   ) {
     super();
   }
 
-  private _InMemoryStoreRequest = this._inMemoryStore$.pipe(getProtectedRxjsPipe());
-
-  private _Request<RequestResult>(request: (inMemoryStore: InMemoryStore) => {
-    data: RequestResult;
-    inMemoryStore: InMemoryStore;
-  }) {
-    return this._InMemoryStoreRequest.pipe(
-      take(1),
-      map(request),
+  private _Request<RequestResult>(request: () => Promise<RequestResult>) {
+    return from(request()).pipe(
       catchError((error: Error) => {
 
         if (!(error instanceof InMemoryError)) {
@@ -263,77 +288,79 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         this._snackBarService.open(error.message, 3000);
 
         throw error;
-      }),
-      tap((result) => this._inMemoryStore$.next(result.inMemoryStore)),
-      map((result) => result.data),
+      })
     );
   }
 
   boardCreate(data: BoardCreateData) {
 
-    return this._Request<BoardCreateResult>((inMemoryStore) => {
+    return this._Request<BoardCreateResult>(async () => {
 
-      if (!inMemoryStore.users) {
-        inMemoryStore.users = {};
-      }
+      const writeBatch = new WriteBatch(this._inMemory);
 
-      const user = inMemoryStore.users[this._userId] || null;
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      const userRef = User.storeRef(this._inMemory, this._userId);
+      const userSnap = await userRef.get();
+      const user = User.storeData(userSnap);
+
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
       InMemoryError.testRequirement(user.boardsIds.length >= this._kanbanConfig.maxUserBoards, {
         code: 'resource-exhausted',
-        message: `User can have ${this._kanbanConfig.maxUserBoards} board`
+        message: `User can have ${this._kanbanConfig.maxUserBoards} boards`
       });
 
-      const boardId = getDocId(Object.getOwnPropertyNames(inMemoryStore.boards).toSet());
+      InMemoryError.testRequirement(data.boardStatusesNames.length > this._kanbanConfig.maxBoardStatuses, {
+        code: 'resource-exhausted',
+        message: `Board can have ${this._kanbanConfig.maxBoardStatuses} statuses`
+      });
 
-      const boardStatusesIdsSet = new Set<string>();
-      const boardStatuses = {};
+      const boardRef = Board.storeRef(this._inMemory);
+
+      const boardStatusesIds: string[] = [];
 
       for (const boardStatusName of data.boardStatusesNames) {
-        const boardStatusId = getDocId(boardStatusesIdsSet);
-        const boardStatus: BoardStatus = {
-          id: boardStatusId,
+
+        const boardStatusRef = boardRef.collection(Collections.boardStatuses).doc();
+
+        const boardStatus = {
           name: boardStatusName,
           boardTasksIds: [] as string[]
-        };
-        Object.assign(boardStatuses, {[boardStatusId]: boardStatus});
-        boardStatusesIdsSet.add(boardStatusId);
+        } as BoardStatus & Data;
+
+        writeBatch.create(boardStatusRef, boardStatus);
+        boardStatusesIds.push(boardStatusRef.id);
       }
 
-      const boardStatusesIds = boardStatusesIdsSet.toArray();
-
-      if (!inMemoryStore.users) {
-        inMemoryStore.users = {};
-      }
-
-      const board: InMemoryBoard = {
-        id: boardId,
+      const board = {
         name: data.name,
         boardStatusesIds,
-        boardTasksIds: [] as string[],
-        boardStatuses,
-        boardTasks: {}
-      };
-      Object.assign(inMemoryStore.boards, {[boardId]: board});
+        boardTasksIds: [] as string[]
+      } as Board & Data;
 
-      user.boardsIds.push(boardId);
+      writeBatch.create(boardRef, board);
 
-      const userBoard: UserBoard = {
-        id: boardId,
+      const boardsIds = [...user.boardsIds, boardRef.id];
+
+      if (!userSnap.exists) {
+        writeBatch.create(userSnap.reference, {
+          boardsIds
+        } as User & Data);
+      } else {
+        writeBatch.update(userSnap.reference, {
+          boardsIds
+        } as User & Data);
+      }
+
+      const userBoardRef = userSnap.reference.collection(Collections.userBoards).doc(boardRef.id);
+      writeBatch.create(userBoardRef, {
         name: data.name
-      };
-      Object.assign(user.userBoards, {[boardId]: userBoard});
+      } as UserBoard & Data);
 
-      const createBoardResult: BoardCreateResult = {
-        id: boardId,
-        boardsIds: [...user.boardsIds],
-        boardStatusesIds
-      };
+      await writeBatch.commit();
 
       return {
-        data: createBoardResult,
-        inMemoryStore
+        id: boardRef.id,
+        boardsIds,
+        boardStatusesIds
       };
     }).pipe(
       tap(() => {
@@ -344,27 +371,69 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardDelete(data: BoardDeleteData) {
 
-    return this._Request<BoardDeleteResult>((inMemoryStore) => {
+    return this._Request<BoardDeleteResult>(async () => {
 
-      const user = inMemoryStore.users[this._userId];
+      const writeBatch = new WriteBatch(this._inMemory);
 
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
+      const userRef = doc(this._inMemory, `${Collections.users}/${this._userId}`);
+      const userSnap = await userRef.get();
+      const user = userSnap.data as UserDoc;
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
       InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
         code: 'permission-denied',
         message: 'User do not have access to this board'
       });
 
-      delete inMemoryStore.boards[data.id];
+      const boardRef = Board.storeRef(this._inMemory, data.id);
+      const boardSnap = await boardRef.get();
+      const board = Board.storeData(boardSnap);
+      writeBatch.delete(boardSnap.reference);
 
-      user.boardsIds = user.boardsIds.toSet().difference([data.id].toSet()).toArray();
-      delete user.userBoards[data.id];
+      const boardTasksRefs = BoardTask.storeRefs(boardSnap.reference, board);
+      const boardTasksSnapsPromise: Promise<DocumentSnapshot>[] = [];
+
+      for (const boardTasksRef of boardTasksRefs) {
+        boardTasksSnapsPromise.push(boardTasksRef.get());
+      }
+
+      const boardTasksSnaps = await Promise.all(boardTasksSnapsPromise);
+
+      const boardTasksSubtasksRefs = [];
+      for (const boardTaskSnap of boardTasksSnaps) {
+        writeBatch.delete(boardTaskSnap.reference);
+        const boardTask = BoardTask.storeData(boardTaskSnap)!;
+        boardTasksSubtasksRefs.push(BoardTaskSubtask.storeRefs(boardTaskSnap.reference, boardTask));
+      }
+      const boardTasksSubtasksSnapsPromises = [];
+
+      for (const boardTaskSubtasksRefs of boardTasksSubtasksRefs) {
+        boardTasksSubtasksSnapsPromises.push(transactionGetAll(transaction, boardTaskSubtasksRefs));
+      }
+
+      const boardTasksSubtasksSnaps = await Promise.all(boardTasksSubtasksSnapsPromises);
+
+      for (const boardTaskSubtasksSnaps of boardTasksSubtasksSnaps) {
+        writeBatch.deleteAll(boardTaskSubtasksSnaps);
+      }
+
+      const boardStatusesRefs = BoardStatus.storeCollectionRefs(boardRef, board);
+      const boardStatusesSnaps = await transactionGetAll(transaction, boardStatusesRefs);
+
+      writeBatch.deleteAll(boardStatusesSnaps);
+
+      const boardsIds = user.boardsIds.filter((boardId) => boardId !== data.id);
+
+      const userBoardRef = userSnap.reference.collection(Collections.userBoards).doc(boardRef.id);
+      writeBatch.delete(userBoardRef);
+
+      writeBatch.update(userSnap.reference, {
+        boardsIds
+      });
+
+      await writeBatch.commit();
 
       return {
-        data: {
-          boardsIds: [...user.boardsIds]
-        },
-        inMemoryStore
+        boardsIds
       };
     }).pipe(
       tap(() => {
@@ -375,84 +444,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardUpdate(data: BoardUpdateData) {
 
-    return this._Request<BoardUpdateResult>((inMemoryStore) => {
+    return this._Request<BoardUpdateResult>(() => {
 
-      const user = inMemoryStore.users[this._userId];
-
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
-      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
-        code: 'permission-denied',
-        message: 'User do not have access to this board'
-      });
-
-      const board = inMemoryStore.boards[data.id];
-
-      board.name = data.name;
-
-      const currentBoardStatusesIds = board.boardStatusesIds || [];
-      const newBordStatusesIdsFromData = data.boardStatuses.filter((s) => s.id).map((s) => s.id) as string[];
-
-      const boardStatusesIdsToRemove = currentBoardStatusesIds.toSet().difference(newBordStatusesIdsFromData.toSet()).toArray();
-
-      const boardStatusesTasksIdsToRemove = [];
-      const tasksIdsToRemove = [];
-
-      for (const boardStatusesIdToRemove of boardStatusesIdsToRemove) {
-        const boardStatusToRemove = board.boardStatuses[boardStatusesIdToRemove];
-        boardStatusesTasksIdsToRemove.push(...boardStatusToRemove.boardTasksIds);
-        delete board.boardStatuses[boardStatusesIdToRemove];
-      }
-
-      for (const boardStatusesTaskIdToRemove of boardStatusesTasksIdsToRemove) {
-        delete board.boardTasks[boardStatusesTaskIdToRemove];
-        tasksIdsToRemove.push(boardStatusesTaskIdToRemove);
-      }
-
-      const boardStatusesIdsSet = new Set<string>(currentBoardStatusesIds.toSet().difference(boardStatusesIdsToRemove.toSet()));
-
-      const boardStatuses = board.boardStatuses;
-
-      for (let i = 0; i < data.boardStatuses.length; ++i) {
-
-        let boardStatusId = data.boardStatuses[i].id;
-        let boardStatus = board.boardStatuses[boardStatusId || ''];
-
-        if (!boardStatus) {
-          boardStatusId = getDocId(boardStatusesIdsSet);
-          boardStatusesIdsSet.add(boardStatusId);
-          boardStatus = {
-            id: boardStatusId,
-            name: data.boardStatuses[i].name,
-            boardTasksIds: []
-          };
-          Object.assign(boardStatuses, {[boardStatusId]: boardStatus});
-        } else {
-          boardStatus.name = data.boardStatuses[i].name;
-        }
-      }
-
-      const boardStatusesIds = boardStatusesIdsSet.toArray();
-
-      InMemoryError.testRequirement(boardStatusesIds.length > this._kanbanConfig.maxBoardStatuses, {
-        code: 'resource-exhausted',
-        message: `Board can have ${this._kanbanConfig.maxBoardStatuses} statuses`
-      })
-
-      const boardTasksIds = board.boardTasksIds.toSet().difference(tasksIdsToRemove.toSet()).toArray();
-
-      board.boardTasksIds = boardTasksIds;
-      board.boardStatusesIds = boardStatusesIds;
-
-      user.userBoards[data.id].name = data.name;
-
-      return {
-        data: {
-          boardStatusesIds,
-          boardTasksIds
-        },
-        inMemoryStore
-      };
     }).pipe(
       tap(() => {
         this._snackBarService.open('Board has been updated', 3000);
@@ -462,80 +455,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardTaskCreate(data: BoardTaskCreateData) {
 
-    return this._Request<BoardTaskCreateResult>((inMemoryStore) => {
+    return this._Request<BoardTaskCreateResult>(() => {
 
-      const user = inMemoryStore.users[this._userId];
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
-      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
-        code: 'permission-denied',
-        message: 'User do not have access to this board'
-      });
-
-      const board = inMemoryStore.boards[data.boardId];
-
-      InMemoryError.testRequirement(board.boardTasksIds.length >= this._kanbanConfig.maxBoardTasks, {
-        code: 'resource-exhausted',
-        message: `Board can have ${this._kanbanConfig.maxBoardTasks} tasks`
-      });
-
-      InMemoryError.testRequirement(!board.boardStatusesIds.toSet().has(data.boardStatusId), {
-        code: 'not-found',
-        message: 'Board status do not exist'
-      });
-
-      InMemoryError.testRequirement(data.boardTaskSubtasksTitles.length > this._kanbanConfig.maxBoardTaskSubtasks, {
-        code: 'resource-exhausted',
-        message: `Board task can have ${this._kanbanConfig.maxBoardTaskSubtasks} subtasks`
-      });
-
-      const boardStatus = board.boardStatuses[data.boardStatusId];
-
-      const boardTaskId = getDocId(Object.getOwnPropertyNames(board.boardTasks).toSet());
-
-      const boardTasksIds = [boardTaskId, ...board.boardTasksIds];
-      const boardStatusBoardTasksIds = [boardTaskId, ...boardStatus.boardTasksIds];
-
-      board.boardTasksIds = boardTasksIds;
-      boardStatus.boardTasksIds = boardStatusBoardTasksIds;
-
-      const boardTaskSubtasksIdsSet = new Set<string>();
-      const boardTaskSubtasks = {};
-
-      for (const boardTaskSubtaskTitle of data.boardTaskSubtasksTitles) {
-        const boardTaskSubtaskId = getDocId(boardTaskSubtasksIdsSet);
-        const boardTaskSubtask: BoardTaskSubtask = {
-          id: boardTaskSubtaskId,
-          title: boardTaskSubtaskTitle,
-          isCompleted: false
-        };
-        Object.assign(boardTaskSubtasks, {[boardTaskSubtaskId]: boardTaskSubtask});
-        boardTaskSubtasksIdsSet.add(boardTaskSubtaskId);
-      }
-
-      const boardTaskSubtasksIds = boardTaskSubtasksIdsSet.toArray();
-
-      const inMemoryBoardTask: InMemoryBoardTask = {
-        id: boardTaskId,
-        title: data.title,
-        description: data.description,
-        boardTaskSubtasksIds,
-        boardStatusId: data.boardStatusId,
-        completedBoardTaskSubtasks: 0,
-        boardTaskSubtasks
-      };
-
-      Object.assign(board.boardTasks, {[boardTaskId]: inMemoryBoardTask});
-
-      return {
-        data: {
-          id: boardTaskId,
-          boardTasksIds,
-          boardStatusBoardTasksIds,
-          boardTaskSubtasksIds
-        },
-        inMemoryStore
-      }
     }).pipe(
       tap(() => {
         this._snackBarService.open('Board task has been created', 3000);
@@ -545,34 +466,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardTaskDelete(data: BoardTaskDeleteData): Observable<BoardTaskDeleteResult> {
 
-    return this._Request<BoardTaskDeleteResult>((inMemoryStore) => {
+    return this._Request<BoardTaskDeleteResult>(() => {
 
-      const user = inMemoryStore.users[this._userId];
-
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
-      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
-        code: 'permission-denied',
-        message: 'User do not have access to this board'
-      });
-
-      const board = inMemoryStore.boards[data.boardId];
-
-      const boardTask = board.boardTasks[data.id];
-      InMemoryError.testRequirement(!boardTask, {code: 'not-found', message: 'Board task not found'});
-
-      const boardStatus = board.boardStatuses[boardTask.boardStatusId];
-
-      boardStatus.boardTasksIds = boardStatus.boardTasksIds.toSet().difference([board.id].toSet()).toArray();
-
-      delete board.boardTasks[boardTask.id];
-
-      board.boardTasksIds = board.boardTasksIds.toSet().difference([boardTask.id].toSet()).toArray();
-
-      return {
-        data: undefined,
-        inMemoryStore
-      };
     }).pipe(
       tap(() => {
         this._snackBarService.open('Board task has been deleted', 3000);
@@ -582,82 +477,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult> {
 
-    return this._Request((inMemoryStore) => {
+    return this._Request(() => {
 
-      const user = inMemoryStore.users[this._userId];
-
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
-      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
-        code: 'permission-denied',
-        message: 'User do not have access to this board'
-      });
-
-      const board = inMemoryStore.boards[data.boardId];
-
-      const boardStatus = board.boardStatuses[data.boardStatus.id];
-      InMemoryError.testRequirement(!boardStatus, {code: 'not-found', message: 'Board status not found'});
-
-      const boardTask = board.boardTasks[data.id];
-      InMemoryError.testRequirement(!boardTask, {code: 'not-found', message: 'Board task not found'});
-
-      let newBoardStatus;
-
-      if (data.boardStatus.newId) {
-        boardStatus.boardTasksIds = boardStatus.boardTasksIds.filter((boardTaskId) => boardTaskId !== data.id)
-        newBoardStatus = board.boardStatuses[data.boardStatus.newId];
-        InMemoryError.testRequirement(!newBoardStatus, {code: 'not-found', message: 'New status not found'});
-        newBoardStatus.boardTasksIds = [data.id, ...newBoardStatus.boardTasksIds];
-      }
-
-      const currentBoardTaskSubtasksIds = boardTask.boardTaskSubtasksIds || [];
-      const newBoardTaskSubtasksIds = data.boardTaskSubtasks.filter((s) => s.id).map((s) => s.id) as string[];
-
-      const boardTaskSubtasksIdsToRemove = currentBoardTaskSubtasksIds.toSet().difference(newBoardTaskSubtasksIds.toSet()).toArray();
-
-      for (const boardTaskSubtaskIdToRemove of boardTaskSubtasksIdsToRemove) {
-        delete boardTask.boardTaskSubtasks[boardTaskSubtaskIdToRemove];
-      }
-
-      const boardTaskSubtasksIdsSet = new Set<string>(currentBoardTaskSubtasksIds.toSet().difference(boardTaskSubtasksIdsToRemove.toSet()));
-
-      for (let i = 0; i < data.boardTaskSubtasks.length; ++i) {
-
-        let boardTaskSubtaskId = data.boardTaskSubtasks[i].id;
-        let boardTaskSubtask = boardTask.boardTaskSubtasks[boardTaskSubtaskId || ''];
-
-        if (!boardTaskSubtask) {
-          boardTaskSubtaskId = getDocId(boardTaskSubtasksIdsSet);
-          boardTaskSubtasksIdsSet.add(boardTaskSubtaskId);
-          boardTaskSubtask = {
-            id: boardTaskSubtaskId,
-            title: data.boardTaskSubtasks[i].title,
-            isCompleted: false
-          };
-          Object.assign(boardTaskSubtask, {[boardTaskSubtaskId]: boardTaskSubtask});
-        } else {
-          boardTaskSubtask.title = data.boardTaskSubtasks[i].title;
-        }
-      }
-
-      const boardTaskSubtasksIds = boardTaskSubtasksIdsSet.toArray();
-
-      InMemoryError.testRequirement(boardTaskSubtasksIds.length > this._kanbanConfig.maxBoardTaskSubtasks, {
-        code: 'resource-exhausted',
-        message: `Board task can have ${this._kanbanConfig.maxBoardTaskSubtasks} subtasks`
-      });
-
-      boardTask.title = data.title;
-      boardTask.description = data.description;
-      boardTask.boardTaskSubtasksIds = boardTaskSubtasksIds;
-      boardTask.boardStatusId = newBoardStatus ? newBoardStatus.id : boardTask.boardStatusId
-
-      return {
-        data: {
-          boardTaskSubtasksIds
-        },
-        inMemoryStore
-      }
     }).pipe(
       tap(() => {
         this._snackBarService.open('Board task has been updated', 3000);
@@ -667,38 +488,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string) {
 
-    return this._Request((inMemoryStore) => {
+    return this._Request(() => {
 
-      const user = inMemoryStore.users[this._userId];
-
-      InMemoryError.testRequirement(!user, {code: 'unauthenticated'});
-      InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((_boardId) => _boardId === boardId), {
-        code: 'permission-denied',
-        message: 'User do not have access to this board'
-      });
-
-      const board = inMemoryStore.boards[boardId];
-
-      const boardTask = board.boardTasks[boardTaskId];
-      InMemoryError.testRequirement(!boardTask, {code: 'not-found', message: 'Board task not found'});
-
-      const boardTaskSubtask = boardTask.boardTaskSubtasks[boardTaskSubtaskId];
-      InMemoryError.testRequirement(!boardTaskSubtask, {code: 'not-found', message: 'Board task subtask not found'});
-
-      const isCompletedBefore = boardTaskSubtask.isCompleted;
-      const isCompletedAfter = isCompleted;
-
-      boardTaskSubtask.isCompleted = isCompleted;
-
-      if (isCompletedBefore !== isCompletedAfter) {
-        boardTask.completedBoardTaskSubtasks = boardTask.completedBoardTaskSubtasks + (isCompletedAfter ? 1 : -1)
-      }
-
-      return {
-        data: undefined,
-        inMemoryStore
-      }
     });
   }
 
