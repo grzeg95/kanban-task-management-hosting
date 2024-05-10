@@ -105,7 +105,7 @@ export class AppComponent {
       return 'Loading boards...';
     }
 
-    if (userBoards === null || userBoards.length === 0) {
+    if (userBoards === null || userBoards?.length === 0) {
       return 'Create Board';
     }
 

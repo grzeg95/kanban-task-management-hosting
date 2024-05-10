@@ -1,9 +1,9 @@
-import {collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot} from '@angular/fire/firestore';
-import {collection as storeCollection, doc as storeDoc, DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
-import {FirestoreDataConverter} from '@firebase/firestore';
+import {collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot, FirestoreDataConverter} from '@angular/fire/firestore';
+import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {Board, BoardDoc} from './board';
+import {BoardStatus} from './board-status';
 
 export type BoardTaskDoc = {
   title: string;
@@ -54,16 +54,16 @@ export class BoardTask implements BoardTaskDoc {
     return boardTaskSnap.data() || new BoardTask();
   }
 
-  static storeRef(boardRef: storeDocumentReference, id: string) {
-    return storeDoc(boardRef.parentReference, [boardRef.id, Collections.boardTasks, id].join('/'))
+  static storeRef(boardRef: storeDocumentReference, id?: string) {
+    return boardRef.collection(Collections.boardTasks).doc(id);
   }
 
-  static storeRefs(boardRef: storeDocumentReference, board: Board) {
+  static storeRefs(boardRef: storeDocumentReference, boardStatus: BoardStatus) {
 
     const boardStatusesCollectionRef = boardRef.collection(Collections.boardStatuses);
     const boardStatusesRefs = [];
 
-    for (const boardStatusId of board.boardStatusesIds) {
+    for (const boardStatusId of boardStatus.boardTasksIds) {
       boardStatusesRefs.push(boardStatusesCollectionRef.doc(boardStatusId));
     }
 
@@ -71,7 +71,7 @@ export class BoardTask implements BoardTaskDoc {
   }
 
   static storeCollectionRef(boardRef: storeDocumentReference) {
-    return storeCollection(boardRef, Collections.boardTasks);
+    return boardRef.collection(Collections.boardTasks);
   }
 
   static storeData(boardTaskSnap: storeDocumentSnapshot) {

@@ -24,11 +24,11 @@ import {User} from '../auth/models/user';
 import {UserBoard} from '../auth/models/user-board';
 
 export type ObservedValuesOfBoardService =
-  'boardId$'
-  | 'boardTaskId$'
+  | 'boardId$'
   | 'user$'
   | 'userBoards$'
   | 'board$'
+  // | 'darkMode$'
   | 'boardStatuses$'
   | 'boardTasks$'
   | 'boardTask$'
@@ -51,6 +51,14 @@ export interface BoardServiceInterface {
   boardStatuses$: Observable<{ [key in string]: BoardStatus } | null | undefined> | undefined;
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
+
+  loadingUser$: Observable<boolean> | undefined;
+  loadingUserBoards$: Observable<boolean> | undefined;
+  loadingBoard$: Observable<boolean> | undefined;
+  loadingBoardStatuses$: Observable<boolean> | undefined;
+  loadingBoardTasks$: Observable<boolean> | undefined;
+  loadingBoardTask$: Observable<boolean> | undefined;
+  loadingBoardTaskSubtasks$: Observable<boolean> | undefined;
 
   boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 
@@ -79,6 +87,14 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
   boardTasks$: Observable<{ [key in string]: BoardTask } | null | undefined> | undefined;
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
+
+  loadingUser$: Observable<boolean> | undefined;
+  loadingUserBoards$: Observable<boolean> | undefined;
+  loadingBoard$: Observable<boolean> | undefined;
+  loadingBoardStatuses$: Observable<boolean> | undefined;
+  loadingBoardTasks$: Observable<boolean> | undefined;
+  loadingBoardTask$: Observable<boolean> | undefined;
+  loadingBoardTaskSubtasks$: Observable<boolean> | undefined;
 
   abstract boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 

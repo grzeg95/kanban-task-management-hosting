@@ -33,10 +33,11 @@ export class AuthService {
           this._unsubUserDocSnapSub();
 
           if (nextFirebaseUser) {
-
-            const userRef = User.ref(this._firestore, nextFirebaseUser.uid);
+            const userRef = User.firestoreRef(this._firestore, nextFirebaseUser.uid);
             this._userDocSnapSub = docSnapshots<User, UserDoc>(userRef).pipe(
-              map(User.data),
+              map((user) => {
+                return User.firestoreData(user);
+              }),
             ).subscribe((user) => {
               this.user$.next(user);
             });
@@ -63,7 +64,7 @@ export class AuthService {
       });
       return {unsubscribe};
     }).pipe(
-      runInZoneRxjsPipe(this._ngZone)
+      // runInZoneRxjsPipe(this._ngZone)
     );
   }
 

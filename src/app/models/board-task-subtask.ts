@@ -1,9 +1,7 @@
-import {collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot} from '@angular/fire/firestore';
-import {collection as storeCollection, doc as storeDoc, DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
-import {FirestoreDataConverter} from '@firebase/firestore';
+import {FirestoreDataConverter, collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot} from '@angular/fire/firestore';
+import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {Board} from './board';
 import {BoardTask, BoardTaskDoc} from './board-task';
 
 export type BoardTaskSubtaskDoc = {
@@ -46,8 +44,17 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return boardTaskSubtaskSnap.data() || new BoardTaskSubtask();
   }
 
-  static storeRef(boardTaskRef: storeDocumentReference, id: string) {
-    return storeDoc(boardTaskRef.parentReference, [boardTaskRef.id, Collections.boardTasks, id].join('/'));
+  static storeRef(boardTaskRef: storeDocumentReference, id?: string) {
+    const boardTaskCollectionRef = boardTaskRef.collection(Collections.boardTaskSubtasks);
+    let boardTaskSubtaskRef;
+
+    if (!id) {
+      boardTaskSubtaskRef = boardTaskCollectionRef.doc();
+    } else {
+      boardTaskSubtaskRef = boardTaskCollectionRef.doc(id);
+    }
+
+    return boardTaskSubtaskRef;
   }
 
   static storeRefs(boardTaskRef: storeDocumentReference, boardTask: BoardTask) {

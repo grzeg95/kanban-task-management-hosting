@@ -12,13 +12,13 @@ import {InMemoryBoardService} from './in-memory-board.service';
 export class BoardService {
 
   storeType$ = this._authService.isLoggedIn$.pipe(
-    getProtectedRxjsPipe(),
+    // getProtectedRxjsPipe(),
     filter((isLoggedIn): isLoggedIn is boolean => isLoggedIn !== undefined),
     map((isLoggedIn) => isLoggedIn ? 'firebase' : 'in-memory')
   );
 
   abstractBoardService$ = this.storeType$.pipe(
-    getProtectedRxjsPipe(),
+    // getProtectedRxjsPipe(),
     map((storeType) => {
       if (storeType === 'firebase') {
         return this._firebaseBoardService;
@@ -31,7 +31,7 @@ export class BoardService {
   user$ = this._getObservedValueOf('user$');
   userBoards$ = this._getObservedValueOf('userBoards$');
   board$ = this._getObservedValueOf('board$');
-  darkMode$ = this.user$.pipe(map((user) => user?.darkMode));
+  // darkMode$ = this.user$.pipe(map((user) => user?.darkMode));
   boardStatuses$ = this._getObservedValueOf('boardStatuses$');
   boardTasks$ = this._getObservedValueOf('boardTasks$');
   boardTask$ = this._getObservedValueOf('boardTask$');
@@ -64,7 +64,7 @@ export class BoardService {
 
   private _getObservedValueOf<T extends ObservedValuesOfBoardService>(observedValuesOf: T) {
     return this.storeType$.pipe(
-      getProtectedRxjsPipe(),
+      // getProtectedRxjsPipe(),
       switchMap((storeType) => {
         if (storeType === 'firebase') {
           return this._firebaseBoardService[observedValuesOf];

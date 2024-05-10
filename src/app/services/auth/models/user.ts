@@ -1,5 +1,4 @@
-import {doc as firestoreDoc, DocumentSnapshot as firestoreDocumentSnapshot, Firestore} from '@angular/fire/firestore';
-import {FirestoreDataConverter} from '@firebase/firestore';
+import {FirestoreDataConverter, doc as firestoreDoc, DocumentSnapshot as firestoreDocumentSnapshot, Firestore} from '@angular/fire/firestore';
 import {Data, doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '@npm/store';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../../firebase/collections';

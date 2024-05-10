@@ -1,6 +1,5 @@
-import {collection as firestoreCollection, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot} from '@angular/fire/firestore';
-import {collection as storeCollection, DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
-import {FirestoreDataConverter} from '@firebase/firestore';
+import {collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot, FirestoreDataConverter} from '@angular/fire/firestore';
+import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '@npm/store';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {Board, BoardDoc} from './board';
@@ -33,8 +32,8 @@ export class BoardStatus implements BoardStatusDoc {
     }
   } as FirestoreDataConverter<BoardStatus, BoardStatusDoc>;
 
-  static firestoreRef(boardRef: firestoreDocumentReference<Board>) {
-    return boardRef.withConverter(BoardStatus._conventer);
+  static firestoreRef(boardRef: firestoreDocumentReference<Board>, statusId: string) {
+    return firestoreDoc(boardRef, Collections.boardStatuses, statusId).withConverter(BoardStatus._conventer);
   }
 
   static firestoreCollectionRef(boardRef: firestoreDocumentReference<Board, BoardDoc>) {
@@ -45,8 +44,8 @@ export class BoardStatus implements BoardStatusDoc {
     return boardStatusSnap.data() || new BoardStatus();
   }
 
-  static storeRef(boardRef: storeDocumentReference) {
-    return boardRef;
+  static storeRef(boardRef: storeDocumentReference, statusId?: string) {
+    return boardRef.collection(Collections.boardStatuses).doc(statusId);
   }
 
   static storeCollectionRefs(boardRef: storeDocumentReference, board: Board) {
