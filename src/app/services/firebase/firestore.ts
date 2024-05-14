@@ -14,7 +14,6 @@ import {
 import {defer, Observable} from 'rxjs';
 
 export function docSnapshots<AppModelType, DbModelType extends DocumentData>(reference: DocumentReference<AppModelType, DbModelType>) {
-  console.log(reference);
   return fromRef(reference);
 }
 

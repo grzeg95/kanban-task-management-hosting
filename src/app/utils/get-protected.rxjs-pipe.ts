@@ -4,13 +4,9 @@ import {distinctUntilChanged, Observable, OperatorFunction} from 'rxjs';
 
 export const getProtectedRxjsPipe = <T>(): OperatorFunction<T, T> => {
   return (source) => {
-
-    console.log(source);
-
     return new Observable<T>((subscriber) => {
       return source.subscribe({
         next: (value?: T) => {
-          console.log(value);
           subscriber.next(cloneDeep(value));
         },
         error: (e: any) => subscriber.error(cloneDeep(e)),

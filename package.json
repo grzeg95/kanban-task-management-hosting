@@ -22,7 +22,6 @@
     "@angular/platform-browser-dynamic": "^17.2.1",
     "@angular/router": "^17.2.1",
     "dompurify": "^3.0.9",
-    "@npm/store": "^1.0.13",
     "lodash": "^4.17.21",
     "path-browserify": "^1.0.1",
     "rxjs": "~7.8.0",

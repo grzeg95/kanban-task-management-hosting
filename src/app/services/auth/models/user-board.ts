@@ -1,5 +1,5 @@
 import {
-  collection,
+  collection as firestoreCollection,
   DocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   QueryDocumentSnapshot as firestoreQueryDocumentSnapshot,
@@ -8,7 +8,7 @@ import {
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../../firebase/collections';
 import {User, UserDoc} from './user';
-import {DocumentReference as storeDocumentReference} from '@npm/store';
+import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot, collection as storeCollection} from '../../../utils/store';
 
 export type UserBoardDoc = {
   name: string;
@@ -42,7 +42,7 @@ export class UserBoard {
   } as FirestoreDataConverter<UserBoard, UserBoardDoc>;
 
   static firestoreCollectionRef(userRef: DocumentReference<User, UserDoc>) {
-    return collection(userRef, Collections.userBoards).withConverter(UserBoard._conventer);
+    return firestoreCollection(userRef, Collections.userBoards).withConverter(UserBoard._conventer);
   }
 
   static firestoreData(userBoardsSnap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
@@ -52,7 +52,23 @@ export class UserBoard {
     return userBoardsSnapOrUserBoardQuerySnap.data() || new UserBoard(userBoardsSnapOrUserBoardQuerySnap.id);
   }
 
+  static storeCollectionRef(userRef: storeDocumentReference) {
+    return storeCollection(userRef, Collections.userBoards);
+  }
+
   static storeRef(userBoardsRef: storeDocumentReference, userBoardId: string) {
     return userBoardsRef.collection(Collections.userBoards).doc(userBoardId);
+  }
+
+  static storeData(userBoardsDocumentSnapshot: storeDocumentSnapshot) {
+
+    if (userBoardsDocumentSnapshot.exists) {
+      return new UserBoard(
+        userBoardsDocumentSnapshot.data['id'] as string,
+        userBoardsDocumentSnapshot.data['name'] as string
+      );
+    }
+
+    return new UserBoard(userBoardsDocumentSnapshot.id);
   }
 }

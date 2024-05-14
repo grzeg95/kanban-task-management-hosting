@@ -1,4 +1,4 @@
-import {Data} from '@npm/store';
+import {Data} from '../../utils/store';
 import {Board} from '../../models/board';
 import {BoardStatus} from '../../models/board-status';
 import {BoardTask} from '../../models/board-task';

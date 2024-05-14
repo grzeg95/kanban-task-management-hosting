@@ -14,6 +14,7 @@ import {routes} from './app.routes';
 import {KanbanConfig} from './kanban-config.token';
 import {SvgService} from './services/svg.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
+import {getInMemory, InMemory} from './utils/store';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -110,6 +111,14 @@ export const appConfig: ApplicationConfig = {
         maxBoardTasks: 20,
         maxBoardTaskSubtasks: 10
       } as KanbanConfig
+    },
+    {
+      provide: InMemory,
+      useValue: (() => {
+        let _inMemory: InMemory;
+        getInMemory(environment.firebase.projectId, (inMemory) => _inMemory = inMemory)
+        return _inMemory!;
+      })()
     }
   ]
 };

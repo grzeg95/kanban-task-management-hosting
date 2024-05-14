@@ -180,7 +180,6 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       );
     }),
     // getProtectedRxjsPipe(),
-    tap((boardTasks) => console.log({boardTasks}))
   );
 
   override loadingBoardTasks$ = this.boardTasks$.pipe(map((boardTasks) => boardTasks === undefined));
@@ -200,8 +199,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       }
 
       return boardTasks[boardTaskId] || null;
-    }),
-    tap((boardTask) => console.log({boardTask}))
+    })
   );
 
   override loadingBoardTask$ = this.boardTask$.pipe(map((boardTask) => boardTask === undefined));
@@ -237,8 +235,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         }),
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((boardTaskSubtasks) => console.log({boardTaskSubtasks}))
+    // getProtectedRxjsPipe()
   );
 
   override loadingBoardTaskSubtasks$ = this.boardTaskSubtasks$.pipe(map((boardTaskSubtasks) => boardTaskSubtasks === undefined));

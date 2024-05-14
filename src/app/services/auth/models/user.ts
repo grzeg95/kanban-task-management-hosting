@@ -1,5 +1,12 @@
 import {FirestoreDataConverter, doc as firestoreDoc, DocumentSnapshot as firestoreDocumentSnapshot, Firestore} from '@angular/fire/firestore';
-import {Data, doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '@npm/store';
+import {
+  Data,
+  doc as storeDoc,
+  DocumentSnapshot as storeDocumentSnapshot,
+  IdbDatabase,
+  InMemory,
+  Storage
+} from '../../../utils/store';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../../firebase/collections';
 
@@ -42,11 +49,21 @@ export class User {
     return userSnap.data() || new User(userSnap.id);
   }
 
-  static storeRef(storage: Storage, id: string) {
+  static storeRef(storage: InMemory | IdbDatabase, id: string) {
     return storeDoc(storage, [Collections.users, id].join('/'));
   }
 
   static storeData(userSnap: storeDocumentSnapshot) {
-    return userSnap.data as User & Data || new User(userSnap.id);
+
+    if (userSnap.exists) {
+      return new User(
+        userSnap.id,
+        userSnap.data['disabled'] as boolean,
+        userSnap.data['boardsIds'] as string[],
+        userSnap.data['darkMode'] as boolean,
+      );
+    }
+
+    return new User(userSnap.id);
   }
 }

@@ -1,5 +1,5 @@
 import {Inject, Injectable} from '@angular/core';
-import {Data, doc, DocumentSnapshot, getInMemory, InMemory, WriteBatch} from '@npm/store';
+import {limit} from '@angular/fire/firestore';
 import {BehaviorSubject, catchError, combineLatest, from, map, Observable, of, switchMap, tap} from 'rxjs';
 import {environment} from '../../../environments/environment';
 import {KanbanConfig} from '../../kanban-config.token';
@@ -28,17 +28,14 @@ import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {User, UserDoc} from '../auth/models/user';
 import {UserBoard} from '../auth/models/user-board';
 import {Collections} from '../firebase/collections';
+import {collectionSnapshots} from '../firebase/firestore';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
 import {InMemoryBoard, InMemoryUser} from './data';
+import {Data, doc, DocumentSnapshot, InMemory, WriteBatch} from '../../utils/store';
 
 @Injectable({
-  providedIn: 'root',
-  useFactory: async (_snackBarService: SnackBarService, _kanbanConfig: KanbanConfig) => {
-    const _inMemory = await getInMemory(environment.firebase.projectId);
-    return new InMemoryBoardService(_inMemory, _snackBarService, _kanbanConfig);
-  },
-  deps: [SnackBarService, KanbanConfig]
+  providedIn: 'root'
 })
 export class InMemoryBoardService extends BoardServiceAbstract {
 
@@ -48,36 +45,22 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   private _inMemoryUser$ = new Observable<DocumentSnapshot>((subscriber) => {
 
-    console.log('_inMemoryUser$');
-
     const unsubscribe = doc(this._inMemory, `users/${this._userId}`).snapshots({
-      next: (documentSnapshot) => {
-        console.log(documentSnapshot);
-        subscriber.next(documentSnapshot);
-      },
-      error: (error) => {
-        console.log(error);
-        subscriber.error(error);
-      },
-      complete: () => {
-        console.log('complete');
-        subscriber.complete();
-      }
+      next: subscriber.next.bind(subscriber),
+      error: subscriber.error.bind(subscriber),
+      complete: subscriber.complete.bind(subscriber)
     });
     return {unsubscribe};
   }).pipe(
-    tap((user) => console.log(user)),
     // getProtectedRxjsPipe(),
     map((value) => {
-      return (value.exists && value.data as InMemoryUser) || null;
+      return User.storeData(value);
     }),
     // getProtectedRxjsPipe()
   );
 
   override user$ = this._inMemoryUser$.pipe(
     map((inMemoryUser) => {
-
-      console.log(inMemoryUser);
 
       if (inMemoryUser === null) {
         return null;
@@ -97,18 +80,44 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   override loadingUser$ = this.user$.pipe(map((user) => user === undefined));
 
-  override userBoards$ = this._inMemoryUser$.pipe(
-    map((inMemoryUser) => {
+  override userBoards$ = this.user$.pipe(
+    switchMap((user) => {
 
-      if (inMemoryUser === null) {
-        return null;
+      if (user === null) {
+        return of(null);
       }
 
-      return inMemoryUser.boardsIds.map((boardId) => {
-        return inMemoryUser.userBoards[boardId];
-      });
+      if (user === undefined) {
+        return of(undefined);
+      }
+
+      const userBoardCollectionRef = UserBoard.storeCollectionRef(User.storeRef(this._inMemory, user.id));
+
+      return new Observable<DocumentSnapshot[]>((subscriber) => {
+
+        const unsubscribe = userBoardCollectionRef.snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      }).pipe(
+        map((userBoardsDocumentSnapshots) => {
+
+          const querySnapUserBoardMap = new Map<string, UserBoard>();
+
+          for (const userBoardsDocumentSnapshot of userBoardsDocumentSnapshots) {
+            querySnapUserBoardMap.set(userBoardsDocumentSnapshot.id, UserBoard.storeData(userBoardsDocumentSnapshot));
+          }
+
+          return user.boardsIds.map((boardId) => {
+            return querySnapUserBoardMap.get(boardId);
+          }).filter((userBoard) => !!userBoard) as UserBoard[];
+        })
+      );
     }),
-    // getProtectedRxjsPipe()
+    // getProtectedRxjsPipe(),
+    tap((userBoards) => console.log({userBoards}))
   );
 
   override loadingUserBoards$ = this.userBoards$.pipe(map((userBoards) => userBoards === undefined));
@@ -135,7 +144,6 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       }).pipe(
         // getProtectedRxjsPipe(),
         map((value) => {
-          console.log(value);
           return (value.exists && value.data as InMemoryBoard) || null;
         })
       );
@@ -301,6 +309,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   private _Request<RequestResult>(request: () => Promise<RequestResult>) {
     return from(request()).pipe(
       catchError((error: Error) => {
+
+        console.error(error);
 
         if (!(error instanceof InMemoryError)) {
           error = new InMemoryError();
@@ -482,7 +492,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId: string) => boardId === data.id), {
         code: 'permission-denied',
         message: 'User do not have access to this board'
       });
@@ -625,7 +635,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId: string) => boardId === data.boardId), {
         code: 'permission-denied',
         message: 'User do not have access to this board'
       });
@@ -715,7 +725,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId: string) => boardId === data.boardId), {
         code: 'permission-denied',
         message: 'User do not have access to this board'
       });
@@ -776,7 +786,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.boardId), {
+      InMemoryError.testRequirement(!user.boardsIds.find((boardId: string) => boardId === data.boardId), {
         code: 'permission-denied',
         message: 'User do not have access to this board'
       });
