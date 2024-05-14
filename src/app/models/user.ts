@@ -6,9 +6,9 @@ import {
   IdbDatabase,
   InMemory,
   Storage
-} from '../../../utils/store';
+} from '../utils/store';
 import cloneDeep from 'lodash/cloneDeep';
-import {Collections} from '../../firebase/collections';
+import {Collections} from '../services/firebase/collections';
 
 export type UserDoc = {
   disabled: boolean;

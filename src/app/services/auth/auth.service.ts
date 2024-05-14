@@ -4,7 +4,7 @@ import {Firestore} from '@angular/fire/firestore';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
 import {docSnapshots} from '../firebase/firestore';
-import {User, UserDoc} from './models/user';
+import {User, UserDoc} from '../../models/user';
 
 @Injectable({
   providedIn: 'root'

@@ -1,7 +1,13 @@
-import {collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot, FirestoreDataConverter} from '@angular/fire/firestore';
-import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
+import {
+  collection as firestoreCollection,
+  doc as firestoreDoc,
+  DocumentReference as firestoreDocumentReference,
+  DocumentSnapshot as firestoreDocumentSnapshot,
+  FirestoreDataConverter
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
+import {DocumentReference as storeDocumentReference, collection as storeCollection, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
 import {Board, BoardDoc} from './board';
 
 export type BoardStatusDoc = {
@@ -60,11 +66,15 @@ export class BoardStatus implements BoardStatusDoc {
     return boardStatusesRefs;
   }
 
+  static storeCollectionRef(boardRef: storeDocumentReference) {
+    return storeCollection(boardRef, Collections.boardStatuses);
+  }
+
   static storeData(boardStatusSnap: storeDocumentSnapshot) {
 
     if (boardStatusSnap.exists) {
       return new BoardStatus(
-        boardStatusSnap.data['id'] as string,
+        boardStatusSnap.id,
         boardStatusSnap.data['name'] as string,
         boardStatusSnap.data['boardTasksIds'] as string[]
       );

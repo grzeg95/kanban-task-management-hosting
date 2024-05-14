@@ -190,8 +190,6 @@ export class InMemory extends Storage {
 
     const documentPaths = this._access.collections.get(collectionReference.path) || new Set<string>();
 
-    console.log(observer);
-
     if (observer) {
 
       const observers = this._registeredGetDocuments.get(collectionReference) || new Map<Observer<Document[], Error>, Unsubscribe>();

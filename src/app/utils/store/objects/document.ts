@@ -35,14 +35,10 @@ export class Document {
     );
 
     this._extension.set(documentReference, document);
-    console.log(this._extension);
     return document;
   }
 
   static getInstance(documentReference: DocumentReference) {
-
-    console.log();
-
     return Document._extension.get(documentReference) || Document._createInstance(documentReference);
   }
 
@@ -51,8 +47,6 @@ export class Document {
   }
 
   private _notifyObserver(observer: Observer<DocumentSnapshot, DocumentSnapshotError>) {
-
-    console.log('_notifyObserver');
 
     this.snapshot().then((documentSnapshot) => {
       observer.next?.(documentSnapshot);

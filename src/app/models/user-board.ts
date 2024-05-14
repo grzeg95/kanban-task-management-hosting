@@ -6,9 +6,9 @@ import {
   FirestoreDataConverter
 } from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
-import {Collections} from '../../firebase/collections';
+import {Collections} from '../services/firebase/collections';
 import {User, UserDoc} from './user';
-import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot, collection as storeCollection} from '../../../utils/store';
+import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot, collection as storeCollection} from '../utils/store';
 
 export type UserBoardDoc = {
   name: string;
@@ -64,7 +64,7 @@ export class UserBoard {
 
     if (userBoardsDocumentSnapshot.exists) {
       return new UserBoard(
-        userBoardsDocumentSnapshot.data['id'] as string,
+        userBoardsDocumentSnapshot.id,
         userBoardsDocumentSnapshot.data['name'] as string
       );
     }

@@ -24,8 +24,8 @@ import {
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
-import {User} from '../auth/models/user';
-import {UserBoard} from '../auth/models/user-board';
+import {User} from '../../models/user';
+import {UserBoard} from '../../models/user-board';
 import {collectionSnapshots, docSnapshots, updateDoc} from '../firebase/firestore';
 import {FunctionsService} from '../firebase/functions.service';
 import {SnackBarService} from '../snack-bar.service';

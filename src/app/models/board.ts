@@ -1,7 +1,12 @@
-import {FirestoreDataConverter, doc as firestoreDoc, DocumentSnapshot as firestoreDocumentSnapshot, Firestore} from '@angular/fire/firestore';
-import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, IdbDatabase, InMemory, Storage} from '../utils/store';
+import {
+  doc as firestoreDoc,
+  DocumentSnapshot as firestoreDocumentSnapshot,
+  Firestore,
+  FirestoreDataConverter
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
+import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
 export type BoardDoc = {
   name: string;
@@ -50,7 +55,7 @@ export class Board implements BoardDoc {
 
     if (boardSnap.exists) {
       return new Board(
-        boardSnap.data['id'] as string,
+        boardSnap.id,
         boardSnap.data['name'] as string,
         boardSnap.data['boardStatusesIds'] as string[],
         boardSnap.data['boardTasksIds'] as string[]

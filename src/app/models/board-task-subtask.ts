@@ -1,7 +1,13 @@
-import {FirestoreDataConverter, collection as firestoreCollection, doc as firestoreDoc, DocumentReference as firestoreDocumentReference, DocumentSnapshot as firestoreDocumentSnapshot} from '@angular/fire/firestore';
-import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
+import {
+  collection as firestoreCollection,
+  doc as firestoreDoc,
+  DocumentReference as firestoreDocumentReference,
+  DocumentSnapshot as firestoreDocumentSnapshot,
+  FirestoreDataConverter
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
+import {DocumentReference as storeDocumentReference, collection as storeCollection, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
 import {BoardTask, BoardTaskDoc} from './board-task';
 
 export type BoardTaskSubtaskDoc = {
@@ -57,7 +63,11 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return boardTaskSubtaskRef;
   }
 
-  static storeRefs(boardTaskRef: storeDocumentReference, boardTask: BoardTask) {
+  static storeRefs(boardTaskRef: storeDocumentReference) {
+    return storeCollection(boardTaskRef, Collections.boardTaskSubtasks);
+  }
+
+  static storeRefsFromBoardTask(boardTaskRef: storeDocumentReference, boardTask: BoardTask) {
 
     const boardTaskSubtasksCollectionRef = boardTaskRef.collection(Collections.boardTaskSubtasks);
     const boardTaskSubtasksRefs = [];
@@ -73,7 +83,7 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
 
     if (boardTaskSubtaskSnap.exists) {
       return new BoardTaskSubtask(
-        boardTaskSubtaskSnap.data['id'] as string,
+        boardTaskSubtaskSnap.id,
         boardTaskSubtaskSnap.data['title'] as string,
         boardTaskSubtaskSnap.data['isCompleted'] as boolean
       );

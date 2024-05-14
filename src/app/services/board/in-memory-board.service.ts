@@ -1,7 +1,5 @@
 import {Inject, Injectable} from '@angular/core';
-import {limit} from '@angular/fire/firestore';
-import {BehaviorSubject, catchError, combineLatest, from, map, Observable, of, switchMap, tap} from 'rxjs';
-import {environment} from '../../../environments/environment';
+import {catchError, combineLatest, from, map, Observable, of, switchMap, tap} from 'rxjs';
 import {KanbanConfig} from '../../kanban-config.token';
 import {
   Board,
@@ -24,15 +22,12 @@ import {
 } from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {InMemoryError} from '../../models/in-memory-error';
-import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {User, UserDoc} from '../auth/models/user';
-import {UserBoard} from '../auth/models/user-board';
+import {User, UserDoc} from '../../models/user';
+import {UserBoard} from '../../models/user-board';
+import {Data, doc, DocumentSnapshot, InMemory, WriteBatch} from '../../utils/store';
 import {Collections} from '../firebase/collections';
-import {collectionSnapshots} from '../firebase/firestore';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
-import {InMemoryBoard, InMemoryUser} from './data';
-import {Data, doc, DocumentSnapshot, InMemory, WriteBatch} from '../../utils/store';
 
 @Injectable({
   providedIn: 'root'
@@ -104,194 +99,211 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       }).pipe(
         map((userBoardsDocumentSnapshots) => {
 
-          const querySnapUserBoardMap = new Map<string, UserBoard>();
+          const userBoardMap = new Map<string, UserBoard>();
 
           for (const userBoardsDocumentSnapshot of userBoardsDocumentSnapshots) {
-            querySnapUserBoardMap.set(userBoardsDocumentSnapshot.id, UserBoard.storeData(userBoardsDocumentSnapshot));
+            userBoardMap.set(userBoardsDocumentSnapshot.id, UserBoard.storeData(userBoardsDocumentSnapshot));
           }
 
           return user.boardsIds.map((boardId) => {
-            return querySnapUserBoardMap.get(boardId);
+            return userBoardMap.get(boardId);
           }).filter((userBoard) => !!userBoard) as UserBoard[];
         })
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((userBoards) => console.log({userBoards}))
+    // getProtectedRxjsPipe()
   );
 
   override loadingUserBoards$ = this.userBoards$.pipe(map((userBoards) => userBoards === undefined));
 
-  private _inMemoryBoard$ = this.boardId$.pipe(
-    // getProtectedRxjsPipe(),
-    switchMap((boardId) => {
+  override board$ = combineLatest([
+    this.boardId$/*.pipe(getProtectedRxjsPipe())*/,
+    this.user$
+  ]).pipe(
+    switchMap(([boardId, user]) => {
 
-      if (boardId === null) {
+      if (boardId === null || user === null) {
         return of(null);
       }
 
-      if (boardId === undefined) {
+      if (user === undefined) {
         return of(undefined);
       }
 
+      if (boardId === undefined) {
+        return of(null);
+      }
+
+      const boardRef = Board.storeRef(this._inMemory, boardId);
+
       return new Observable<DocumentSnapshot>((subscriber) => {
-        const unsubscribe = doc(this._inMemory, `boards/${boardId}`).snapshots({
-          next: (documentSnapshot) => subscriber.next(documentSnapshot),
-          error: (error) => subscriber.error(error),
-          complete: () => subscriber.complete()
+
+        const unsubscribe = boardRef.snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
         });
         return {unsubscribe};
       }).pipe(
-        // getProtectedRxjsPipe(),
-        map((value) => {
-          return (value.exists && value.data as InMemoryBoard) || null;
+        map((boardSnap) => {
+
+          if (!boardSnap.exists) {
+            return null;
+          }
+
+          return Board.storeData(boardSnap);
         })
       );
     }),
-    // getProtectedRxjsPipe()
-  );
-
-  override board$ = this._inMemoryBoard$.pipe(
-    map((inMemoryBoard) => {
-
-      if (inMemoryBoard === null) {
-        return null;
-      }
-
-      if (inMemoryBoard == undefined) {
-        return undefined;
-      }
-
-      const board: Board = {
-        id: inMemoryBoard.id,
-        name: inMemoryBoard.name,
-        boardStatusesIds: inMemoryBoard.boardStatusesIds,
-        boardTasksIds: inMemoryBoard.boardTasksIds
-      };
-
-      return board;
-    }),
-    // getProtectedRxjsPipe()
+    // getProtectedRxjsPipe(),
+    tap((board) => console.log({board}))
   );
 
   override loadingBoard$ = this.board$.pipe(map((board) => board === undefined));
 
-  override boardStatuses$ = this._inMemoryBoard$.pipe(
-    map((inMemoryBoard) => {
+  override boardStatuses$ = combineLatest([
+    this.board$,
+    this.user$
+  ]).pipe(
+    switchMap(([board, user]) => {
 
-      if (inMemoryBoard === null) {
-        return null;
+      if (board === null || user === null) {
+        return of(null);
       }
 
-      return inMemoryBoard?.boardStatuses || {};
+      if (board === undefined || user === undefined) {
+        return of(undefined);
+      }
+
+      const boardRef = Board.storeRef(this._inMemory, board.id);
+      const boardStatusesRef = BoardStatus.storeCollectionRef(boardRef);
+
+      return new Observable<DocumentSnapshot[]>((subscriber) => {
+
+        const unsubscribe = boardStatusesRef.snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      }).pipe(
+        map((boardStatusesDocumentSnapshots) => {
+
+          const boardStatuses: { [key in string]: BoardStatus } = {};
+
+          for (const boardStatusesDocumentSnapshot of boardStatusesDocumentSnapshots) {
+            Object.assign(boardStatuses, {[boardStatusesDocumentSnapshot.id]: BoardStatus.storeData(boardStatusesDocumentSnapshot)});
+          }
+
+          return boardStatuses;
+        })
+      );
     }),
-    // getProtectedRxjsPipe()
+    // getProtectedRxjsPipe(),
+    tap((boardStatuses) => console.log({boardStatuses}))
   );
 
   override loadingBoardStatuses$ = this.boardStatuses$.pipe(map((boardStatuses) => boardStatuses === undefined));
 
-  override boardTasks$ = this._inMemoryBoard$.pipe(
-    map((inMemoryBoard) => {
+  override boardTasks$ = combineLatest([
+    this.board$,
+    this.user$
+  ]).pipe(
+    switchMap(([board, user]) => {
 
-      const inMemoryBoardTasks = inMemoryBoard?.boardTasks;
-
-      if (inMemoryBoardTasks === null) {
-        return null;
+      if (board === null || user === null) {
+        return of(null);
       }
 
-      if (inMemoryBoardTasks === undefined) {
-        return undefined;
+      if (board === undefined || user === undefined) {
+        return of(undefined);
       }
 
-      const boardTasks: { [key in string]: BoardTask } = {};
+      const boardRef = Board.storeRef(this._inMemory, board.id);
+      const boardTasksRef = BoardTask.storeCollectionRef(boardRef);
 
-      for (const inMemoryBoardTaskId of Object.getOwnPropertyNames(inMemoryBoardTasks)) {
+      return new Observable<DocumentSnapshot[]>((subscriber) => {
+        const unsubscribe = boardTasksRef.snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      }).pipe(
+        map((boardTasksDocumentSnapshots) => {
 
-        const inMemoryBoardTask = inMemoryBoardTasks[inMemoryBoardTaskId];
+          const boardTasks: { [key in string]: BoardTask } = {};
 
-        const boardTask: BoardTask = {
-          id: inMemoryBoardTask.id,
-          title: inMemoryBoardTask.title,
-          description: inMemoryBoardTask.description,
-          boardTaskSubtasksIds: inMemoryBoardTask.boardTaskSubtasksIds,
-          boardStatusId: inMemoryBoardTask.boardStatusId,
-          completedBoardTaskSubtasks: inMemoryBoardTask.completedBoardTaskSubtasks
-        };
+          for (const boardTasksDocumentSnapshot of boardTasksDocumentSnapshots) {
+            Object.assign(boardTasks, {[boardTasksDocumentSnapshot.id]: BoardTask.storeData(boardTasksDocumentSnapshot)});
+          }
 
-        Object.assign(boardTasks, {[boardTask.id]: boardTask});
-      }
-
-      return boardTasks;
+          return boardTasks;
+        })
+      );
     }),
-    // getProtectedRxjsPipe()
+    // getProtectedRxjsPipe(),
   );
 
   override loadingBoardTasks$ = this.boardTasks$.pipe(map((boardTasks) => boardTasks === undefined));
 
-  private _inMemoryBoardTask$ = combineLatest([
-    this._inMemoryBoard$,
-    this.boardTaskId$/*.pipe(getProtectedRxjsPipe())*/
+  override boardTask$ = combineLatest([
+    this.boardTasks$,
+    this.boardTaskId$/*.pipe(getProtectedRxjsPipe())*/,
   ]).pipe(
-    map(([inMemoryBoard, boardTaskId]) => {
+    map(([boardTasks, boardTaskId]) => {
 
-      if (inMemoryBoard === undefined || boardTaskId === undefined) {
+      if (boardTasks === null || boardTaskId === null) {
+        return null;
+      }
+
+      if (boardTasks === undefined || boardTaskId === undefined) {
         return undefined;
       }
 
-      if (inMemoryBoard === null || boardTaskId === null) {
-        return null;
-      }
-
-      const inMemoryBoardTasks = inMemoryBoard.boardTasks;
-
-      if (!inMemoryBoardTasks) {
-        return null;
-      }
-
-      return inMemoryBoardTasks[boardTaskId] || null;
-    }),
-    // getProtectedRxjsPipe()
-  );
-
-  override boardTask$ = this._inMemoryBoardTask$.pipe(
-    map((inMemoryBoardTask) => {
-
-      if (inMemoryBoardTask === null) {
-        return null;
-      }
-
-      if (inMemoryBoardTask === undefined) {
-        return undefined;
-      }
-
-      const boardTask: BoardTask = {
-        id: inMemoryBoardTask.id,
-        title: inMemoryBoardTask.title,
-        description: inMemoryBoardTask.description,
-        boardTaskSubtasksIds: inMemoryBoardTask.boardTaskSubtasksIds,
-        boardStatusId: inMemoryBoardTask.boardStatusId,
-        completedBoardTaskSubtasks: inMemoryBoardTask.completedBoardTaskSubtasks
-      };
-
-      return boardTask;
-    }),
-    // getProtectedRxjsPipe()
+      return boardTasks[boardTaskId] || null;
+    })
   );
 
   override loadingBoardTask$ = this.boardTask$.pipe(map((boardTask) => boardTask === undefined));
 
-  override boardTaskSubtasks$ = this._inMemoryBoardTask$.pipe(
-    map((inMemoryBoardTask) => {
+  override boardTaskSubtasks$ = combineLatest([
+    this.board$,
+    this.boardTask$,
+  ]).pipe(
+    switchMap(([board, boardTask]) => {
 
-      if (inMemoryBoardTask === null) {
-        return null;
+      if (board === null || boardTask === null) {
+        return of(null);
       }
 
-      if (inMemoryBoardTask === undefined) {
-        return undefined;
+      if (board === undefined || boardTask === undefined) {
+        return of(undefined);
       }
 
-      return inMemoryBoardTask.boardTaskSubtasks || null;
+      const boardRef = Board.storeRef(this._inMemory, board.id);
+      const boardTaskRef = BoardTask.storeRef(boardRef, boardTask.id);
+      const boardTaskSubtasksRef = BoardTaskSubtask.storeRefs(boardTaskRef);
+
+      return new Observable<DocumentSnapshot[]>((subscriber) => {
+        const unsubscribe = boardTaskSubtasksRef.snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      }).pipe(
+        map((boardTaskSubtasksDocumentSnapshots) => {
+
+          const boardTaskSubtasks: { [key in string]: BoardTaskSubtask } = {};
+
+          for (const boardTaskSubtasksDocumentSnapshot of boardTaskSubtasksDocumentSnapshots) {
+            Object.assign(boardTaskSubtasks, {[boardTaskSubtasksDocumentSnapshot.id]: BoardTaskSubtask.storeData(boardTaskSubtasksDocumentSnapshot)});
+          }
+
+          return boardTaskSubtasks;
+        }),
+      );
     }),
     // getProtectedRxjsPipe()
   );
@@ -433,7 +445,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       for (const boardTaskSnap of boardTasksSnaps) {
         writeBatch.delete(boardTaskSnap.reference);
         const boardTask = BoardTask.storeData(boardTaskSnap)!;
-        boardTasksSubtasksRefs.push(BoardTaskSubtask.storeRefs(boardTaskSnap.reference, boardTask));
+        boardTasksSubtasksRefs.push(BoardTaskSubtask.storeRefsFromBoardTask(boardTaskSnap.reference, boardTask));
       }
       const boardTasksSubtasksSnapsPromises = [];
 
@@ -544,8 +556,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       for (const boardStatusTaskSnapToRemove of boardStatusesTasksSnapsToRemove) {
         tasksIdsToRemove.push(boardStatusTaskSnapToRemove.id);
         writeBatch.delete(boardStatusTaskSnapToRemove.reference);
-        const task = BoardTask.storeData(boardStatusTaskSnapToRemove);
-        for (const tasksSubtasksRefsToRemove of BoardTaskSubtask.storeRefs(boardStatusTaskSnapToRemove.reference, task)) {
+        const boardTask = BoardTask.storeData(boardStatusTaskSnapToRemove);
+        for (const tasksSubtasksRefsToRemove of BoardTaskSubtask.storeRefsFromBoardTask(boardStatusTaskSnapToRemove.reference, boardTask)) {
           tasksSubtasksSnapsToRemovePromise.push(tasksSubtasksRefsToRemove.get());
         }
       }
@@ -750,7 +762,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
       writeBatch.delete(boardTaskSnap.reference);
 
-      const boardSubtasksRefs = BoardTaskSubtask.storeRefs(boardTaskSnap.reference, boardTask);
+      const boardSubtasksRefs = BoardTaskSubtask.storeRefsFromBoardTask(boardTaskSnap.reference, boardTask);
       const boardSubtasksSnapsPromise: Promise<DocumentSnapshot>[] = [];
 
       for (const boardSubtasksRef of boardSubtasksRefs) {

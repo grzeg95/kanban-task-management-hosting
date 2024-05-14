@@ -3,8 +3,8 @@ import {Board} from '../../models/board';
 import {BoardStatus} from '../../models/board-status';
 import {BoardTask} from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
-import {User} from '../auth/models/user';
-import {UserBoard} from '../auth/models/user-board';
+import {User} from '../../models/user';
+import {UserBoard} from '../../models/user-board';
 
 export type InMemoryUser = {
   userBoards: { [key in string]: UserBoard }

@@ -123,8 +123,6 @@ export class CollectionReference {
       documentSnapshotsUnsubscribes = [];
     };
 
-    console.log(this.storage);
-
     return this.storage.getDocuments(this, {
       next: (documents) => {
 
