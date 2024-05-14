@@ -24,6 +24,7 @@ import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {InMemoryError} from '../../models/in-memory-error';
 import {User, UserDoc} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
+import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {Data, doc, DocumentSnapshot, InMemory, WriteBatch} from '../../utils/store';
 import {Collections} from '../firebase/collections';
 import {SnackBarService} from '../snack-bar.service';
@@ -34,11 +35,9 @@ import {BoardServiceAbstract} from './board-service.abstract';
 })
 export class InMemoryBoardService extends BoardServiceAbstract {
 
-  // conventer
-
   private _userId = '0';
 
-  private _inMemoryUser$ = new Observable<DocumentSnapshot>((subscriber) => {
+  override user$ = new Observable<DocumentSnapshot>((subscriber) => {
 
     const unsubscribe = doc(this._inMemory, `users/${this._userId}`).snapshots({
       next: subscriber.next.bind(subscriber),
@@ -47,30 +46,11 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     });
     return {unsubscribe};
   }).pipe(
-    // getProtectedRxjsPipe(),
+    getProtectedRxjsPipe(),
     map((value) => {
       return User.storeData(value);
     }),
-    // getProtectedRxjsPipe()
-  );
-
-  override user$ = this._inMemoryUser$.pipe(
-    map((inMemoryUser) => {
-
-      if (inMemoryUser === null) {
-        return null;
-      }
-
-      const user: User = {
-        id: inMemoryUser.id,
-        disabled: inMemoryUser.disabled,
-        boardsIds: inMemoryUser.boardsIds,
-        darkMode: inMemoryUser.darkMode
-      };
-
-      return user;
-    }),
-    // getProtectedRxjsPipe()
+    getProtectedRxjsPipe()
   );
 
   override loadingUser$ = this.user$.pipe(map((user) => user === undefined));
@@ -111,13 +91,13 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe()
+    getProtectedRxjsPipe()
   );
 
   override loadingUserBoards$ = this.userBoards$.pipe(map((userBoards) => userBoards === undefined));
 
   override board$ = combineLatest([
-    this.boardId$/*.pipe(getProtectedRxjsPipe())*/,
+    this.boardId$.pipe(getProtectedRxjsPipe()),
     this.user$
   ]).pipe(
     switchMap(([boardId, user]) => {
@@ -155,8 +135,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((board) => console.log({board}))
+    getProtectedRxjsPipe()
   );
 
   override loadingBoard$ = this.board$.pipe(map((board) => board === undefined));
@@ -199,8 +178,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((boardStatuses) => console.log({boardStatuses}))
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardStatuses$ = this.boardStatuses$.pipe(map((boardStatuses) => boardStatuses === undefined));
@@ -242,14 +220,14 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardTasks$ = this.boardTasks$.pipe(map((boardTasks) => boardTasks === undefined));
 
   override boardTask$ = combineLatest([
     this.boardTasks$,
-    this.boardTaskId$/*.pipe(getProtectedRxjsPipe())*/,
+    this.boardTaskId$.pipe(getProtectedRxjsPipe()),
   ]).pipe(
     map(([boardTasks, boardTaskId]) => {
 
@@ -305,7 +283,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         }),
       );
     }),
-    // getProtectedRxjsPipe()
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardTaskSubtasks$ = this.boardTaskSubtasks$.pipe(map((boardTaskSubtasks) => boardTaskSubtasks === undefined));

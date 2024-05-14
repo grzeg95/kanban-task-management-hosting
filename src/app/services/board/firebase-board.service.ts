@@ -1,6 +1,6 @@
 import {Inject, Injectable} from '@angular/core';
 import {Firestore, limit} from '@angular/fire/firestore';
-import {BehaviorSubject, combineLatest, map, of, share, shareReplay, switchMap, tap} from 'rxjs';
+import {combineLatest, map, of, switchMap, tap} from 'rxjs';
 import {KanbanConfig} from '../../kanban-config.token';
 import {
   Board,
@@ -22,10 +22,10 @@ import {
   BoardTaskUpdateResult
 } from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
-import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {AuthService} from '../auth/auth.service';
 import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
+import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
+import {AuthService} from '../auth/auth.service';
 import {collectionSnapshots, docSnapshots, updateDoc} from '../firebase/firestore';
 import {FunctionsService} from '../firebase/functions.service';
 import {SnackBarService} from '../snack-bar.service';
@@ -37,8 +37,7 @@ import {BoardServiceAbstract} from './board-service.abstract';
 export class FirebaseBoardService extends BoardServiceAbstract {
 
   override user$ = this._authService.user$.pipe(
-    // getProtectedRxjsPipe(),
-    tap((user) => console.log({user}))
+    getProtectedRxjsPipe()
   );
 
   override loadingUser$ = this.user$.pipe(map((user) => user === undefined));
@@ -71,8 +70,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((userBoards) => console.log({userBoards}))
+    getProtectedRxjsPipe()
   );
 
   override loadingUserBoards$ = this.userBoards$.pipe(map((userBoards) => userBoards === undefined));
@@ -107,8 +105,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((board) => console.log({board}))
+    getProtectedRxjsPipe()
   );
 
   override loadingBoard$ = this.board$.pipe(map((board) => board === undefined));
@@ -143,8 +140,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
-    tap((boardStatuses) => console.log({boardStatuses}))
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardStatuses$ = this.boardStatuses$.pipe(map((boardStatuses) => boardStatuses === undefined));
@@ -179,14 +175,14 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    // getProtectedRxjsPipe(),
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardTasks$ = this.boardTasks$.pipe(map((boardTasks) => boardTasks === undefined));
 
   override boardTask$ = combineLatest([
     this.boardTasks$,
-    this.boardTaskId$/*.pipe(getProtectedRxjsPipe())*/,
+    this.boardTaskId$.pipe(getProtectedRxjsPipe()),
   ]).pipe(
     map(([boardTasks, boardTaskId]) => {
 
@@ -235,7 +231,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         }),
       );
     }),
-    // getProtectedRxjsPipe()
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardTaskSubtasks$ = this.boardTaskSubtasks$.pipe(map((boardTaskSubtasks) => boardTaskSubtasks === undefined));
