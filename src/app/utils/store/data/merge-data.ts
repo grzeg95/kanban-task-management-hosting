@@ -1,7 +1,5 @@
 import {clone} from './clone-value';
-import {Arr, Data} from './data';
-import {mergeArr} from './merge-arr';
-import {removeUndefined} from './remove-undefined';
+import {Data} from './data';
 
 export const mergeData = (a: Data, b: Data, cloneData = true): Data => {
 
@@ -12,22 +10,27 @@ export const mergeData = (a: Data, b: Data, cloneData = true): Data => {
     b = clone(b);
   }
 
+  const usedKeys = new Set<string>();
+
   for (const key of Object.getOwnPropertyNames(b)) {
 
     const itemA = a[key];
     const itemB = b[key];
 
-    if (Array.isArray(itemA) && Array.isArray(itemB)) {
-      data[key] = mergeArr(itemA as Arr, itemB as Arr, false);
-    } else if (typeof itemA === 'object' && itemA !== null && typeof itemB === 'object' && itemB !== null) {
+    if (Array.isArray(itemB)) {
+      data[key] = itemB;
+      usedKeys.add(key);
+    } else if (itemA !== null && typeof itemA === 'object' && itemB !== null && typeof itemB === 'object') {
       data[key] = mergeData(itemA as Data, itemB as Data, false);
-    } else if (itemB !== undefined) {
+      usedKeys.add(key);
+    } else if (!!itemA && itemB === undefined) {
+      usedKeys.add(key);
+    }
+  }
 
-      if (itemB !== null && (Array.isArray(itemB) || typeof itemB === 'object')) {
-        data[key] = removeUndefined(itemB);
-      } else {
-        data[key] = itemB;
-      }
+  for (const key of Object.getOwnPropertyNames(a)) {
+    if (!usedKeys.has(key)) {
+      data[key] = a[key];
     }
   }
 
