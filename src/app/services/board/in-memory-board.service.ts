@@ -900,7 +900,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string) {
 
     return this._Request(async () => {
-      await Board.storeRef(this._inMemory, boardId).collection(boardTaskId).doc(boardTaskSubtaskId).update({
+      await Board.storeRef(this._inMemory, boardId).collection(Collections.boardTasks).doc(boardTaskId).collection(Collections.boardTaskSubtasks).doc(boardTaskSubtaskId).update({
         isCompleted
       });
     });

@@ -17,7 +17,7 @@ export const mergeData = (a: Data, b: Data, cloneData = true): Data => {
     const itemA = a[key];
     const itemB = b[key];
 
-    if (Array.isArray(itemB)) {
+    if (Array.isArray(itemB) || itemB === null || typeof itemB === 'boolean' || typeof itemB === 'string' || typeof itemB === 'number') {
       data[key] = itemB;
       usedKeys.add(key);
     } else if (itemA !== null && typeof itemA === 'object' && itemB !== null && typeof itemB === 'object') {
