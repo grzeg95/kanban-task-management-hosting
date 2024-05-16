@@ -131,7 +131,7 @@ export class InMemory extends Storage {
 
       if (operation.type === WriteBatchOperationType.delete) {
 
-        if (document.exists) {
+        if (!document.exists) {
           throw new WriteBatchError(`WriteBatch detected that ${operation.documentReference.id} doesn't exist but was to be deleted`);
         }
       }
@@ -172,6 +172,16 @@ export class InMemory extends Storage {
       }
 
       inMemory.setCollection(documentParentPath, collection!, writeBatch);
+    }
+
+    // reload document
+
+    for (const operation of writeBatchOperations) {
+      operation.documentPromise = inMemory.getDocument(operation.documentReference);
+    }
+
+    for (const operation of writeBatchOperations) {
+      operation.document = await operation.documentPromise!;
     }
 
     for (const operation of writeBatchOperations) {

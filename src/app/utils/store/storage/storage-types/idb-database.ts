@@ -217,6 +217,17 @@ export class IdbDatabase extends Storage {
 
           transaction.oncomplete = async () => {
 
+
+            // reload document
+
+            for (const operation of writeBatchOperations) {
+              operation.documentPromise = idbDatabase.getDocument(operation.documentReference);
+            }
+
+            for (const operation of writeBatchOperations) {
+              operation.document = await operation.documentPromise!;
+            }
+
             for (const operation of writeBatchOperations) {
               const document = await operation.documentPromise!;
               document.notifyObservers();

@@ -48,16 +48,15 @@ export abstract class Storage {
         data: {},
         parentPath: documentReference.parentReference.path,
         createdAt: null,
-        modifiedAt: null,
-        exists: false
+        modifiedAt: null
       } as DocumentJSON;
     }
 
     const document = Document.getInstance(documentReference);
 
     document.data = documentJSON.data;
-    document.createdAt = document.createdAt ? new Date(documentJSON.createdAt!) : null
-    document.modifiedAt = document.modifiedAt ? new Date(documentJSON.modifiedAt!) : null
+    document.createdAt = documentJSON.createdAt ? new Date(documentJSON.createdAt!) : null
+    document.modifiedAt = documentJSON.modifiedAt ? new Date(documentJSON.modifiedAt!) : null
     document.got = true;
     return document;
   }

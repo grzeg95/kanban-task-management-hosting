@@ -129,17 +129,22 @@ export class CollectionReference {
         unsubscribeDocumentSnapshotsUnsubscribes();
 
         let remainingFirstValues = documents.length;
-        const values = new Array<DocumentSnapshot>(documents.length);
+        const values = new Array<DocumentSnapshot | undefined>(documents.length);
 
         for (let i = 0; i < documents.length; ++i) {
 
           const innerObserver: Observer<DocumentSnapshot, DocumentSnapshotError> = {
             next: (documentSnapshot) => {
 
-              values[i] = documentSnapshot;
+              if (!documentSnapshot.exists) {
+                innerObserver.complete?.();
+                values[i] = undefined;
+              } else {
+                values[i] = documentSnapshot;
+              }
 
               if (remainingFirstValues - 1 === 0) {
-                observer.next?.(values);
+                observer.next?.(values.filter((documentSnapshot) => !!documentSnapshot) as DocumentSnapshot[]);
               } else {
                 --remainingFirstValues;
               }

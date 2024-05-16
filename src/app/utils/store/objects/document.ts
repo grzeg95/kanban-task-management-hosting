@@ -71,8 +71,7 @@ export class Document {
       data: this.data,
       parentPath: this.documentReference.parentReference.path,
       createdAt: this.createdAt ? this.createdAt.toString() : this.createdAt,
-      modifiedAt: this.modifiedAt ? this.modifiedAt.toString() : this.modifiedAt,
-      exists: !!this.createdAt
+      modifiedAt: this.modifiedAt ? this.modifiedAt.toString() : this.modifiedAt
     } as DocumentJSON;
   }
 
