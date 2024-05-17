@@ -76,7 +76,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
   override loadingUserBoards$ = this.userBoards$.pipe(map((userBoards) => userBoards === undefined));
 
   override board$ = combineLatest([
-    this.boardId$/*.pipe(getProtectedRxjsPipe())*/,
+    this.boardId$.pipe(getProtectedRxjsPipe()),
     this.user$
   ]).pipe(
     switchMap(([boardId, user]) => {
@@ -195,7 +195,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       }
 
       return boardTasks[boardTaskId] || null;
-    })
+    }),
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardTask$ = this.boardTask$.pipe(map((boardTask) => boardTask === undefined));

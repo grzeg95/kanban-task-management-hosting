@@ -6,9 +6,7 @@ export const getProtectedRxjsPipe = <T>(): OperatorFunction<T, T> => {
   return (source) => {
     return new Observable<T>((subscriber) => {
       return source.subscribe({
-        next: (value?: T) => {
-          subscriber.next(cloneDeep(value));
-        },
+        next: (value?: T) => subscriber.next(cloneDeep(value)),
         error: (e: any) => subscriber.error(cloneDeep(e)),
         complete: () => subscriber.complete()
       });

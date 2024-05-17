@@ -64,7 +64,7 @@ export class AuthService {
       });
       return {unsubscribe};
     }).pipe(
-      // runInZoneRxjsPipe(this._ngZone)
+      runInZoneRxjsPipe(this._ngZone)
     );
   }
 

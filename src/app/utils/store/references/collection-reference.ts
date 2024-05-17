@@ -1,5 +1,5 @@
 import {Observer, uid, Unsubscribe} from '../data';
-import {DocumentSnapshot, DocumentSnapshotError, Document, doc} from '../objects';
+import {Document, DocumentSnapshot, DocumentSnapshotError} from '../objects';
 import {Storage} from '../storage';
 import {getPathPartRegex} from '../utils';
 import {DocumentReference} from './document-reference';
@@ -127,6 +127,11 @@ export class CollectionReference {
       next: (documents) => {
 
         unsubscribeDocumentSnapshotsUnsubscribes();
+
+        if (documents.length === 0) {
+          observer.next?.([]);
+          return;
+        }
 
         let remainingFirstValues = documents.length;
         const values = new Array<DocumentSnapshot | undefined>(documents.length);

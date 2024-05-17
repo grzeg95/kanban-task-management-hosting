@@ -64,7 +64,7 @@ export class BoardService {
 
   private _getObservedValueOf<T extends ObservedValuesOfBoardService>(observedValuesOf: T) {
     return this.storeType$.pipe(
-      // getProtectedRxjsPipe(),
+      getProtectedRxjsPipe(),
       switchMap((storeType) => {
         if (storeType === 'firebase') {
           return this._firebaseBoardService[observedValuesOf];
