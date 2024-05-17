@@ -240,7 +240,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       }
 
       return boardTasks[boardTaskId] || null;
-    })
+    }),
+    getProtectedRxjsPipe()
   );
 
   override loadingBoardTask$ = this.boardTask$.pipe(map((boardTask) => boardTask === undefined));
