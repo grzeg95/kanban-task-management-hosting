@@ -1,5 +1,5 @@
 import {HttpClient, provideHttpClient} from '@angular/common/http';
-import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom} from '@angular/core';
+import {APP_INITIALIZER, ApplicationConfig} from '@angular/core';
 import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
 import {initializeAppCheck, provideAppCheck, ReCaptchaEnterpriseProvider} from '@angular/fire/app-check';
 import {connectAuthEmulator, getAuth, provideAuth} from '@angular/fire/auth';
@@ -49,47 +49,45 @@ export const appConfig: ApplicationConfig = {
         )
       }
     },
-    importProvidersFrom([
-      provideFirebaseApp(() => initializeApp(environment.firebase)),
-      provideAuth(() => {
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => {
 
-        const auth = getAuth();
+      const auth = getAuth();
 
-        if (!environment.production) {
-          connectAuthEmulator(auth, `${environment.emulators.auth.protocol}://${environment.emulators.auth.host}:${environment.emulators.auth.port}`);
-        }
+      if (!environment.production) {
+        connectAuthEmulator(auth, `${environment.emulators.auth.protocol}://${environment.emulators.auth.host}:${environment.emulators.auth.port}`);
+      }
 
-        return auth;
-      }),
-      provideAppCheck(() => {
-        const provider = new ReCaptchaEnterpriseProvider(environment.recaptchaEnterprise);
-        return initializeAppCheck(undefined, {
-          provider,
-          isTokenAutoRefreshEnabled: true
-        });
-      }),
-      provideFirestore(() => {
-        const firestore = getFirestore();
+      return auth;
+    }),
+    provideAppCheck(() => {
+      const provider = new ReCaptchaEnterpriseProvider(environment.recaptchaEnterprise);
+      return initializeAppCheck(undefined, {
+        provider,
+        isTokenAutoRefreshEnabled: true
+      });
+    }),
+    provideFirestore(() => {
+      const firestore = getFirestore();
 
-        if (!environment.production) {
-          connectFirestoreEmulator(firestore, environment.emulators.firestore.host, environment.emulators.firestore.port);
-        }
+      if (!environment.production) {
+        connectFirestoreEmulator(firestore, environment.emulators.firestore.host, environment.emulators.firestore.port);
+      }
 
-        return firestore;
-      }),
-      provideFunctions(() => {
+      return firestore;
+    }),
+    provideFunctions(() => {
 
-        const app = getApp();
+      const app = getApp();
 
-        const functions = getFunctions(app, 'europe-central2');
+      const functions = getFunctions(app, 'europe-central2');
 
-        if (!environment.production) {
-          connectFunctionsEmulator(functions, environment.emulators.functions.host, environment.emulators.functions.port);
-        }
+      if (!environment.production) {
+        connectFunctionsEmulator(functions, environment.emulators.functions.host, environment.emulators.functions.port);
+      }
 
-        return functions;
-      })
-    ]),
+      return functions;
+    }),
     {
       provide: APP_INITIALIZER,
       multi: true,
