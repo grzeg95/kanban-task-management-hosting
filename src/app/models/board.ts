@@ -44,7 +44,20 @@ export class Board implements BoardDoc {
   }
 
   static firestoreData(boardSnap: firestoreDocumentSnapshot<Board, BoardDoc>) {
-    return boardSnap.data() || new Board(boardSnap.id);
+
+    if (boardSnap.exists()) {
+
+      const data = boardSnap.data();
+
+      return new Board(
+        boardSnap.id,
+        data['name'] as string,
+        data['boardStatusesIds'] as string[],
+        data['boardTasksIds'] as string[]
+      );
+    }
+
+    return new Board(boardSnap.id);
   }
 
   static storeRef(storage: Storage, id?: string) {

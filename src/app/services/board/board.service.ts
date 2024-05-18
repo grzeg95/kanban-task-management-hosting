@@ -1,5 +1,5 @@
 import {Injectable, NgZone} from '@angular/core';
-import {filter, map, shareReplay, switchMap} from 'rxjs';
+import {filter, map, shareReplay, switchMap, take} from 'rxjs';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
@@ -47,13 +47,15 @@ export class BoardService {
   loadingBoardTaskSubtasks$ = this._getObservedValueOf('loadingBoardTaskSubtasks$');
 
   set boardId(boardId: string | undefined) {
-    this._firebaseBoardService.boardId$.next(boardId);
-    this._inMemoryBoardService.boardId$.next(boardId);
+    this.abstractBoardService$.pipe(take(1)).subscribe((abstractBoardService) => {
+      abstractBoardService.boardId$.next(boardId)
+    });
   }
 
   set boardTaskId(boardTaskId: string | undefined) {
-    this._firebaseBoardService.boardTaskId$.next(boardTaskId);
-    this._inMemoryBoardService.boardTaskId$.next(boardTaskId);
+    this.abstractBoardService$.pipe(take(1)).subscribe((abstractBoardService) => {
+      abstractBoardService.boardTaskId$.next(boardTaskId)
+    });
   }
 
   constructor(

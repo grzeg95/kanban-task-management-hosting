@@ -85,12 +85,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         return of(null);
       }
 
-      if (user === undefined) {
+      if (user === undefined || boardId === undefined) {
         return of(undefined);
-      }
-
-      if (boardId === undefined) {
-        return of(null);
       }
 
       const boardRef = Board.firestoreRef(this._firestore, boardId);

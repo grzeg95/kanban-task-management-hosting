@@ -106,12 +106,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(null);
       }
 
-      if (user === undefined) {
+      if (user === undefined || boardId === undefined) {
         return of(undefined);
-      }
-
-      if (boardId === undefined) {
-        return of(null);
       }
 
       const boardRef = Board.storeRef(this._inMemory, boardId);
