@@ -5,11 +5,8 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {Board} from '../../../models/board';
-import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
-import {BoardTaskSubtask} from '../../../models/board-task-subtask';
+import {BoardTaskUpdateData} from '../../../models/board-task';
 import {BoardService} from '../../../services/board/board.service';
-import {InMemoryBoardService} from '../../../services/board/in-memory-board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
 import {ButtonComponent} from '../../button/button.component';
@@ -102,8 +99,6 @@ export class ViewBoardTaskComponent {
         return;
       }
 
-      this.boardStatusId.set(boardTask.boardStatusId);
-
       const boardTaskSubtasks = this.boardTaskSubtasks();
 
       if (!boardTaskSubtasks) {
@@ -121,6 +116,8 @@ export class ViewBoardTaskComponent {
 
       if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
         this.boardStatusId.set(boardStatusesPopMenuItems[0].value);
+      } else {
+        this.boardStatusId.set(boardTask.boardStatusId);
       }
     }, {allowSignalWrites: true});
   }

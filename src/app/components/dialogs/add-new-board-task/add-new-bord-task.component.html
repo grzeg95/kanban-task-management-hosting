@@ -50,7 +50,7 @@
     <app-select
       placeholder="e.g. Take coffee break"
       [formControl]="form.controls.boardStatusId"
-      [items]="statuses"
+      [items]="boardStatusesPopMenuItems()"
       [withHint]="true"
     />
   </app-form-field>

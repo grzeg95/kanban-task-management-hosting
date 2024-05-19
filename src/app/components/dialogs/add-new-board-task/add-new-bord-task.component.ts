@@ -1,5 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, ViewEncapsulation} from '@angular/core';
+import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -41,7 +41,7 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class AddNewBordTaskComponent {
 
-  protected statuses: PopMenuItem[] = [];
+  protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$)
@@ -80,16 +80,21 @@ export class AddNewBordTaskComponent {
 
       this.form.controls.boardId.setValue(board.id);
 
-      this.statuses = board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
+      const boardStatusesPopMenuItems = board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
         return {
           value: boardStatus.id,
           label: boardStatus.name
         } as PopMenuItem;
       });
 
-      setTimeout(() => {
-        this.form.controls.boardStatusId.setValue(this.statuses[0].value);
-      });
+      this.boardStatusesPopMenuItems.set(boardStatusesPopMenuItems);
+
+      if (
+        !boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this.form.controls.boardStatusId.value === boardStatusesPopMenuItem.value) ||
+        !this.form.controls.boardStatusId.value
+      ) {
+        this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
+      }
     });
 
     this.addNewSubtask();
