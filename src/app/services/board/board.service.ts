@@ -38,13 +38,19 @@ export class BoardService {
   boardTask$ = this._getObservedValueOf('boardTask$');
   boardTaskSubtasks$ = this._getObservedValueOf('boardTaskSubtasks$');
 
-  loadingUser$ = this._getObservedValueOf('loadingUser$');
   loadingUserBoards$ = this._getObservedValueOf('loadingUserBoards$');
   loadingBoard$ = this._getObservedValueOf('loadingBoard$');
   loadingBoardStatuses$ = this._getObservedValueOf('loadingBoardStatuses$');
   loadingBoardTasks$ = this._getObservedValueOf('loadingBoardTasks$');
   loadingBoardTask$ = this._getObservedValueOf('loadingBoardTask$');
   loadingBoardTaskSubtasks$ = this._getObservedValueOf('loadingBoardTaskSubtasks$');
+
+  firstLoadingUserBoards$ = this._getObservedValueOf('firstLoadingUserBoards$');
+  firstLoadingBoard$ = this._getObservedValueOf('firstLoadingBoard$');
+  firstLoadingBoardStatuses$ = this._getObservedValueOf('firstLoadingBoardStatuses$');
+  firstLoadingBoardTasks$ = this._getObservedValueOf('firstLoadingBoardTasks$');
+  firstLoadingBoardTask$ = this._getObservedValueOf('firstLoadingBoardTask$');
+  firstLoadingBoardTaskSubtasks$ = this._getObservedValueOf('firstLoadingBoardTaskSubtasks$');
 
   set boardId(boardId: string | undefined) {
     this.abstractBoardService$.pipe(take(1)).subscribe((abstractBoardService) => {
@@ -64,6 +70,16 @@ export class BoardService {
     private readonly _authService: AuthService,
     private readonly _ngZone: NgZone
   ) {
+    this._authService.resetFirstLoadings$.subscribe(() => {
+      this.abstractBoardService$.pipe(take(1)).subscribe((abstractBoardService) => {
+        abstractBoardService.firstLoadingUserBoards$.next(true);
+        abstractBoardService.firstLoadingBoard$.next(true);
+        abstractBoardService.firstLoadingBoardStatuses$.next(true);
+        abstractBoardService.firstLoadingBoardTasks$.next(true);
+        abstractBoardService.firstLoadingBoardTask$.next(true);
+        abstractBoardService.firstLoadingBoardTaskSubtasks$.next(true);
+      });
+    });
   }
 
   private _getObservedValueOf<T extends ObservedValuesOfBoardService>(observedValuesOf: T) {

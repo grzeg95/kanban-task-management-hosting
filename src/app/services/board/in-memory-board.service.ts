@@ -26,6 +26,8 @@ import {User, UserDoc} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {Data, doc, DocumentSnapshot, InMemory, WriteBatch} from '../../utils/store';
+import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
+import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {Collections} from '../firebase/collections';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
@@ -46,16 +48,20 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     });
     return {unsubscribe};
   }).pipe(
+    map(User.storeData),
     getProtectedRxjsPipe(),
-    map((value) => {
-      return User.storeData(value);
-    }),
-    getProtectedRxjsPipe()
+    tapOnce(() => {
+      this.firstLoadingUserBoards$.next(true);
+      this.firstLoadingBoard$.next(true);
+      this.firstLoadingBoardStatuses$.next(true);
+      this.firstLoadingBoardTasks$.next(true);
+      this.firstLoadingBoardTask$.next(true);
+      this.firstLoadingBoardTaskSubtasks$.next(true);
+    })
   );
 
-  override loadingUser$ = this.user$.pipe(map((user) => user === undefined));
-
   override userBoards$ = this.user$.pipe(
+    tap(() => this.loadingUserBoards$.next(true)),
     switchMap((user) => {
 
       if (user === null) {
@@ -91,15 +97,25 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    tapTimeoutRxjsPipe(() => {
+      this.loadingUserBoards$.next(false);
+      this.firstLoadingUserBoards$.next(false);
+    }),
     getProtectedRxjsPipe()
   );
 
-  override loadingUserBoards$ = this.userBoards$.pipe(map((userBoards) => userBoards === undefined));
-
   override board$ = combineLatest([
-    this.boardId$.pipe(getProtectedRxjsPipe()),
+    this.boardId$.pipe(
+      getProtectedRxjsPipe(),
+      tap(() => {
+        this.firstLoadingBoard$.next(true);
+        this.firstLoadingBoardStatuses$.next(true);
+        this.firstLoadingBoardTasks$.next(true);
+      })
+    ),
     this.user$
   ]).pipe(
+    tap(() => this.loadingBoard$.next(true)),
     switchMap(([boardId, user]) => {
 
       if (boardId === null || user === null) {
@@ -131,15 +147,18 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    tapTimeoutRxjsPipe(() => {
+      this.loadingBoard$.next(false);
+      this.firstLoadingBoard$.next(false);
+    }),
     getProtectedRxjsPipe()
   );
-
-  override loadingBoard$ = this.board$.pipe(map((board) => board === undefined));
 
   override boardStatuses$ = combineLatest([
     this.board$,
     this.user$
   ]).pipe(
+    tap(() => this.loadingBoardStatuses$.next(true)),
     switchMap(([board, user]) => {
 
       if (board === null || user === null) {
@@ -174,15 +193,18 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    tapTimeoutRxjsPipe(() => {
+      this.loadingBoardStatuses$.next(false);
+      this.firstLoadingBoardStatuses$.next(false);
+    }),
     getProtectedRxjsPipe()
   );
-
-  override loadingBoardStatuses$ = this.boardStatuses$.pipe(map((boardStatuses) => boardStatuses === undefined));
 
   override boardTasks$ = combineLatest([
     this.board$,
     this.user$
   ]).pipe(
+    tap(() => this.loadingBoardTasks$.next(true)),
     switchMap(([board, user]) => {
 
       if (board === null || user === null) {
@@ -216,15 +238,24 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    tapTimeoutRxjsPipe(() => {
+      this.loadingBoardTasks$.next(false);
+      this.firstLoadingBoardTasks$.next(false);
+    }),
     getProtectedRxjsPipe()
   );
 
-  override loadingBoardTasks$ = this.boardTasks$.pipe(map((boardTasks) => boardTasks === undefined));
-
   override boardTask$ = combineLatest([
     this.boardTasks$,
-    this.boardTaskId$.pipe(getProtectedRxjsPipe()),
+    this.boardTaskId$.pipe(
+      getProtectedRxjsPipe(),
+      tap(() => {
+        this.firstLoadingBoardTask$.next(true);
+        this.firstLoadingBoardTaskSubtasks$.next(true);
+      })
+    )
   ]).pipe(
+    tap(() => this.loadingBoardTask$.next(true)),
     map(([boardTasks, boardTaskId]) => {
 
       if (boardTasks === null || boardTaskId === null) {
@@ -237,15 +268,18 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
       return boardTasks[boardTaskId] || null;
     }),
+    tapTimeoutRxjsPipe(() => {
+      this.loadingBoardTask$.next(false);
+      this.firstLoadingBoardTask$.next(false);
+    }),
     getProtectedRxjsPipe()
   );
-
-  override loadingBoardTask$ = this.boardTask$.pipe(map((boardTask) => boardTask === undefined));
 
   override boardTaskSubtasks$ = combineLatest([
     this.board$,
     this.boardTask$,
   ]).pipe(
+    tap(() => this.loadingBoardTaskSubtasks$.next(true)),
     switchMap(([board, boardTask]) => {
 
       if (board === null || boardTask === null) {
@@ -280,10 +314,12 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         }),
       );
     }),
+    tapTimeoutRxjsPipe(() => {
+      this.loadingBoardTaskSubtasks$.next(false);
+      this.firstLoadingBoardTaskSubtasks$.next(false);
+    }),
     getProtectedRxjsPipe()
   );
-
-  override loadingBoardTaskSubtasks$ = this.boardTaskSubtasks$.pipe(map((boardTaskSubtasks) => boardTaskSubtasks === undefined));
 
   constructor(
     private readonly _inMemory: InMemory,
@@ -382,7 +418,24 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       };
     }).pipe(
       tap(() => {
+
         this._snackBarService.open('Board has been created', 3000);
+
+        this.loadingUserBoards$.next(true);
+
+        if (this.boardId$.value) {
+          this.loadingBoard$.next(true);
+        }
+      }),
+      catchError((error) => {
+
+        this.loadingUserBoards$.next(false);
+
+        if (this.boardId$.value) {
+          this.loadingBoard$.next(false);
+        }
+
+        throw error;
       })
     );
   }
@@ -465,11 +518,16 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     }).pipe(
       tap(() => {
         this._snackBarService.open('Board has been deleted', 3000);
+        this.loadingUserBoards$.next(true);
+      }),
+      catchError((error) => {
+        this.loadingUserBoards$.next(false);
+        throw error;
       })
     );
   }
 
-  boardUpdate(data: BoardUpdateData) {
+  boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
     return this._Request<BoardUpdateResult>(async () => {
 
@@ -607,7 +665,42 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     }).pipe(
       tap(() => {
+
         this._snackBarService.open('Board has been updated', 3000);
+
+        if (this.boardId$.value) {
+          if (boardNameWasChanged) {
+            this.loadingBoard$.next(true);
+            this.loadingUserBoards$.next(true);
+          }
+
+          if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
+            this.loadingBoardStatuses$.next(true);
+          }
+
+          if (boardStatusAddedOrDeleted) {
+            this.loadingBoardTasks$.next(true);
+          }
+        }
+      }),
+      catchError((error) => {
+
+        if (this.boardId$.value) {
+          if (boardNameWasChanged) {
+            this.loadingBoard$.next(false);
+            this.loadingUserBoards$.next(false);
+          }
+
+          if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
+            this.loadingBoardStatuses$.next(false);
+          }
+
+          if (boardStatusAddedOrDeleted) {
+            this.loadingBoardTasks$.next(false);
+          }
+        }
+
+        throw error;
       })
     );
   }
@@ -697,7 +790,22 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       };
     }).pipe(
       tap(() => {
+
         this._snackBarService.open('Board task has been created', 3000);
+
+        if (this.boardId$.value) {
+          this.loadingBoardTasks$.next(true);
+          this.loadingBoardStatuses$.next(true);
+        }
+      }),
+      catchError((error) => {
+
+        if (this.boardId$.value) {
+          this.loadingBoardTasks$.next(false);
+          this.loadingBoardStatuses$.next(false);
+        }
+
+        throw error;
       })
     );
   }
@@ -758,7 +866,22 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     }).pipe(
       tap(() => {
+
         this._snackBarService.open('Board task has been deleted', 3000);
+
+        if (this.boardId$.value) {
+          this.loadingBoardTasks$.next(true);
+          this.loadingBoardStatuses$.next(true);
+        }
+      }),
+      catchError((error) => {
+
+        if (this.boardId$.value) {
+          this.loadingBoardTasks$.next(false);
+          this.loadingBoardStatuses$.next(false);
+        }
+
+        throw error;
       })
     );
   }
@@ -889,7 +1012,23 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     }).pipe(
       tap(() => {
+
         this._snackBarService.open('Board task has been updated', 3000);
+
+        if (this.boardId$.value) {
+          this.loadingBoardTasks$.next(true);
+          this.loadingBoardStatuses$.next(true);
+        }
+
+      }),
+      catchError((error) => {
+
+        if (this.boardId$.value) {
+          this.loadingBoardTasks$.next(false);
+          this.loadingBoardStatuses$.next(false);
+        }
+
+        throw error;
       })
     );
   }
@@ -897,8 +1036,30 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string) {
 
     return this._Request(async () => {
-      await Board.storeRef(this._inMemory, boardId).collection(Collections.boardTasks).doc(boardTaskId).collection(Collections.boardTaskSubtasks).doc(boardTaskSubtaskId).update({
+
+      const writeBatch = new WriteBatch(this._inMemory);
+
+      const boardTaskRef = Board.storeRef(this._inMemory, boardId).collection(Collections.boardTasks).doc(boardTaskId);
+      const boardTaskSnap = await boardTaskRef.get();
+      const boardTask = BoardTask.storeData(boardTaskSnap);
+
+      const boardTaskSubtaskRef = boardTaskRef.collection(Collections.boardTaskSubtasks).doc(boardTaskSubtaskId);
+      const boardTaskSubtaskSnap = await boardTaskSubtaskRef.get();
+      const boardTaskSubtask = BoardTaskSubtask.storeData(boardTaskSubtaskSnap);
+
+      if (boardTaskSubtask.isCompleted === isCompleted) {
+        return Promise.resolve();
+      }
+
+      writeBatch.update(boardTaskSubtaskSnap.reference, {
         isCompleted
+      });
+
+      writeBatch.update(boardTaskSnap.reference, {
+        completedBoardTaskSubtasks: boardTask.completedBoardTaskSubtasks + (!isCompleted ? -1 : 1)
+      });
+
+      return writeBatch.commit().then(() => {
       });
     });
   }

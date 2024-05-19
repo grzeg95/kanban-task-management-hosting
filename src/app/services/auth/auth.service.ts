@@ -2,9 +2,9 @@ import {Injectable, NgZone} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from '@angular/fire/auth';
 import {Firestore} from '@angular/fire/firestore';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
+import {User, UserDoc} from '../../models/user';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
 import {docSnapshots} from '../firebase/firestore';
-import {User, UserDoc} from '../../models/user';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +18,7 @@ export class AuthService {
   readonly user$ = new BehaviorSubject<User | null | undefined>(undefined);
   readonly isLoggedIn$ = new BehaviorSubject<boolean | undefined>(undefined);
   readonly whileLoginIn$ = new BehaviorSubject<boolean>(false);
+  readonly resetFirstLoadings$ = new BehaviorSubject<void>(undefined);
 
   constructor(
     private readonly _auth: Auth,
@@ -33,6 +34,9 @@ export class AuthService {
           this._unsubUserDocSnapSub();
 
           if (nextFirebaseUser) {
+
+            this.resetFirstLoadings$.next();
+
             const userRef = User.firestoreRef(this._firestore, nextFirebaseUser.uid);
             this._userDocSnapSub = docSnapshots<User, UserDoc>(userRef).pipe(
               map((user) => {

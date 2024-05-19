@@ -89,13 +89,15 @@ export class AddNewBordTaskComponent {
 
       this.boardStatusesPopMenuItems.set(boardStatusesPopMenuItems);
 
-      if (
-        !boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this.form.controls.boardStatusId.value === boardStatusesPopMenuItem.value) ||
-        !this.form.controls.boardStatusId.value
-      ) {
-        this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
-      }
-    });
+      setTimeout(() => {
+        if (
+          !boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this.form.controls.boardStatusId.value === boardStatusesPopMenuItem.value) ||
+          !this.form.controls.boardStatusId.value
+        ) {
+          this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
+        }
+      });
+    }, {allowSignalWrites: true});
 
     this.addNewSubtask();
   }

@@ -39,7 +39,7 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
   } as FirestoreDataConverter<BoardTaskSubtask, BoardTaskSubtaskDoc>;
 
   static firestoreRef(boardTaskRef: firestoreDocumentReference<BoardTask, BoardTaskDoc>, id: string) {
-    return firestoreDoc(boardTaskRef, Collections.boardTasks, id).withConverter(BoardTaskSubtask._conventer);
+    return firestoreDoc(boardTaskRef, Collections.boardTaskSubtasks, id).withConverter(BoardTaskSubtask._conventer);
   }
 
   static firestoreRefs(boardTaskRef: firestoreDocumentReference<BoardTask, BoardTaskDoc>) {

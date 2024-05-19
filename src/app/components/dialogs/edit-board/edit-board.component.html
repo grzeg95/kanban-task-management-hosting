@@ -7,9 +7,9 @@
     <app-input
       placeholder="e.g. Web Design"
       [withHint]="true"
-      [formControl]="form.controls.name"
+      [formControl]="form.controls.boardName"
     />
-    @if (!form.controls.name.valid && form.controls.name.touched && form.controls.name.errors?.['required']) {
+    @if (!form.controls.boardName.valid && form.controls.boardName.touched && form.controls.boardName.errors?.['required']) {
       <app-error>Can’t be empty</app-error>
     }
   </app-form-field>

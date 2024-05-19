@@ -1,6 +1,6 @@
 import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -55,12 +55,89 @@ export class ViewBoardTaskComponent {
   protected isRequesting = signal(false);
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
-  protected boardStatusId = signal('');
   protected showMenuOptions = signal(false);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
   protected boardTask = toSignal(this._boardService.boardTask$);
   protected boardTaskSubtasks = toSignal(this._boardService.boardTaskSubtasks$);
+
+  protected boardStatusesPopMenuItems = computed(() => {
+
+    const board = this.board();
+    const boardStatuses = this.boardStatuses();
+
+    if (
+      (!board && board !== undefined) ||
+      (!boardStatuses && boardStatuses !== undefined)
+    ) {
+      return [];
+    }
+
+    if (board === undefined || boardStatuses === undefined) {
+      return [];
+    }
+
+    const boardTask = this.boardTask();
+
+    if (!boardTask && boardTask !== undefined) {
+      return [];
+    }
+
+    if (boardTask === undefined) {
+      return [];
+    }
+
+    const boardTaskSubtasks = this.boardTaskSubtasks();
+
+    if (!boardTaskSubtasks) {
+      return [];
+    }
+
+    return board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
+      return {
+        value: status.id,
+        label: status.name
+      } as PopMenuItem;
+    });
+  });
+
+  protected boardStatusId = computed(() => {
+
+    const board = this.board();
+    const boardStatuses = this.boardStatuses();
+
+    if (
+      (!board && board !== undefined) ||
+      (!boardStatuses && boardStatuses !== undefined)
+    ) {
+      return '';
+    }
+
+    if (board === undefined || boardStatuses === undefined) {
+      return '';
+    }
+
+    const boardTask = this.boardTask();
+
+    if (!boardTask && boardTask !== undefined) {
+      return '';
+    }
+
+    if (boardTask === undefined) {
+      return '';
+    }
+
+    const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
+
+    if (!boardStatusesPopMenuItems || boardStatusesPopMenuItems.length === 0) {
+      return '';
+    }
+
+    if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
+      return boardStatusesPopMenuItems[0].value;
+    }
+
+    return boardTask.boardStatusId;
+  });
 
   constructor(
     private readonly _boardService: BoardService,
@@ -94,32 +171,7 @@ export class ViewBoardTaskComponent {
         this.close();
         return;
       }
-
-      if (boardTask === undefined) {
-        return;
-      }
-
-      const boardTaskSubtasks = this.boardTaskSubtasks();
-
-      if (!boardTaskSubtasks) {
-        return;
-      }
-
-      const boardStatusesPopMenuItems = board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
-        return {
-          value: status.id,
-          label: status.name
-        } as PopMenuItem;
-      });
-
-      this.boardStatusesPopMenuItems.set(boardStatusesPopMenuItems);
-
-      if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
-        this.boardStatusId.set(boardStatusesPopMenuItems[0].value);
-      } else {
-        this.boardStatusId.set(boardTask.boardStatusId);
-      }
-    }, {allowSignalWrites: true});
+    });
   }
 
   updateBoardTaskSubtaskIsCompleted($event: MouseEvent, boardTaskSubtaskId: string, isCompleted: boolean) {
@@ -193,7 +245,6 @@ export class ViewBoardTaskComponent {
 
         try {
           this.isRequesting.set(false);
-          this.boardStatusId.set(newBoardStatusId);
         } catch {
           /* empty */
         }

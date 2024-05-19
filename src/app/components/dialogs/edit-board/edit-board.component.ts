@@ -39,10 +39,12 @@ export class EditBoardComponent {
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected initialBoardName = '';
+  protected initialBoardStatuses = new Map<string, string>();
 
   protected form = new FormGroup({
-    id: new FormControl('', [Validators.required]),
-    name: new FormControl('', [Validators.required]),
+    boardId: new FormControl('', [Validators.required]),
+    boardName: new FormControl('', [Validators.required]),
     boardStatuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
   });
 
@@ -70,10 +72,11 @@ export class EditBoardComponent {
         return;
       }
 
-      this.form.controls.id.setValue(board.id);
+      this.form.controls.boardId.setValue(board.id);
 
-      if (!this.form.controls.name.dirty) {
-        this.form.controls.name.setValue(board.name);
+      if (!this.form.controls.boardName.dirty) {
+        this.form.controls.boardName.setValue(board.name);
+        this.initialBoardName = board.name;
       }
 
       if (!this.form.controls.boardStatuses.dirty) {
@@ -81,6 +84,7 @@ export class EditBoardComponent {
 
         board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).forEach((boardStatus) => {
           this.addNewStatusName(boardStatus.id, boardStatus.name);
+          this.initialBoardStatuses.set(boardStatus.id, boardStatus.name);
         });
       }
     });
@@ -111,8 +115,8 @@ export class EditBoardComponent {
       this.form.disable();
 
       const updateBoardData = {
-        id: this.form.value.id,
-        name: this.form.value.name,
+        id: this.form.value.boardId,
+        name: this.form.value.boardName,
         boardStatuses: this.form.value.boardStatuses?.map((boardStatus) => {
 
           if (!boardStatus.id) {
@@ -123,7 +127,11 @@ export class EditBoardComponent {
         }),
       } as BoardUpdateData;
 
-      abstractBoardService.boardUpdate(updateBoardData).pipe(
+      const boardNameWasChanged = this.initialBoardName !== updateBoardData.name;
+      const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this.initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
+      const boardStatusAddedOrDeleted = this.initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
+
+      abstractBoardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
         catchError(() => {
 
           try {

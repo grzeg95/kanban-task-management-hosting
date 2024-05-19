@@ -42,6 +42,7 @@ import {ViewBoardTaskComponent} from '../dialogs/view-board-task/view-board-task
 export class BoardComponent implements OnDestroy {
 
   @HostBinding('style.height') height = '';
+  @HostBinding('style.width') width = '';
 
   protected statusesColorStart = Color.hexStringColorToColor('#285be0');
   protected statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
@@ -55,9 +56,10 @@ export class BoardComponent implements OnDestroy {
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected boardTasks = toSignal(this._boardService.boardTasks$);
 
-  protected loadingBoard = toSignal(this._boardService.loadingBoard$);
-  protected loadingBoardStatuses = toSignal(this._boardService.loadingBoardStatuses$);
-  protected loadingBoardTasks = toSignal(this._boardService.loadingBoardTasks$);
+  protected loadingBoard = toSignal(this._boardService.firstLoadingBoard$);
+  protected firstLoadingBoard = toSignal(this._boardService.firstLoadingBoard$);
+  protected firstLoadingBoardStatuses = toSignal(this._boardService.firstLoadingBoardStatuses$);
+  protected firstLoadingBoardTasks = toSignal(this._boardService.firstLoadingBoardTasks$);
 
   protected tabIndex = computed(() => {
 
@@ -87,16 +89,20 @@ export class BoardComponent implements OnDestroy {
       const loadingBoard = this.loadingBoard();
       const board = this.board();
       let height = '';
+      let width = '';
 
       if (!loadingBoard && board) {
         if (board.boardStatusesIds.length === 0) {
           height = '100%';
+          width = '100%';
         }
       } else {
         height = '100%';
+        width = '100%';
       }
 
       this.height = height;
+      this.width = width;
       this._cdr.markForCheck();
     });
 
@@ -111,7 +117,7 @@ export class BoardComponent implements OnDestroy {
       const board = this.board();
       const loadingBoard = this.loadingBoard();
 
-      if (loadingBoard === undefined) {
+      if (board === undefined || loadingBoard === undefined) {
         return;
       }
 
