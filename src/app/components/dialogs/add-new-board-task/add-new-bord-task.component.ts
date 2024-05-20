@@ -1,5 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -41,10 +41,33 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class AddNewBordTaskComponent {
 
-  protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$)
+  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+
+  protected boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
+
+    const board = this.board();
+    const boardStatuses = this.boardStatuses();
+
+    if (
+      (!board && board !== undefined) ||
+      (!boardStatuses && boardStatuses !== undefined)
+    ) {
+      return [];
+    }
+
+    if (board === undefined || boardStatuses === undefined) {
+      return [];
+    }
+
+    return board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
+      return {
+        value: boardStatus.id,
+        label: boardStatus.name
+      } as PopMenuItem;
+    });
+  });
 
   protected form = new FormGroup({
     boardId: new FormControl(''),
@@ -80,14 +103,11 @@ export class AddNewBordTaskComponent {
 
       this.form.controls.boardId.setValue(board.id);
 
-      const boardStatusesPopMenuItems = board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
-        return {
-          value: boardStatus.id,
-          label: boardStatus.name
-        } as PopMenuItem;
-      });
+    });
 
-      this.boardStatusesPopMenuItems.set(boardStatusesPopMenuItems);
+    effect(() => {
+
+      const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
 
       setTimeout(() => {
         if (
@@ -97,7 +117,7 @@ export class AddNewBordTaskComponent {
           this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
         }
       });
-    }, {allowSignalWrites: true});
+    });
 
     this.addNewSubtask();
   }

@@ -1,5 +1,5 @@
-import {DIALOG_DATA, DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, Inject, signal, ViewEncapsulation} from '@angular/core';
+import {DialogRef} from '@angular/cdk/dialog';
+import {Component, computed, effect, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -46,11 +46,79 @@ export class EditBoardTaskComponent {
 
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected boardStatusesPopMenuItems = signal<PopMenuItem[]>([]);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
   protected boardTask = toSignal(this._boardService.boardTask$);
   protected boardTaskSubtasks = toSignal(this._boardService.boardTaskSubtasks$);
-  protected boardStatusId = signal('');
+
+  protected boardStatusId = computed(() => {
+
+    const board = this.board();
+    const boardStatuses = this.boardStatuses();
+
+    if (
+      (!board && board !== undefined) ||
+      (!boardStatuses && boardStatuses !== undefined)
+    ) {
+      return null;
+    }
+
+    if (board === undefined || boardStatuses === undefined) {
+      return null;
+    }
+
+    const boardTask = this.boardTask();
+
+    if (!boardTask && boardTask !== undefined) {
+      return null;
+    }
+
+    if (boardTask === undefined) {
+      return null;
+    }
+
+    return boardTask.boardStatusId;
+  });
+
+  protected boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
+
+    const board = this.board();
+    const boardStatuses = this.boardStatuses();
+
+    if (
+      (!board && board !== undefined) ||
+      (!boardStatuses && boardStatuses !== undefined)
+    ) {
+      return [];
+    }
+
+    if (board === undefined || boardStatuses === undefined) {
+      return [];
+    }
+
+    const boardTask = this.boardTask();
+
+    if (!boardTask && boardTask !== undefined) {
+      return [];
+    }
+
+    if (boardTask === undefined) {
+      return [];
+    }
+
+    const boardTaskSubtasks = this.boardTaskSubtasks();
+
+    if (!boardTaskSubtasks) {
+      return [];
+    }
+
+    return board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
+      return {
+        value: status.id,
+        label: status.name
+      } as PopMenuItem;
+    });
+
+  });
 
   protected form = new FormGroup({
     id: new FormControl<string | null>(null, Validators.required),
@@ -97,33 +165,10 @@ export class EditBoardTaskComponent {
         return;
       }
 
-      this.boardStatusId.set(boardTask.boardStatusId);
-
       const boardTaskSubtasks = this.boardTaskSubtasks();
 
       if (!boardTaskSubtasks) {
         return;
-      }
-
-      const boardStatusesPopMenuItems = board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
-        return {
-          value: status.id,
-          label: status.name
-        } as PopMenuItem;
-      });
-
-      this.boardStatusesPopMenuItems.set(boardStatusesPopMenuItems);
-
-      if (!this.form.controls.boardStatusId.dirty) {
-        setTimeout(() => {
-          this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
-        });
-      } else {
-        if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this.form.controls.boardStatusId.value === boardStatusesPopMenuItem.value)) {
-          setTimeout(() => {
-            this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
-          });
-        }
       }
 
       this.form.controls.id.setValue(boardTask.id);
@@ -145,7 +190,24 @@ export class EditBoardTaskComponent {
           this.addNewBoardTaskSubtask(boardTaskSubtask.id, boardTaskSubtask.title);
         });
       }
-    }, {allowSignalWrites: true});
+    });
+
+    effect(() => {
+
+      const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
+
+      if (!this.form.controls.boardStatusId.dirty) {
+        setTimeout(() => {
+          this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
+        });
+      } else {
+        if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this.form.controls.boardStatusId.value === boardStatusesPopMenuItem.value)) {
+          setTimeout(() => {
+            this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
+          });
+        }
+      }
+    });
   }
 
   addNewBoardTaskSubtask(id: null | string = null, title = '') {
