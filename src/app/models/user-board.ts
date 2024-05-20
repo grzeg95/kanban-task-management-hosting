@@ -1,14 +1,19 @@
 import {
   collection as firestoreCollection,
+  DocumentData,
   DocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
-  QueryDocumentSnapshot as firestoreQueryDocumentSnapshot,
-  FirestoreDataConverter
+  FirestoreDataConverter,
+  QueryDocumentSnapshot as firestoreQueryDocumentSnapshot
 } from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
+import {
+  collection as storeCollection,
+  DocumentReference as storeDocumentReference,
+  DocumentSnapshot as storeDocumentSnapshot
+} from '../utils/store';
 import {User, UserDoc} from './user';
-import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot, collection as storeCollection} from '../utils/store';
 
 export type UserBoardDoc = {
   name: string;
@@ -17,58 +22,56 @@ export type UserBoardDoc = {
 export class UserBoard {
 
   constructor(
-    public id: string = '',
-    public name: string = ''
+    public id: string,
+    public name: string
   ) {
   }
 
-  static valueOf(userBoard: UserBoard) {
-    return cloneDeep({
-      name: userBoard.name,
-    }) as UserBoardDoc;
-  }
-
-  private static _conventer = {
-    toFirestore: (userBoard: UserBoard) => UserBoard.valueOf(userBoard),
-    fromFirestore: (snap) => {
-
-      const data = cloneDeep(snap.data()) as UserBoard;
-
-      return new UserBoard(
-        snap.id,
-        data.name
-      );
-    }
+  private static _converter = {
+    toFirestore: cloneDeep,
+    fromFirestore: UserBoard._snapToThis
   } as FirestoreDataConverter<UserBoard, UserBoardDoc>;
 
-  static firestoreCollectionRef(userRef: DocumentReference<User, UserDoc>) {
-    return firestoreCollection(userRef, Collections.userBoards).withConverter(UserBoard._conventer);
+  static firestoreCollectionRef(ref: DocumentReference<User, UserDoc>) {
+    return firestoreCollection(ref, Collections.userBoards).withConverter(UserBoard._converter);
   }
 
-  static firestoreData(userBoardsSnap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
-  static firestoreData(userBoardQuerySnap: firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
+  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
+  static firestoreData(snap: firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
 
-  static firestoreData(userBoardsSnapOrUserBoardQuerySnap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc> | firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>) {
-    return userBoardsSnapOrUserBoardQuerySnap.data() || new UserBoard(userBoardsSnapOrUserBoardQuerySnap.id);
+  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc> | firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>) {
+    return UserBoard._snapToThis(snap);
   }
 
-  static storeCollectionRef(userRef: storeDocumentReference) {
-    return storeCollection(userRef, Collections.userBoards);
+  static storeCollectionRef(ref: storeDocumentReference) {
+    return storeCollection(ref, Collections.userBoards);
   }
 
-  static storeRef(userBoardsRef: storeDocumentReference, userBoardId: string) {
-    return userBoardsRef.collection(Collections.userBoards).doc(userBoardId);
+  static storeRef(ref: storeDocumentReference, userBoardId: string) {
+    return ref.collection(Collections.userBoards).doc(userBoardId);
   }
 
-  static storeData(userBoardsDocumentSnapshot: storeDocumentSnapshot) {
+  static storeData(snap: storeDocumentSnapshot) {
+    return UserBoard._snapToThis(snap);
+  }
 
-    if (userBoardsDocumentSnapshot.exists) {
-      return new UserBoard(
-        userBoardsDocumentSnapshot.id,
-        userBoardsDocumentSnapshot.data['name'] as string
-      );
+  private static _snapToThis(snap: firestoreDocumentSnapshot<UserBoard | DocumentData, UserBoardDoc> | storeDocumentSnapshot) {
+
+    let data: any;
+
+    if (snap instanceof firestoreDocumentSnapshot) {
+      data = snap.data();
+    } else {
+      data = snap.data;
     }
 
-    return new UserBoard(userBoardsDocumentSnapshot.id);
+    let name = '';
+
+    data?.['name'] && typeof data['name'] === 'string' && data['name'].length > 0 && (name = data['name']);
+
+    return new UserBoard(
+      snap.id,
+      name
+    );
   }
 }

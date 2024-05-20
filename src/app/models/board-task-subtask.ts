@@ -1,13 +1,18 @@
 import {
   collection as firestoreCollection,
   doc as firestoreDoc,
+  DocumentData,
   DocumentReference as firestoreDocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter
 } from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {DocumentReference as storeDocumentReference, collection as storeCollection, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
+import {
+  collection as storeCollection,
+  DocumentReference as storeDocumentReference,
+  DocumentSnapshot as storeDocumentSnapshot
+} from '../utils/store';
 import {BoardTask, BoardTaskDoc} from './board-task';
 
 export type BoardTaskSubtaskDoc = {
@@ -18,40 +23,31 @@ export type BoardTaskSubtaskDoc = {
 export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
 
   constructor(
-    public id: string = '',
-    public title: string = '',
-    public isCompleted: boolean = false
+    public readonly id: string,
+    public readonly title: string,
+    public readonly isCompleted: boolean
   ) {
   }
 
-  private static _conventer = {
-    toFirestore: (boardTaskSubtaskDoc: BoardTaskSubtaskDoc) => cloneDeep(boardTaskSubtaskDoc),
-    fromFirestore: (snap) => {
-
-      const data = cloneDeep(snap.data()) as BoardTaskSubtaskDoc;
-
-      return new BoardTaskSubtask(
-        snap.id,
-        data.title,
-        data.isCompleted
-      );
-    }
+  private static _converter = {
+    toFirestore: cloneDeep,
+    fromFirestore: BoardTaskSubtask._snapToThis
   } as FirestoreDataConverter<BoardTaskSubtask, BoardTaskSubtaskDoc>;
 
-  static firestoreRef(boardTaskRef: firestoreDocumentReference<BoardTask, BoardTaskDoc>, id: string) {
-    return firestoreDoc(boardTaskRef, Collections.boardTaskSubtasks, id).withConverter(BoardTaskSubtask._conventer);
+  static firestoreRef(ref: firestoreDocumentReference<BoardTask, BoardTaskDoc>, id: string) {
+    return firestoreDoc(ref, Collections.boardTaskSubtasks, id).withConverter(BoardTaskSubtask._converter);
   }
 
-  static firestoreRefs(boardTaskRef: firestoreDocumentReference<BoardTask, BoardTaskDoc>) {
-    return firestoreCollection(boardTaskRef, Collections.boardTaskSubtasks).withConverter(BoardTaskSubtask._conventer);
+  static firestoreRefs(ref: firestoreDocumentReference<BoardTask, BoardTaskDoc>) {
+    return firestoreCollection(ref, Collections.boardTaskSubtasks).withConverter(BoardTaskSubtask._converter);
   }
 
-  static firestoreData(boardTaskSubtaskSnap: firestoreDocumentSnapshot<BoardTaskSubtask, BoardTaskSubtaskDoc>) {
-    return boardTaskSubtaskSnap.data() || new BoardTaskSubtask();
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTaskSubtask, BoardTaskSubtaskDoc>) {
+    return BoardTaskSubtask._snapToThis(snap);
   }
 
-  static storeRef(boardTaskRef: storeDocumentReference, id?: string) {
-    const boardTaskCollectionRef = boardTaskRef.collection(Collections.boardTaskSubtasks);
+  static storeRef(ref: storeDocumentReference, id?: string) {
+    const boardTaskCollectionRef = ref.collection(Collections.boardTaskSubtasks);
     let boardTaskSubtaskRef;
 
     if (!id) {
@@ -63,13 +59,13 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return boardTaskSubtaskRef;
   }
 
-  static storeRefs(boardTaskRef: storeDocumentReference) {
-    return storeCollection(boardTaskRef, Collections.boardTaskSubtasks);
+  static storeRefs(ref: storeDocumentReference) {
+    return storeCollection(ref, Collections.boardTaskSubtasks);
   }
 
-  static storeRefsFromBoardTask(boardTaskRef: storeDocumentReference, boardTask: BoardTask) {
+  static storeRefsFromBoardTask(ref: storeDocumentReference, boardTask: BoardTask) {
 
-    const boardTaskSubtasksCollectionRef = boardTaskRef.collection(Collections.boardTaskSubtasks);
+    const boardTaskSubtasksCollectionRef = ref.collection(Collections.boardTaskSubtasks);
     const boardTaskSubtasksRefs = [];
 
     for (const boardTaskSubtaskId of boardTask.boardTaskSubtasksIds) {
@@ -79,16 +75,30 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return boardTaskSubtasksRefs;
   }
 
-  static storeData(boardTaskSubtaskSnap: storeDocumentSnapshot) {
+  static storeData(snap: storeDocumentSnapshot) {
+    return BoardTaskSubtask._snapToThis(snap);
+  }
 
-    if (boardTaskSubtaskSnap.exists) {
-      return new BoardTaskSubtask(
-        boardTaskSubtaskSnap.id,
-        boardTaskSubtaskSnap.data['title'] as string,
-        boardTaskSubtaskSnap.data['isCompleted'] as boolean
-      );
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTaskSubtask | DocumentData, BoardTaskSubtaskDoc> | storeDocumentSnapshot) {
+
+    let data: any;
+
+    if (snap instanceof firestoreDocumentSnapshot) {
+      data = snap.data();
+    } else {
+      data = snap.data;
     }
 
-    return new BoardTaskSubtask(boardTaskSubtaskSnap.id);
+    let title = '';
+    let isCompleted = false;
+
+    data?.['title'] && typeof data['title'] === 'string' && data['title'].length > 0 && (title = data['title']);
+    data?.['isCompleted'] && typeof data['isCompleted'] === 'boolean' && (isCompleted = data['isCompleted']);
+
+    return new BoardTaskSubtask(
+      snap.id,
+      title,
+      isCompleted
+    );
   }
 }

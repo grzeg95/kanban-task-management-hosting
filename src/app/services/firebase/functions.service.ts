@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Functions, httpsCallable, HttpsCallableResult} from '@angular/fire/functions';
+import {Functions, httpsCallable} from '@angular/fire/functions';
 import {defer} from 'rxjs';
 import {SnackBarService} from '../snack-bar.service';
 

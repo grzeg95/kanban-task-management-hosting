@@ -28,6 +28,8 @@ export class BoardService {
     })
   );
 
+  config$ = this._getObservedValueOf('config$');
+
   boardId$ = this._getObservedValueOf('boardId$');
   user$ = this._getObservedValueOf('user$');
   userBoards$ = this._getObservedValueOf('userBoards$');

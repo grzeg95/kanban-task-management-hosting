@@ -1,5 +1,6 @@
 import {
   doc as firestoreDoc,
+  DocumentData,
   DocumentSnapshot as firestoreDocumentSnapshot,
   Firestore,
   FirestoreDataConverter
@@ -17,65 +18,72 @@ export type BoardDoc = {
 export class Board implements BoardDoc {
 
   constructor(
-    public id: string = '',
-    public name: string = '',
-    public boardStatusesIds: string[] = [],
-    public boardTasksIds: string[] = [],
+    public readonly id: string,
+    public readonly name: string,
+    public readonly boardStatusesIds: string[],
+    public readonly boardTasksIds: string[]
   ) {
   }
 
-  private static _conventer = {
-    toFirestore: (boardDoc: BoardDoc) => cloneDeep(boardDoc),
-    fromFirestore: (snap) => {
-
-      const data = cloneDeep(snap.data()) as BoardDoc;
-
-      return new Board(
-        snap.id,
-        data.name,
-        data.boardStatusesIds,
-        data.boardTasksIds
-      );
-    }
+  private static _converter = {
+    toFirestore: cloneDeep,
+    fromFirestore: Board._snapToThis
   } as FirestoreDataConverter<Board, BoardDoc>;
 
   static firestoreRef(firestore: Firestore, id: string) {
-    return firestoreDoc(firestore, Collections.boards, id).withConverter(Board._conventer);
+    return firestoreDoc(firestore, Collections.boards, id).withConverter(Board._converter);
   }
 
-  static firestoreData(boardSnap: firestoreDocumentSnapshot<Board, BoardDoc>) {
-
-    if (boardSnap.exists()) {
-
-      const data = boardSnap.data();
-
-      return new Board(
-        boardSnap.id,
-        data['name'] as string,
-        data['boardStatusesIds'] as string[],
-        data['boardTasksIds'] as string[]
-      );
-    }
-
-    return new Board(boardSnap.id);
+  static firestoreData(snap: firestoreDocumentSnapshot<Board, BoardDoc>) {
+    return Board._snapToThis(snap);
   }
 
   static storeRef(storage: Storage, id?: string) {
     return storeDoc(storage, [Collections.boards, id].filter(p => !!p).join('/'));
   }
 
-  static storeData(boardSnap: storeDocumentSnapshot) {
+  static storeData(snap: storeDocumentSnapshot) {
+    return Board._snapToThis(snap);
+  }
 
-    if (boardSnap.exists) {
-      return new Board(
-        boardSnap.id,
-        boardSnap.data['name'] as string,
-        boardSnap.data['boardStatusesIds'] as string[],
-        boardSnap.data['boardTasksIds'] as string[]
-      );
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Board | DocumentData, BoardDoc> | storeDocumentSnapshot) {
+
+    let data: any;
+
+    if (snap instanceof firestoreDocumentSnapshot) {
+      data = snap.data();
+    } else {
+      data = snap.data;
     }
 
-    return new Board(boardSnap.id);
+    let name = '';
+    let boardStatusesIds: string[] = [];
+    let boardTasksIds: string[] = [];
+
+    data?.['name'] && typeof data['name'] === 'string' && data['name'].length > 0 && (name = data['name']);
+
+    if (
+      data?.['boardStatusesIds'] &&
+      Array.isArray(data['boardStatusesIds']) &&
+      !data['boardStatusesIds'].some((e) => typeof e !== 'string')
+    ) {
+      boardStatusesIds = data['boardStatusesIds'];
+    }
+
+    if (
+      data?.['boardTasksIds'] &&
+      Array.isArray(data['boardTasksIds']) &&
+      !data['boardTasksIds'].some((e) => typeof e !== 'string')
+    ) {
+      boardTasksIds = data['boardTasksIds'];
+    }
+
+    return new Board(
+      snap.id,
+      name,
+      boardStatusesIds,
+      boardTasksIds
+    );
   }
 }
 

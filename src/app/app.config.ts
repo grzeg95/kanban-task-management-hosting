@@ -11,7 +11,6 @@ import {join} from 'path-browserify';
 import {forkJoin, mergeMap} from 'rxjs';
 import {environment} from '../environments/environment';
 import {routes} from './app.routes';
-import {KanbanConfig} from './kanban-config.token';
 import {SvgService} from './services/svg.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
 import {getInMemory, InMemory} from './utils/store';
@@ -100,15 +99,6 @@ export const appConfig: ApplicationConfig = {
           }
         }
       }
-    },
-    {
-      provide: KanbanConfig,
-      useValue: {
-        maxUserBoards: 5,
-        maxBoardStatuses: 5,
-        maxBoardTasks: 20,
-        maxBoardTaskSubtasks: 10
-      } as KanbanConfig
     },
     {
       provide: InMemory,

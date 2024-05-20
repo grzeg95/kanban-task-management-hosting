@@ -1,6 +1,5 @@
-import {Inject, Injectable} from '@angular/core';
-import {catchError, combineLatest, from, map, Observable, of, switchMap, tap} from 'rxjs';
-import {KanbanConfig} from '../../kanban-config.token';
+import {Injectable} from '@angular/core';
+import {catchError, combineLatest, firstValueFrom, from, map, Observable, of, shareReplay, switchMap, tap} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -21,6 +20,7 @@ import {
   BoardTaskUpdateResult,
 } from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
+import {Config} from '../../models/config';
 import {InMemoryError} from '../../models/in-memory-error';
 import {User, UserDoc} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
@@ -39,9 +39,25 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   private _userId = '0';
 
+  override config$ = new Observable<DocumentSnapshot>((subscriber) => {
+
+    const configRef = Config.storeRef(this._inMemory, 'global');
+
+    const unsubscribe = configRef.snapshots({
+      next: subscriber.next.bind(subscriber),
+      error: subscriber.error.bind(subscriber),
+      complete: subscriber.complete.bind(subscriber)
+    });
+    return {unsubscribe};
+  }).pipe(
+    map(Config.storeData),
+    getProtectedRxjsPipe(),
+    shareReplay()
+  );
+
   override user$ = new Observable<DocumentSnapshot>((subscriber) => {
 
-    const unsubscribe = doc(this._inMemory, `users/${this._userId}`).snapshots({
+    const unsubscribe = User.storeRef(this._inMemory, this._userId).snapshots({
       next: subscriber.next.bind(subscriber),
       error: subscriber.error.bind(subscriber),
       complete: subscriber.complete.bind(subscriber)
@@ -57,7 +73,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.firstLoadingBoardTasks$.next(true);
       this.firstLoadingBoardTask$.next(true);
       this.firstLoadingBoardTaskSubtasks$.next(true);
-    })
+    }),
+    shareReplay()
   );
 
   override userBoards$ = this.user$.pipe(
@@ -72,9 +89,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(undefined);
       }
 
-      const userBoardCollectionRef = UserBoard.storeCollectionRef(User.storeRef(this._inMemory, user.id));
-
       return new Observable<DocumentSnapshot[]>((subscriber) => {
+
+        const userRef = User.storeRef(this._inMemory, user.id);
+        const userBoardCollectionRef = UserBoard.storeCollectionRef(userRef);
 
         const unsubscribe = userBoardCollectionRef.snapshots({
           next: subscriber.next.bind(subscriber),
@@ -101,7 +119,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.loadingUserBoards$.next(false);
       this.firstLoadingUserBoards$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override board$ = combineLatest([
@@ -126,9 +145,9 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(undefined);
       }
 
-      const boardRef = Board.storeRef(this._inMemory, boardId);
-
       return new Observable<DocumentSnapshot>((subscriber) => {
+
+        const boardRef = Board.storeRef(this._inMemory, boardId);
 
         const unsubscribe = boardRef.snapshots({
           next: subscriber.next.bind(subscriber),
@@ -151,7 +170,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.loadingBoard$.next(false);
       this.firstLoadingBoard$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardStatuses$ = combineLatest([
@@ -169,10 +189,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(undefined);
       }
 
-      const boardRef = Board.storeRef(this._inMemory, board.id);
-      const boardStatusesRef = BoardStatus.storeCollectionRef(boardRef);
-
       return new Observable<DocumentSnapshot[]>((subscriber) => {
+
+        const boardRef = Board.storeRef(this._inMemory, board.id);
+        const boardStatusesRef = BoardStatus.storeCollectionRef(boardRef);
 
         const unsubscribe = boardStatusesRef.snapshots({
           next: subscriber.next.bind(subscriber),
@@ -197,7 +217,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.loadingBoardStatuses$.next(false);
       this.firstLoadingBoardStatuses$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardTasks$ = combineLatest([
@@ -215,10 +236,11 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(undefined);
       }
 
-      const boardRef = Board.storeRef(this._inMemory, board.id);
-      const boardTasksRef = BoardTask.storeCollectionRef(boardRef);
-
       return new Observable<DocumentSnapshot[]>((subscriber) => {
+
+        const boardRef = Board.storeRef(this._inMemory, board.id);
+        const boardTasksRef = BoardTask.storeCollectionRef(boardRef);
+
         const unsubscribe = boardTasksRef.snapshots({
           next: subscriber.next.bind(subscriber),
           error: subscriber.error.bind(subscriber),
@@ -242,7 +264,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.loadingBoardTasks$.next(false);
       this.firstLoadingBoardTasks$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardTask$ = combineLatest([
@@ -272,7 +295,8 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.loadingBoardTask$.next(false);
       this.firstLoadingBoardTask$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardTaskSubtasks$ = combineLatest([
@@ -318,13 +342,13 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       this.loadingBoardTaskSubtasks$.next(false);
       this.firstLoadingBoardTaskSubtasks$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   constructor(
     private readonly _inMemory: InMemory,
-    private readonly _snackBarService: SnackBarService,
-    @Inject(KanbanConfig) private readonly _kanbanConfig: KanbanConfig
+    private readonly _snackBarService: SnackBarService
   ) {
     super();
   }
@@ -350,6 +374,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     return this._Request<BoardCreateResult>(async () => {
 
+      let config = await firstValueFrom(this.config$);
+      InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
+      config = config as Config;
+
       const writeBatch = new WriteBatch(this._inMemory);
 
       const userRef = User.storeRef(this._inMemory, this._userId);
@@ -357,14 +385,14 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const user = User.storeData(userSnap);
 
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
-      InMemoryError.testRequirement(user.boardsIds.length >= this._kanbanConfig.maxUserBoards, {
+      InMemoryError.testRequirement(user.boardsIds.length >= config.maxUserBoards, {
         code: 'resource-exhausted',
-        message: `User can have ${this._kanbanConfig.maxUserBoards} boards`
+        message: `User can have ${config.maxUserBoards} boards`
       });
 
-      InMemoryError.testRequirement(data.boardStatusesNames.length > this._kanbanConfig.maxBoardStatuses, {
+      InMemoryError.testRequirement(data.boardStatusesNames.length > config.maxBoardStatuses, {
         code: 'resource-exhausted',
-        message: `Board can have ${this._kanbanConfig.maxBoardStatuses} statuses`
+        message: `Board can have ${config.maxBoardStatuses} statuses`
       });
 
       const boardRef = Board.storeRef(this._inMemory);
@@ -531,6 +559,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     return this._Request<BoardUpdateResult>(async () => {
 
+      let config = await firstValueFrom(this.config$);
+      InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
+      config = config as Config;
+
       const writeBatch = new WriteBatch(this._inMemory);
 
       const userRef = User.storeRef(this._inMemory, this._userId);
@@ -637,9 +669,9 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         boardStatusesIds.push(boardStatusSnap.id);
       }
 
-      InMemoryError.testRequirement(boardStatusesIds.length > this._kanbanConfig.maxBoardStatuses, {
+      InMemoryError.testRequirement(boardStatusesIds.length > config.maxBoardStatuses, {
         code: 'resource-exhausted',
-        message: `Board can have ${this._kanbanConfig.maxBoardStatuses} statuses`
+        message: `Board can have ${config.maxBoardStatuses} statuses`
       });
 
       const boardTasksIds = board.boardTasksIds.toSet().difference(tasksIdsToRemove.toSet()).toArray();
@@ -709,6 +741,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     return this._Request<BoardTaskCreateResult>(async () => {
 
+      let config = await firstValueFrom(this.config$);
+      InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
+      config = config as Config;
+
       const writeBatch = new WriteBatch(this._inMemory);
 
       const userRef = User.storeRef(this._inMemory, this._userId);
@@ -724,9 +760,9 @@ export class InMemoryBoardService extends BoardServiceAbstract {
       const boardSnap = await boardRef.get();
       const board = Board.storeData(boardSnap);
 
-      InMemoryError.testRequirement(board.boardTasksIds.length >= this._kanbanConfig.maxBoardTasks, {
+      InMemoryError.testRequirement(board.boardTasksIds.length >= config.maxBoardTasks, {
         code: 'resource-exhausted',
-        message: `Board can have ${this._kanbanConfig.maxBoardTasks} tasks`
+        message: `Board can have ${config.maxBoardTasks} tasks`
       });
 
       InMemoryError.testRequirement(!board.boardStatusesIds.toSet().has(data.boardStatusId), {
@@ -734,9 +770,9 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: 'Status do not exist'
       });
 
-      InMemoryError.testRequirement(data.boardTaskSubtasksTitles.length > this._kanbanConfig.maxBoardTaskSubtasks, {
+      InMemoryError.testRequirement(data.boardTaskSubtasksTitles.length > config.maxBoardTaskSubtasks, {
         code: 'resource-exhausted',
-        message: `Board task can have ${this._kanbanConfig.maxBoardTaskSubtasks} subtasks`
+        message: `Board task can have ${config.maxBoardTaskSubtasks} subtasks`
       });
 
       const boardStatusRef = BoardStatus.storeRef(boardSnap.reference, data.boardStatusId);
@@ -890,6 +926,10 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
     return this._Request(async () => {
 
+      let config = await firstValueFrom(this.config$);
+      InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
+      config = config as Config;
+
       const writeBatch = new WriteBatch(this._inMemory);
 
       const userRef = User.storeRef(this._inMemory, this._userId);
@@ -992,9 +1032,9 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         boardTaskSubtasksIds.push(boardTaskSubtaskSnap.id);
       }
 
-      InMemoryError.testRequirement(boardTaskSubtasksIds.length > this._kanbanConfig.maxBoardTaskSubtasks, {
+      InMemoryError.testRequirement(boardTaskSubtasksIds.length > config.maxBoardTaskSubtasks, {
         code: 'resource-exhausted',
-        message: `Board task can have ${this._kanbanConfig.maxBoardTaskSubtasks} subtasks`
+        message: `Board task can have ${config.maxBoardTaskSubtasks} subtasks`
       });
 
       writeBatch.update(taskSnap.reference, {

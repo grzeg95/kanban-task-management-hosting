@@ -196,6 +196,10 @@ export class EditBoardTaskComponent {
 
       const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
 
+      if (boardStatusesPopMenuItems.length === 0) {
+        return;
+      }
+
       if (!this.form.controls.boardStatusId.dirty) {
         setTimeout(() => {
           this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);

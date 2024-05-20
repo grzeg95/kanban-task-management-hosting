@@ -9,8 +9,9 @@ import {
   QueryConstraint,
   QuerySnapshot,
   UpdateData,
-  updateDoc as _updateDoc
+  updateDoc as _updateDoc,
 } from '@angular/fire/firestore';
+export {doc, getDoc} from '@angular/fire/firestore';
 import {defer, Observable} from 'rxjs';
 
 export function docSnapshots<AppModelType, DbModelType extends DocumentData>(reference: DocumentReference<AppModelType, DbModelType>) {

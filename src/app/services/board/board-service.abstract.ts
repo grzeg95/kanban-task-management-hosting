@@ -20,10 +20,12 @@ import {
   BoardTaskUpdateResult
 } from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
+import {Config} from '../../models/config';
 import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 
 export type ObservedValuesOfBoardService =
+  | 'config$'
   | 'boardId$'
   | 'user$'
   | 'userBoards$'
@@ -46,6 +48,8 @@ export type ObservedValuesOfBoardService =
   | 'firstLoadingBoardTaskSubtasks$';
 
 export interface BoardServiceInterface {
+
+  config$: Observable<Config | undefined> | undefined;
 
   boardId$: BehaviorSubject<string | null | undefined>;
   boardTaskId$: BehaviorSubject<string | null | undefined> | undefined;
@@ -87,6 +91,8 @@ export interface BoardServiceInterface {
 
 @Injectable()
 export abstract class BoardServiceAbstract implements BoardServiceInterface {
+
+  config$: Observable<Config | undefined> | undefined;
 
   readonly boardId$ = new BehaviorSubject<string | null | undefined>(undefined);
   readonly boardTaskId$ = new BehaviorSubject<string | null | undefined>(undefined);

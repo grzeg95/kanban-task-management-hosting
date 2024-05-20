@@ -1,7 +1,6 @@
-import {Inject, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Firestore, limit} from '@angular/fire/firestore';
-import {catchError, combineLatest, map, of, switchMap, take, tap} from 'rxjs';
-import {KanbanConfig} from '../../kanban-config.token';
+import {catchError, combineLatest, map, of, shareReplay, switchMap, tap} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -22,6 +21,7 @@ import {
   BoardTaskUpdateResult
 } from '../../models/board-task';
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
+import {Config} from '../../models/config';
 import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
@@ -41,21 +41,30 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     getProtectedRxjsPipe()
   );
 
-  override userBoards$ = this.user$.pipe(
+  override config$ = docSnapshots(Config.firestoreRef(this._firestore, 'global')).pipe(
+    map(Config.firestoreData),
+    getProtectedRxjsPipe(),
+    shareReplay()
+  );
+
+  override userBoards$ = combineLatest([
+    this.user$,
+    this.config$
+  ]).pipe(
     tap(() => this.loadingUserBoards$.next(true)),
-    switchMap((user) => {
+    switchMap(([user, config]) => {
 
       if (user === null) {
         return of(null);
       }
 
-      if (user === undefined) {
+      if (user === undefined || config === undefined) {
         return of(undefined);
       }
 
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, user.id));
 
-      return collectionSnapshots(userBoardCollectionRef, limit(this._kanbanConfig.maxUserBoards)).pipe(
+      return collectionSnapshots(userBoardCollectionRef, limit(config.maxUserBoards)).pipe(
         map((querySnapUserBoard) => {
 
           const querySnapUserBoardMap = new Map<string, UserBoard>();
@@ -74,7 +83,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       this.loadingUserBoards$.next(false);
       this.firstLoadingUserBoards$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override board$ = combineLatest([
@@ -115,28 +125,30 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       this.loadingBoard$.next(false);
       this.firstLoadingBoard$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardStatuses$ = combineLatest([
     this.board$,
-    this.user$
+    this.user$,
+    this.config$
   ]).pipe(
     tap(() => this.loadingBoardStatuses$.next(true)),
-    switchMap(([board, user]) => {
+    switchMap(([board, user, config]) => {
 
       if (board === null || user === null) {
         return of(null);
       }
 
-      if (board === undefined || user === undefined) {
+      if (board === undefined || user === undefined || config === undefined) {
         return of(undefined);
       }
 
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
 
-      return collectionSnapshots(boardStatusesRef, limit(this._kanbanConfig.maxBoardStatuses)).pipe(
+      return collectionSnapshots(boardStatusesRef, limit(config.maxBoardStatuses)).pipe(
         map((querySnapBoardStatuses) => {
 
           const boardStatuses: { [key in string]: BoardStatus } = {};
@@ -153,28 +165,30 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       this.loadingBoardStatuses$.next(false);
       this.firstLoadingBoardStatuses$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardTasks$ = combineLatest([
     this.board$,
-    this.user$
+    this.user$,
+    this.config$
   ]).pipe(
     tap(() => this.loadingBoardTasks$.next(true)),
-    switchMap(([board, user]) => {
+    switchMap(([board, user, config]) => {
 
       if (board === null || user === null) {
         return of(null);
       }
 
-      if (board === undefined || user === undefined) {
+      if (board === undefined || user === undefined || config === undefined) {
         return of(undefined);
       }
 
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
 
-      return collectionSnapshots(boardTasksRef, limit(this._kanbanConfig.maxBoardTasks)).pipe(
+      return collectionSnapshots(boardTasksRef, limit(config.maxBoardTasks)).pipe(
         map((querySnapBoardTasks) => {
 
           const boardTasks: { [key in string]: BoardTask } = {};
@@ -191,7 +205,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       this.loadingBoardTasks$.next(false);
       this.firstLoadingBoardTasks$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardTask$ = combineLatest([
@@ -221,21 +236,23 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       this.loadingBoardTask$.next(false);
       this.firstLoadingBoardTask$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   override boardTaskSubtasks$ = combineLatest([
     this.board$,
     this.boardTask$,
+    this.config$
   ]).pipe(
-    tap(() => this.loadingBoardTaskSubtasks$.next(true)),
-    switchMap(([board, boardTask]) => {
+    tap(() => this.loadingBoardTask$.next(true)),
+    switchMap(([board, boardTask, config]) => {
 
       if (board === null || boardTask === null) {
         return of(null);
       }
 
-      if (board === undefined || boardTask === undefined) {
+      if (board === undefined || boardTask === undefined || config === undefined) {
         return of(undefined);
       }
 
@@ -243,7 +260,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       const boardTaskRef = BoardTask.firestoreRef(boardRef, boardTask.id);
       const boardTaskSubtasksRef = BoardTaskSubtask.firestoreRefs(boardTaskRef);
 
-      return collectionSnapshots(boardTaskSubtasksRef, limit(this._kanbanConfig.maxBoardTaskSubtasks)).pipe(
+      return collectionSnapshots(boardTaskSubtasksRef, limit(config.maxBoardTaskSubtasks)).pipe(
         map((querySnapBoardTaskSubtasks) => {
 
           const boardTaskSubtasks: { [key in string]: BoardTaskSubtask } = {};
@@ -257,18 +274,18 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       );
     }),
     tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTaskSubtasks$.next(false);
-      this.firstLoadingBoardTaskSubtasks$.next(false);
+      this.loadingBoardTask$.next(false);
+      this.firstLoadingBoardTask$.next(false);
     }),
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    shareReplay()
   );
 
   constructor(
     private readonly _authService: AuthService,
     private readonly _firestore: Firestore,
     private readonly _functionsService: FunctionsService,
-    private readonly _snackBarService: SnackBarService,
-    @Inject(KanbanConfig) private readonly _kanbanConfig: KanbanConfig
+    private readonly _snackBarService: SnackBarService
   ) {
     super();
   }

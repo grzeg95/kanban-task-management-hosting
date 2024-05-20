@@ -1,6 +1,7 @@
 import {
   collection as firestoreCollection,
   doc as firestoreDoc,
+  DocumentData,
   DocumentReference as firestoreDocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter
@@ -22,51 +23,39 @@ export type BoardTaskDoc = {
 export class BoardTask implements BoardTaskDoc {
 
   constructor(
-    public id: string = '',
-    public title: string = '',
-    public description: string = '',
-    public boardTaskSubtasksIds: string[] = [],
-    public boardStatusId: string = '',
-    public completedBoardTaskSubtasks: number = 0
+    public readonly id: string,
+    public readonly title: string,
+    public readonly description: string,
+    public readonly boardTaskSubtasksIds: string[],
+    public readonly boardStatusId: string,
+    public readonly completedBoardTaskSubtasks: number
   ) {
   }
 
-  private static _conventer = {
-    toFirestore: (boardTaskDoc: BoardTaskDoc) => cloneDeep(boardTaskDoc),
-    fromFirestore: (snap) => {
-
-      const data = cloneDeep(snap.data()) as BoardTaskDoc;
-
-      return new BoardTask(
-        snap.id,
-        data.title,
-        data.description,
-        data.boardTaskSubtasksIds,
-        data.boardStatusId,
-        data.completedBoardTaskSubtasks
-      );
-    }
+  private static _converter = {
+    toFirestore: cloneDeep,
+    fromFirestore: BoardTask._snapToThis
   } as FirestoreDataConverter<BoardTask, BoardTaskDoc>;
 
-  static firestoreRef(boardRef: firestoreDocumentReference<Board, BoardDoc>, id: string) {
-    return firestoreDoc(boardRef, Collections.boardTasks, id).withConverter(BoardTask._conventer);
+  static firestoreRef(ref: firestoreDocumentReference<Board, BoardDoc>, id: string) {
+    return firestoreDoc(ref, Collections.boardTasks, id).withConverter(BoardTask._converter);
   }
 
-  static firestoreCollectionRef(boardRef: firestoreDocumentReference<Board, BoardDoc>) {
-    return firestoreCollection(boardRef, Collections.boardTasks).withConverter(BoardTask._conventer);
+  static firestoreCollectionRef(ref: firestoreDocumentReference<Board, BoardDoc>) {
+    return firestoreCollection(ref, Collections.boardTasks).withConverter(BoardTask._converter);
   }
 
-  static firestoreData(boardTaskSnap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc>) {
-    return boardTaskSnap.data() || new BoardTask();
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc>) {
+    return BoardTask._snapToThis(snap);
   }
 
-  static storeRef(boardRef: storeDocumentReference, id?: string) {
-    return boardRef.collection(Collections.boardTasks).doc(id);
+  static storeRef(ref: storeDocumentReference, id?: string) {
+    return ref.collection(Collections.boardTasks).doc(id);
   }
 
-  static storeRefs(boardRef: storeDocumentReference, boardStatus: BoardStatus) {
+  static storeRefs(ref: storeDocumentReference, boardStatus: BoardStatus) {
 
-    const boardStatusesCollectionRef = boardRef.collection(Collections.boardStatuses);
+    const boardStatusesCollectionRef = ref.collection(Collections.boardStatuses);
     const boardStatusesRefs = [];
 
     for (const boardStatusId of boardStatus.boardTasksIds) {
@@ -76,24 +65,52 @@ export class BoardTask implements BoardTaskDoc {
     return boardStatusesRefs;
   }
 
-  static storeCollectionRef(boardRef: storeDocumentReference) {
-    return boardRef.collection(Collections.boardTasks);
+  static storeCollectionRef(ref: storeDocumentReference) {
+    return ref.collection(Collections.boardTasks);
   }
 
-  static storeData(boardTaskSnap: storeDocumentSnapshot) {
+  static storeData(snap: storeDocumentSnapshot) {
+    return BoardTask._snapToThis(snap);
+  }
 
-    if (boardTaskSnap.exists) {
-      return new BoardTask(
-        boardTaskSnap.id,
-        boardTaskSnap.data['title'] as string,
-        boardTaskSnap.data['description'] as string,
-        boardTaskSnap.data['boardTaskSubtasksIds'] as string[],
-        boardTaskSnap.data['boardStatusId'] as string,
-        boardTaskSnap.data['completedBoardTaskSubtasks'] as number
-      );
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask | DocumentData, BoardTaskDoc> | storeDocumentSnapshot) {
+
+    let data: any;
+
+    if (snap instanceof firestoreDocumentSnapshot) {
+      data = snap.data();
+    } else {
+      data = snap.data;
     }
 
-    return new BoardTask(boardTaskSnap.id);
+    let title = '';
+    let description = '';
+    let boardTaskSubtasksIds: string[] = [];
+    let boardStatusId = '';
+    let completedBoardTaskSubtasks = 0;
+
+    data?.['title'] && typeof data['title'] === 'string' && data['title'].length > 0 && (title = data['title']);
+    data?.['description'] && typeof data['description'] === 'string' && data['description'].length > 0 && (description = data['description']);
+
+    if (
+      data?.['boardTaskSubtasksIds'] &&
+      Array.isArray(data['boardTaskSubtasksIds']) &&
+      !data['boardTaskSubtasksIds'].some((e) => typeof e !== 'string')
+    ) {
+      boardTaskSubtasksIds = data['boardTaskSubtasksIds'];
+    }
+
+    data?.['boardStatusId'] && typeof data['boardStatusId'] === 'string' && data['boardStatusId'].length > 0 && (boardStatusId = data['boardStatusId']);
+    data?.['completedBoardTaskSubtasks'] && typeof data['completedBoardTaskSubtasks'] === 'number' && data['completedBoardTaskSubtasks'] > 0 && (completedBoardTaskSubtasks = data['completedBoardTaskSubtasks']);
+
+    return new BoardTask(
+      snap.id,
+      title,
+      description,
+      boardTaskSubtasksIds,
+      boardStatusId,
+      completedBoardTaskSubtasks
+    );
   }
 }
 
