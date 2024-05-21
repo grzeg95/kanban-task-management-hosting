@@ -7,7 +7,7 @@ import {
 } from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, IdbDatabase, InMemory} from '../utils/store';
+import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
 export type UserDoc = {
   disabled: boolean;
@@ -38,7 +38,7 @@ export class User {
     return User._snapToThis(snap);
   }
 
-  static storeRef(storage: InMemory | IdbDatabase, id: string) {
+  static storeRef(storage: Storage, id: string) {
     return storeDoc(storage, [Collections.users, id].join('/'));
   }
 

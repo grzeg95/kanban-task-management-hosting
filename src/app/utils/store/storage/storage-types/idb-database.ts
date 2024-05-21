@@ -167,6 +167,7 @@ export class IdbDatabase extends Storage {
 
             document.createdAt = date;
             document.modifiedAt = date;
+            document.data = writeBatchOperation.data!;
             documentsStore.add(document.toJSON());
           }
 
@@ -217,7 +218,6 @@ export class IdbDatabase extends Storage {
 
           transaction.oncomplete = async () => {
 
-
             // reload document
 
             for (const operation of writeBatchOperations) {
@@ -229,8 +229,7 @@ export class IdbDatabase extends Storage {
             }
 
             for (const operation of writeBatchOperations) {
-              const document = await operation.documentPromise!;
-              document.notifyObservers();
+              operation.document!.notifyObservers();
               idbDatabase.notifyRegisteredGetDocuments(operation.document!.documentReference.parentReference);
             }
 

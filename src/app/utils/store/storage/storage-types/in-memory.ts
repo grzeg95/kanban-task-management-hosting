@@ -98,41 +98,41 @@ export class InMemory extends Storage {
 
     const date = new Date();
 
-    for (const operation of writeBatchOperations) {
+    for (const writeBatchOperation of writeBatchOperations) {
 
-      operation.document = await operation.documentPromise!;
-      const document = operation.document;
+      writeBatchOperation.document = await writeBatchOperation.documentPromise!;
+      const document = writeBatchOperation.document;
 
-      if (operation.type === WriteBatchOperationType.create) {
+      if (writeBatchOperation.type === WriteBatchOperationType.create) {
 
         if (document.exists) {
-          throw new WriteBatchError(`WriteBatch detected that ${operation.documentReference.id} document exists but was to be created`);
+          throw new WriteBatchError(`WriteBatch detected that ${writeBatchOperation.documentReference.id} document exists but was to be created`);
         }
 
         document.createdAt = date;
         document.modifiedAt = date;
-        document.data = operation.data!;
+        document.data = writeBatchOperation.data!;
       }
 
-      if (operation.type === WriteBatchOperationType.set) {
+      if (writeBatchOperation.type === WriteBatchOperationType.set) {
         document.modifiedAt = date;
-        document.data = operation.data!;
+        document.data = writeBatchOperation.data!;
       }
 
-      if (operation.type === WriteBatchOperationType.update) {
+      if (writeBatchOperation.type === WriteBatchOperationType.update) {
 
         if (!document.exists) {
-          throw new WriteBatchError(`WriteBatch detected that ${operation.documentReference.id} document doesn't exist but was to be updated`);
+          throw new WriteBatchError(`WriteBatch detected that ${writeBatchOperation.documentReference.id} document doesn't exist but was to be updated`);
         }
 
         document.modifiedAt = date;
-        document.data = mergeData(document.data, operation.data!);
+        document.data = mergeData(document.data, writeBatchOperation.data!);
       }
 
-      if (operation.type === WriteBatchOperationType.delete) {
+      if (writeBatchOperation.type === WriteBatchOperationType.delete) {
 
         if (!document.exists) {
-          throw new WriteBatchError(`WriteBatch detected that ${operation.documentReference.id} doesn't exist but was to be deleted`);
+          throw new WriteBatchError(`WriteBatch detected that ${writeBatchOperation.documentReference.id} doesn't exist but was to be deleted`);
         }
       }
     }

@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {catchError, combineLatest, firstValueFrom, from, map, Observable, of, shareReplay, switchMap, tap} from 'rxjs';
+import {environment} from '../../../environments/environment';
 import {
   Board,
   BoardCreateData,
@@ -25,7 +26,7 @@ import {InMemoryError} from '../../models/in-memory-error';
 import {User, UserDoc} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {Data, doc, DocumentSnapshot, InMemory, WriteBatch} from '../../utils/store';
+import {Data, doc, DocumentSnapshot, getIdbDatabase, IdbDatabase, WriteBatch, Storage} from '../../utils/store';
 import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
 import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {Collections} from '../firebase/collections';
@@ -39,31 +40,41 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   private _userId = '0';
 
-  override config$ = new Observable<DocumentSnapshot>((subscriber) => {
+  private _storage$ = from(
+    new Promise<IdbDatabase>((resolve, reject) => getIdbDatabase(environment.firebase.projectId, resolve, reject))
+  );
 
-    const configRef = Config.storeRef(this._inMemory, 'global');
+  override config$ = this._storage$.pipe(
+    switchMap((storage) => {
+      return new Observable<DocumentSnapshot>((subscriber) => {
 
-    const unsubscribe = configRef.snapshots({
-      next: subscriber.next.bind(subscriber),
-      error: subscriber.error.bind(subscriber),
-      complete: subscriber.complete.bind(subscriber)
-    });
-    return {unsubscribe};
-  }).pipe(
+        const configRef = Config.storeRef(storage, 'global');
+
+        const unsubscribe = configRef.snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      })
+    }),
     map(Config.storeData),
     getProtectedRxjsPipe(),
     shareReplay()
   );
 
-  override user$ = new Observable<DocumentSnapshot>((subscriber) => {
+  override user$ = this._storage$.pipe(
+    switchMap((storage) => {
+      return new Observable<DocumentSnapshot>((subscriber) => {
 
-    const unsubscribe = User.storeRef(this._inMemory, this._userId).snapshots({
-      next: subscriber.next.bind(subscriber),
-      error: subscriber.error.bind(subscriber),
-      complete: subscriber.complete.bind(subscriber)
-    });
-    return {unsubscribe};
-  }).pipe(
+        const unsubscribe = User.storeRef(storage, this._userId).snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      })
+    }),
     map(User.storeData),
     getProtectedRxjsPipe(),
     tapOnce(() => {
@@ -77,9 +88,12 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     shareReplay()
   );
 
-  override userBoards$ = this.user$.pipe(
+  override userBoards$ = combineLatest([
+    this._storage$,
+    this.user$
+  ]).pipe(
     tap(() => this.loadingUserBoards$.next(true)),
-    switchMap((user) => {
+    switchMap(([storage, user]) => {
 
       if (user === null) {
         return of(null);
@@ -91,7 +105,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
       return new Observable<DocumentSnapshot[]>((subscriber) => {
 
-        const userRef = User.storeRef(this._inMemory, user.id);
+        const userRef = User.storeRef(storage, user.id);
         const userBoardCollectionRef = UserBoard.storeCollectionRef(userRef);
 
         const unsubscribe = userBoardCollectionRef.snapshots({
@@ -124,6 +138,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   );
 
   override board$ = combineLatest([
+    this._storage$,
     this.boardId$.pipe(
       getProtectedRxjsPipe(),
       tap(() => {
@@ -135,7 +150,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
     this.user$
   ]).pipe(
     tap(() => this.loadingBoard$.next(true)),
-    switchMap(([boardId, user]) => {
+    switchMap(([storage, boardId, user]) => {
 
       if (boardId === null || user === null) {
         return of(null);
@@ -147,7 +162,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
       return new Observable<DocumentSnapshot>((subscriber) => {
 
-        const boardRef = Board.storeRef(this._inMemory, boardId);
+        const boardRef = Board.storeRef(storage, boardId);
 
         const unsubscribe = boardRef.snapshots({
           next: subscriber.next.bind(subscriber),
@@ -175,11 +190,12 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   );
 
   override boardStatuses$ = combineLatest([
+    this._storage$,
     this.board$,
     this.user$
   ]).pipe(
     tap(() => this.loadingBoardStatuses$.next(true)),
-    switchMap(([board, user]) => {
+    switchMap(([storage, board, user]) => {
 
       if (board === null || user === null) {
         return of(null);
@@ -191,7 +207,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
       return new Observable<DocumentSnapshot[]>((subscriber) => {
 
-        const boardRef = Board.storeRef(this._inMemory, board.id);
+        const boardRef = Board.storeRef(storage, board.id);
         const boardStatusesRef = BoardStatus.storeCollectionRef(boardRef);
 
         const unsubscribe = boardStatusesRef.snapshots({
@@ -222,11 +238,12 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   );
 
   override boardTasks$ = combineLatest([
+    this._storage$,
     this.board$,
     this.user$
   ]).pipe(
     tap(() => this.loadingBoardTasks$.next(true)),
-    switchMap(([board, user]) => {
+    switchMap(([storage, board, user]) => {
 
       if (board === null || user === null) {
         return of(null);
@@ -238,7 +255,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
       return new Observable<DocumentSnapshot[]>((subscriber) => {
 
-        const boardRef = Board.storeRef(this._inMemory, board.id);
+        const boardRef = Board.storeRef(storage, board.id);
         const boardTasksRef = BoardTask.storeCollectionRef(boardRef);
 
         const unsubscribe = boardTasksRef.snapshots({
@@ -300,11 +317,12 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   );
 
   override boardTaskSubtasks$ = combineLatest([
+    this._storage$,
     this.board$,
-    this.boardTask$,
+    this.boardTask$
   ]).pipe(
     tap(() => this.loadingBoardTaskSubtasks$.next(true)),
-    switchMap(([board, boardTask]) => {
+    switchMap(([storage, board, boardTask]) => {
 
       if (board === null || boardTask === null) {
         return of(null);
@@ -314,7 +332,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         return of(undefined);
       }
 
-      const boardRef = Board.storeRef(this._inMemory, board.id);
+      const boardRef = Board.storeRef(storage, board.id);
       const boardTaskRef = BoardTask.storeRef(boardRef, boardTask.id);
       const boardTaskSubtasksRef = BoardTaskSubtask.storeRefs(boardTaskRef);
 
@@ -347,17 +365,17 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   );
 
   constructor(
-    private readonly _inMemory: InMemory,
     private readonly _snackBarService: SnackBarService
   ) {
     super();
   }
 
-  private _Request<RequestResult>(request: () => Promise<RequestResult>) {
-    return from(request()).pipe(
+  private _Request<RequestResult>(request: (storage: Storage) => Promise<RequestResult>) {
+    return this._storage$.pipe(
+      switchMap((storage) => {
+        return request(storage);
+      }),
       catchError((error: Error) => {
-
-        console.error(error);
 
         if (!(error instanceof InMemoryError)) {
           error = new InMemoryError();
@@ -372,15 +390,15 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardCreate(data: BoardCreateData) {
 
-    return this._Request<BoardCreateResult>(async () => {
+    return this._Request<BoardCreateResult>(async (storage: Storage) => {
 
       let config = await firstValueFrom(this.config$);
       InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
       config = config as Config;
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const userRef = User.storeRef(this._inMemory, this._userId);
+      const userRef = User.storeRef(storage, this._userId);
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
 
@@ -395,7 +413,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: `Board can have ${config.maxBoardStatuses} statuses`
       });
 
-      const boardRef = Board.storeRef(this._inMemory);
+      const boardRef = Board.storeRef(storage);
 
       const boardStatusesIds: string[] = [];
 
@@ -470,11 +488,11 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardDelete(data: BoardDeleteData) {
 
-    return this._Request<BoardDeleteResult>(async () => {
+    return this._Request<BoardDeleteResult>(async (storage: Storage) => {
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const userRef = doc(this._inMemory, `${Collections.users}/${this._userId}`);
+      const userRef = doc(storage, `${Collections.users}/${this._userId}`);
       const userSnap = await userRef.get();
       const user = userSnap.data as UserDoc;
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
@@ -483,7 +501,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: 'User do not have access to this board'
       });
 
-      const boardRef = Board.storeRef(this._inMemory, data.id);
+      const boardRef = Board.storeRef(storage, data.id);
       const boardSnap = await boardRef.get();
       const board = Board.storeData(boardSnap);
       writeBatch.delete(boardSnap.reference);
@@ -557,15 +575,15 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
-    return this._Request<BoardUpdateResult>(async () => {
+    return this._Request<BoardUpdateResult>(async (storage: Storage) => {
 
       let config = await firstValueFrom(this.config$);
       InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
       config = config as Config;
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const userRef = User.storeRef(this._inMemory, this._userId);
+      const userRef = User.storeRef(storage, this._userId);
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
@@ -574,7 +592,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: 'User do not have access to this board'
       });
 
-      const boardRef = Board.storeRef(this._inMemory, data.id);
+      const boardRef = Board.storeRef(storage, data.id);
       const boardSnap = await boardRef.get();
       const board = Board.storeData(boardSnap);
 
@@ -739,15 +757,15 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardTaskCreate(data: BoardTaskCreateData) {
 
-    return this._Request<BoardTaskCreateResult>(async () => {
+    return this._Request<BoardTaskCreateResult>(async (storage: Storage) => {
 
       let config = await firstValueFrom(this.config$);
       InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
       config = config as Config;
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const userRef = User.storeRef(this._inMemory, this._userId);
+      const userRef = User.storeRef(storage, this._userId);
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
@@ -756,7 +774,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: 'User do not have access to this board'
       });
 
-      const boardRef = Board.storeRef(this._inMemory, data.boardId);
+      const boardRef = Board.storeRef(storage, data.boardId);
       const boardSnap = await boardRef.get();
       const board = Board.storeData(boardSnap);
 
@@ -848,11 +866,11 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardTaskDelete(data: BoardTaskDeleteData): Observable<BoardTaskDeleteResult> {
 
-    return this._Request<BoardTaskDeleteResult>(async () => {
+    return this._Request<BoardTaskDeleteResult>(async (storage: Storage) => {
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const userRef = User.storeRef(this._inMemory, this._userId);
+      const userRef = User.storeRef(storage, this._userId);
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
@@ -861,7 +879,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: 'User do not have access to this board'
       });
 
-      const boardRef = Board.storeRef(this._inMemory, data.boardId);
+      const boardRef = Board.storeRef(storage, data.boardId);
       const boardSnap = await boardRef.get();
       const board = Board.storeData(boardSnap);
 
@@ -924,15 +942,15 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult> {
 
-    return this._Request(async () => {
+    return this._Request(async (storage: Storage) => {
 
       let config = await firstValueFrom(this.config$);
       InMemoryError.testRequirement(!config, {code: 'internal', message: 'There is no config'});
       config = config as Config;
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const userRef = User.storeRef(this._inMemory, this._userId);
+      const userRef = User.storeRef(storage, this._userId);
       const userSnap = await userRef.get();
       const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
@@ -941,7 +959,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
         message: 'User do not have access to this board'
       });
 
-      const boardRef = Board.storeRef(this._inMemory, data.boardId);
+      const boardRef = Board.storeRef(storage, data.boardId);
       const boardSnap = await boardRef.get();
 
       const boardStatusRef = BoardStatus.storeRef(boardSnap.reference, data.boardStatus.id);
@@ -1075,11 +1093,11 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string) {
 
-    return this._Request(async () => {
+    return this._Request(async (storage: Storage) => {
 
-      const writeBatch = new WriteBatch(this._inMemory);
+      const writeBatch = new WriteBatch(storage);
 
-      const boardTaskRef = Board.storeRef(this._inMemory, boardId).collection(Collections.boardTasks).doc(boardTaskId);
+      const boardTaskRef = Board.storeRef(storage, boardId).collection(Collections.boardTasks).doc(boardTaskId);
       const boardTaskSnap = await boardTaskRef.get();
       const boardTask = BoardTask.storeData(boardTaskSnap);
 
@@ -1105,7 +1123,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
   }
 
   loadDefault() {
-    // this._inMemoryStore$.next({
+    // this._idbDatabaseStore$.next({
     //   users: defaultInMemoryUsers,
     //   boards: defaultInMemoryBoards,
     // });

@@ -13,7 +13,6 @@ import {environment} from '../environments/environment';
 import {routes} from './app.routes';
 import {SvgService} from './services/svg.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
-import {getInMemory, InMemory} from './utils/store';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -99,14 +98,6 @@ export const appConfig: ApplicationConfig = {
           }
         }
       }
-    },
-    {
-      provide: InMemory,
-      useValue: (() => {
-        let _inMemory: InMemory;
-        getInMemory(environment.firebase.projectId, (inMemory) => _inMemory = inMemory)
-        return _inMemory!;
-      })()
     }
   ]
 };

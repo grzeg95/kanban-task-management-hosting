@@ -75,11 +75,11 @@ export class Watcher {
 
         let runWriteBatchPromise;
 
-        if (this.storage.constructor.name.includes('InMemory')) {
+        if (this.storage.constructor.name.includes(InMemory.name)) {
           runWriteBatchPromise = InMemory.runWriteBatch(this.storage as InMemory, writeBatch, writeBatchOperations);
         }
 
-        if (this.storage.constructor.name.includes('IdbDatabase')) {
+        if (this.storage.constructor.name.includes(IdbDatabase.name)) {
           runWriteBatchPromise = IdbDatabase.runWriteBatch(this.storage as IdbDatabase, writeBatch, writeBatchOperations);
         }
 
