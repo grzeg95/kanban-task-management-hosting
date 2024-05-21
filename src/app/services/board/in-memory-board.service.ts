@@ -26,7 +26,7 @@ import {InMemoryError} from '../../models/in-memory-error';
 import {User, UserDoc} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {Data, doc, DocumentSnapshot, getIdbDatabase, IdbDatabase, WriteBatch, Storage} from '../../utils/store';
+import {Data, doc, DocumentSnapshot, getIdbDatabase, WriteBatch, Storage} from '../../utils/store';
 import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
 import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {Collections} from '../firebase/collections';
@@ -40,9 +40,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
 
   private _userId = '0';
 
-  private _storage$ = from(
-    new Promise<IdbDatabase>((resolve, reject) => getIdbDatabase(environment.firebase.projectId, resolve, reject))
-  );
+  private _storage$ = from(getIdbDatabase(environment.firebase.projectId));
 
   override config$ = this._storage$.pipe(
     switchMap((storage) => {

@@ -1,7 +1,7 @@
 import {mergeData, Observer, Unsubscribe} from '../../data';
-import {doc, Document, DocumentJSON} from '../../objects';
+import {doc, Document, DocumentFields, DocumentJSON} from '../../objects';
 import {CollectionReference, DocumentReference} from '../../references';
-import {Storage} from '../storage';
+import {Storage, StoreNames} from '../storage';
 import {WriteBatch, WriteBatchError, WriteBatchOperation, WriteBatchOperationType} from '../write-batch';
 
 export type IdbDatabaseAccess = {
@@ -35,52 +35,55 @@ export class IdbDatabase extends Storage {
     });
   }
 
-  private static _createInstance(projectId: string, cb: (idbDatabase: IdbDatabase) => void, err?: (err: IDBVersionChangeEvent | Event) => void) {
+  private static _createInstance(projectId: string) {
 
-    const idbOpenDbRequest = indexedDB.open(projectId, 1);
+    return new Promise<IdbDatabase>((resolve, reject) => {
 
-    idbOpenDbRequest.onsuccess = function () {
-      const idbDatabase = idbOpenDbRequest.result;
-      cb(new IdbDatabase(projectId, {idbDatabase}));
-    }
+      const idbOpenDbRequest = indexedDB.open(projectId, 1);
 
-    idbOpenDbRequest.onblocked = function (ev) {
-      err?.(ev);
-    }
+      idbOpenDbRequest.onsuccess = function () {
+        const idbDatabase = idbOpenDbRequest.result;
+        resolve(new IdbDatabase(projectId, {idbDatabase}));
+      }
 
-    idbOpenDbRequest.onupgradeneeded = function () {
+      idbOpenDbRequest.onblocked = function (ev) {
+        reject(ev);
+      }
 
-      const idbDatabase = idbOpenDbRequest.result;
+      idbOpenDbRequest.onupgradeneeded = function () {
 
-      idbDatabase.onerror = function (ev) {
-        err?.(ev);
-      };
+        const idbDatabase = idbOpenDbRequest.result;
 
-      const objectStore = idbDatabase.createObjectStore('documents', {
-        keyPath: ['parentPath', 'id']
-      });
+        idbDatabase.onerror = function (ev) {
+          reject(ev);
+        };
 
-      objectStore.createIndex('parentPath', ['parentPath']);
+        const objectStore = idbDatabase.createObjectStore(StoreNames.documents, {
+          keyPath: [DocumentFields.parentPath, DocumentFields.id]
+        });
 
-      cb(new IdbDatabase(projectId, {idbDatabase}));
-    }
+        objectStore.createIndex(DocumentFields.parentPath, [DocumentFields.parentPath]);
 
-    idbOpenDbRequest.onerror = function (ev) {
-      err?.(ev);
-    }
+        resolve(new IdbDatabase(projectId, {idbDatabase}));
+      }
+
+      idbOpenDbRequest.onerror = function (ev) {
+        reject(ev);
+      }
+    });
   }
 
-  static getInstance(projectId: string, cb: (idbDatabase: IdbDatabase) => void, err?: (err: IDBVersionChangeEvent | Event) => void) {
+  static getInstance(projectId: string) {
 
     const instance = IdbDatabase._extension.get(projectId)
 
-    return instance ? cb(instance) : IdbDatabase._createInstance(projectId, cb, err);
+    return instance ? Promise.resolve(instance) : IdbDatabase._createInstance(projectId);
   }
 
-  getTransaction(writeBatch: WriteBatch) {
+  private _getTransaction(writeBatch: WriteBatch) {
 
     if (this._registeredWriteBatches.has(writeBatch)) {
-      return this._access.idbDatabase.transaction('documents', 'readwrite');
+      return this._access.idbDatabase.transaction(StoreNames.documents, 'readwrite');
     }
 
     throw `This write batch wasn't registered`;
@@ -93,8 +96,8 @@ export class IdbDatabase extends Storage {
       const stopTransaction = !documentsStore;
 
       if (!documentsStore) {
-        const transaction = this._access.idbDatabase.transaction('documents', 'readonly');
-        documentsStore = transaction.objectStore('documents');
+        const transaction = this._access.idbDatabase.transaction(StoreNames.documents, 'readonly');
+        documentsStore = transaction.objectStore(StoreNames.documents);
       }
 
       const query = [
@@ -124,17 +127,17 @@ export class IdbDatabase extends Storage {
     });
   }
 
-  registerWriteBatch(writeBatch: WriteBatch) {
+  private _registerWriteBatch(writeBatch: WriteBatch) {
     this._registeredWriteBatches.add(writeBatch);
   }
 
-  unregisterWriteBatch(writeBatch: WriteBatch) {
+  private _unregisterWriteBatch(writeBatch: WriteBatch) {
     this._registeredWriteBatches.delete(writeBatch);
   }
 
   static async runWriteBatch(idbDatabase: IdbDatabase, writeBatch: WriteBatch, writeBatchOperations: WriteBatchOperation[]) {
 
-    idbDatabase.registerWriteBatch(writeBatch);
+    idbDatabase._registerWriteBatch(writeBatch);
 
     const maxIterations = 5;
     let result: boolean;
@@ -145,8 +148,8 @@ export class IdbDatabase extends Storage {
 
         const date = new Date();
 
-        const transaction = idbDatabase.getTransaction(writeBatch);
-        const documentsStore = transaction.objectStore('documents');
+        const transaction = idbDatabase._getTransaction(writeBatch);
+        const documentsStore = transaction.objectStore(StoreNames.documents);
 
         transaction.onerror = function () {
           throw new WriteBatchError('idbDatabase transaction error');
@@ -251,21 +254,18 @@ export class IdbDatabase extends Storage {
 
         if (error instanceof DOMException && error.NOT_FOUND_ERR) {
           await idbDatabase._deleteDatabase();
-
-          idbDatabase = await new Promise<IdbDatabase>((resolve, reject) => {
-            IdbDatabase.getInstance(idbDatabase.projectId, resolve, reject);
-          });
+          idbDatabase = await IdbDatabase.getInstance(idbDatabase.projectId);
           continue;
         }
 
         if (currentIteration === maxIterations - 1) {
-          idbDatabase.unregisterWriteBatch(writeBatch);
+          idbDatabase._unregisterWriteBatch(writeBatch);
           throw error as WriteBatchError;
         }
       }
     }
 
-    idbDatabase.unregisterWriteBatch(writeBatch);
+    idbDatabase._unregisterWriteBatch(writeBatch);
     return result!;
   }
 
@@ -274,10 +274,10 @@ export class IdbDatabase extends Storage {
 
   getDocuments(collectionReference: CollectionReference, observer?: Observer<Document[], Error>): Promise<Document[]> | Unsubscribe {
 
-    const transaction = this._access.idbDatabase.transaction('documents', 'readonly');
-    const documentsStore = transaction.objectStore('documents');
+    const transaction = this._access.idbDatabase.transaction(StoreNames.documents, 'readonly');
+    const documentsStore = transaction.objectStore(StoreNames.documents);
     const query = [collectionReference.path];
-    const index = documentsStore.index('parentPath');
+    const index = documentsStore.index(DocumentFields.parentPath);
     const idbRequest = index.getAll(query);
 
     if (observer) {
@@ -311,7 +311,7 @@ export class IdbDatabase extends Storage {
         const documents: Document[] = [];
 
         for (const documentJSON of documentJSONs) {
-          const documentReference = doc(this, documentJSON.path);
+          const documentReference = doc(this, [documentJSON[DocumentFields.parentPath], documentJSON[DocumentFields.id]].join('/'));
           documents.push(IdbDatabase.getDocumentFromDocumentJSON(documentReference, documentJSON));
         }
 
@@ -333,7 +333,7 @@ export class IdbDatabase extends Storage {
         const documents: Document[] = [];
 
         for (const documentJSON of documentJSONs) {
-          const documentReference = doc(this, documentJSON.path);
+          const documentReference = doc(this, [documentJSON[DocumentFields.parentPath], documentJSON[DocumentFields.id]].join('/'));
           documents.push(IdbDatabase.getDocumentFromDocumentJSON(documentReference, documentJSON));
         }
 
@@ -344,11 +344,10 @@ export class IdbDatabase extends Storage {
 
   async clear() {
     await this._deleteDatabase();
-    await IdbDatabase._createInstance(this.projectId, () => {
-    });
+    await IdbDatabase._createInstance(this.projectId);
   }
 }
 
-export function getIdbDatabase(projectId: string, cb: (idbDatabase: IdbDatabase) => void, err?: (err: IDBVersionChangeEvent | Event) => void) {
-  return IdbDatabase.getInstance(projectId, cb, err);
+export function getIdbDatabase(projectId: string) {
+  return IdbDatabase.getInstance(projectId);
 }

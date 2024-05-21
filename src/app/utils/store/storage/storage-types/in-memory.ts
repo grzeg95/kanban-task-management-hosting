@@ -22,21 +22,21 @@ export class InMemory extends Storage {
     super(projectId);
   }
 
-  private static _createInstance(projectId: string, cb: (inMemory: InMemory) => void) {
-    cb(new InMemory(projectId, {
+  private static _createInstance(projectId: string) {
+    return new InMemory(projectId, {
       documents: new Map<string, DocumentJSON>,
       collections: new Map<string, Set<string>>
-    }));
+    });
   }
 
-  static getInstance(projectId: string, cb: (inMemory: InMemory) => void) {
+  static getInstance(projectId: string) {
 
     const inMemory = InMemory._extension.get(projectId);
 
-    return inMemory ? cb(inMemory) : InMemory._createInstance(projectId, cb);
+    return inMemory ? inMemory : InMemory._createInstance(projectId);
   }
 
-  setCollection(documentParentPath: string, set: Set<string>, writeBatch: WriteBatch) {
+  private _setCollection(documentParentPath: string, set: Set<string>, writeBatch: WriteBatch) {
 
     if (this._registeredWriteBatches.has(writeBatch)) {
       this._access.collections.set(documentParentPath, set);
@@ -46,7 +46,7 @@ export class InMemory extends Storage {
     throw `This write batch wasn't registered`;
   }
 
-  getCollection(documentParentPath: string, writeBatch: WriteBatch) {
+  private _getCollection(documentParentPath: string, writeBatch: WriteBatch) {
 
     if (this._registeredWriteBatches.has(writeBatch)) {
       return this._access.collections.get(documentParentPath);
@@ -55,7 +55,7 @@ export class InMemory extends Storage {
     throw `This write batch wasn't registered`;
   }
 
-  setDocument(documentPath: string, documentJSON: DocumentJSON, writeBatch: WriteBatch) {
+  private _setDocument(documentPath: string, documentJSON: DocumentJSON, writeBatch: WriteBatch) {
 
     if (this._registeredWriteBatches.has(writeBatch)) {
       this._access.documents.set(documentPath, documentJSON);
@@ -65,7 +65,7 @@ export class InMemory extends Storage {
     throw `This write batch wasn't registered`;
   }
 
-  deleteDocument(documentPath: string, writeBatch: WriteBatch) {
+  private _deleteDocument(documentPath: string, writeBatch: WriteBatch) {
 
     if (this._registeredWriteBatches.has(writeBatch)) {
       this._access.documents.delete(documentPath);
@@ -75,11 +75,11 @@ export class InMemory extends Storage {
     throw `This write batch wasn't registered`;
   }
 
-  registerWriteBatch(writeBatch: WriteBatch) {
+  private _registerWriteBatch(writeBatch: WriteBatch) {
     this._registeredWriteBatches.add(writeBatch);
   }
 
-  unregisterWriteBatch(writeBatch: WriteBatch) {
+  private _unregisterWriteBatch(writeBatch: WriteBatch) {
     this._registeredWriteBatches.delete(writeBatch);
   }
 
@@ -90,7 +90,7 @@ export class InMemory extends Storage {
 
   static async runWriteBatch(inMemory: InMemory, writeBatch: WriteBatch, writeBatchOperations: WriteBatchOperation[]) {
 
-    inMemory.registerWriteBatch(writeBatch);
+    inMemory._registerWriteBatch(writeBatch);
 
     for (const operation of writeBatchOperations) {
       operation.documentPromise = inMemory.getDocument(operation.documentReference);
@@ -144,34 +144,34 @@ export class InMemory extends Storage {
       const documentParentPath = document.documentReference.parentReference.path;
       const documentJSON = document.toJSON();
 
-      let collection = inMemory.getCollection(documentParentPath, writeBatch);
+      let collection = inMemory._getCollection(documentParentPath, writeBatch);
 
       if (!collection) {
-        inMemory.setCollection(documentParentPath, new Set<string>(), writeBatch);
-        collection = inMemory.getCollection(documentParentPath, writeBatch);
+        inMemory._setCollection(documentParentPath, new Set<string>(), writeBatch);
+        collection = inMemory._getCollection(documentParentPath, writeBatch);
       }
 
       if (operation.type === WriteBatchOperationType.create) {
-        inMemory.setDocument(documentPath, documentJSON, writeBatch);
+        inMemory._setDocument(documentPath, documentJSON, writeBatch);
         collection!.add(document.documentReference.path);
       }
 
       if (operation.type === WriteBatchOperationType.set) {
-        inMemory.setDocument(documentPath, documentJSON, writeBatch);
+        inMemory._setDocument(documentPath, documentJSON, writeBatch);
         collection!.add(document.documentReference.path);
       }
 
       if (operation.type === WriteBatchOperationType.update) {
-        inMemory.setDocument(documentPath, documentJSON, writeBatch);
+        inMemory._setDocument(documentPath, documentJSON, writeBatch);
         collection!.add(document.documentReference.path);
       }
 
       if (operation.type === WriteBatchOperationType.delete) {
-        inMemory.deleteDocument(documentPath, writeBatch);
+        inMemory._deleteDocument(documentPath, writeBatch);
         collection!.delete(document.documentReference.path);
       }
 
-      inMemory.setCollection(documentParentPath, collection!, writeBatch);
+      inMemory._setCollection(documentParentPath, collection!, writeBatch);
     }
 
     // reload document
@@ -189,7 +189,7 @@ export class InMemory extends Storage {
       inMemory.notifyRegisteredGetDocuments(operation.document!.documentReference.parentReference);
     }
 
-    inMemory.unregisterWriteBatch(writeBatch);
+    inMemory._unregisterWriteBatch(writeBatch);
     return true;
   }
 
@@ -247,6 +247,6 @@ export class InMemory extends Storage {
   }
 }
 
-export function getInMemory(projectId: string, cb: (inMemory: InMemory) => void) {
-  InMemory.getInstance(projectId, cb);
+export function getInMemory(projectId: string) {
+  return InMemory.getInstance(projectId);
 }

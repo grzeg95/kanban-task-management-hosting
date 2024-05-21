@@ -6,6 +6,14 @@ import {DocumentSnapshot, DocumentSnapshotError} from './document-snapshot';
 export class DocumentError extends Error {
 }
 
+export enum DocumentFields {
+  id = 'q',
+  data = 'w',
+  parentPath = 'e',
+  createdAt = 'r',
+  modifiedAt = 't'
+}
+
 export class Document {
 
   private static _extension = new Map<DocumentReference, Document>();
@@ -64,20 +72,17 @@ export class Document {
 
   toJSON() {
     return {
-      id: this.documentReference.id,
-      path: this.documentReference.path,
-      storageType: this.documentReference.parentReference.storage.constructor.name,
-      projectId: this.documentReference.parentReference.storage.projectId,
-      data: this.data,
-      parentPath: this.documentReference.parentReference.path,
-      createdAt: this.createdAt ? this.createdAt.toString() : this.createdAt,
-      modifiedAt: this.modifiedAt ? this.modifiedAt.toString() : this.modifiedAt
+      [DocumentFields.id]: this.documentReference.id,
+      [DocumentFields.data]: this.data,
+      [DocumentFields.parentPath]: this.documentReference.parentReference.path,
+      [DocumentFields.createdAt]: this.createdAt ? this.createdAt.getTime() : this.createdAt,
+      [DocumentFields.modifiedAt]: this.modifiedAt ? this.modifiedAt.getTime() : this.modifiedAt
     } as DocumentJSON;
   }
 
   async snapshot(): Promise<DocumentSnapshot> {
 
-    if (this.got) {
+    const getDocumentSnapshot = (document: Document) => {
       return Promise.resolve(new DocumentSnapshot(
         this.documentReference.parentReference.storage,
         this.data,
@@ -86,18 +91,13 @@ export class Document {
         this.createdAt,
         this.modifiedAt
       ));
+    };
+
+    if (this.got) {
+      return getDocumentSnapshot(this);
     }
 
-    const document = await this.get();
-
-    return Promise.resolve(new DocumentSnapshot(
-      document.documentReference.parentReference.storage,
-      document.data,
-      document.documentReference.id,
-      document.documentReference.parentReference.path,
-      document.createdAt,
-      document.modifiedAt
-    ));
+    return getDocumentSnapshot(await this.get());
   }
 
   static snapshots(documentReference: DocumentReference, observer: Observer<DocumentSnapshot, DocumentSnapshotError>): Unsubscribe {

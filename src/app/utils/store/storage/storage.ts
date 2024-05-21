@@ -1,6 +1,10 @@
 import {Observer, Unsubscribe} from '../data';
-import {Document, DocumentJSON} from '../objects';
+import {Document, DocumentFields, DocumentJSON} from '../objects';
 import {CollectionReference, DocumentReference} from '../references';
+
+export enum StoreNames {
+  documents = 'p'
+}
 
 export abstract class Storage {
 
@@ -41,22 +45,21 @@ export abstract class Storage {
 
     if (!documentJSON) {
       documentJSON = {
-        id: documentReference.id,
-        storageType: documentReference.parentReference.storage.constructor.name,
-        projectId: documentReference.parentReference.storage.projectId,
-        data: {},
-        parentPath: documentReference.parentReference.path,
-        createdAt: null,
-        modifiedAt: null
+        [DocumentFields.id]: documentReference.id,
+        [DocumentFields.data]: {},
+        [DocumentFields.parentPath]: documentReference.parentReference.path,
+        [DocumentFields.createdAt]: null,
+        [DocumentFields.modifiedAt]: null
       } as DocumentJSON;
     }
 
     const document = Document.getInstance(documentReference);
 
-    document.data = documentJSON.data;
-    document.createdAt = documentJSON.createdAt ? new Date(documentJSON.createdAt!) : null
-    document.modifiedAt = documentJSON.modifiedAt ? new Date(documentJSON.modifiedAt!) : null
+    document.data = documentJSON[DocumentFields.data];
+    document.createdAt = documentJSON[DocumentFields.createdAt] ? new Date(documentJSON[DocumentFields.createdAt]!) : null
+    document.modifiedAt = documentJSON[DocumentFields.modifiedAt] ? new Date(documentJSON[DocumentFields.modifiedAt]!) : null
     document.got = true;
+
     return document;
   }
 

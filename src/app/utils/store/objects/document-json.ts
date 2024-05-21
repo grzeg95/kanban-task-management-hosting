@@ -1,13 +1,10 @@
 import {Data} from '../data';
+import {DocumentFields} from './document';
 
 export type DocumentJSON = {
-  id: string;
-  path: string;
-  storageType: string;
-  projectId: string;
-  data: Data;
-  parentPath: string;
-  createdAt: string | null;
-  modifiedAt: string | null;
-  exists: boolean;
+  [DocumentFields.id]: string;
+  [DocumentFields.data]: Data;
+  [DocumentFields.parentPath]: string;
+  [DocumentFields.createdAt]: number | null;
+  [DocumentFields.modifiedAt]: number | null;
 }
