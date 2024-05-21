@@ -1,7 +1,6 @@
 import {Observer, Unsubscribe} from '../data';
 import {Document, DocumentJSON} from '../objects';
 import {CollectionReference, DocumentReference} from '../references';
-import {WriteBatch, WriteBatchOperation} from './write-batch';
 
 export abstract class Storage {
 

@@ -56,9 +56,11 @@ export class IdbDatabase extends Storage {
         err?.(ev);
       };
 
-      idbDatabase.createObjectStore('documents', {
+      const objectStore = idbDatabase.createObjectStore('documents', {
         keyPath: ['parentPath', 'id']
       });
+
+      objectStore.createIndex('parentPath', ['parentPath']);
 
       cb(new IdbDatabase(projectId, {idbDatabase}));
     }
@@ -275,7 +277,8 @@ export class IdbDatabase extends Storage {
     const transaction = this._access.idbDatabase.transaction('documents', 'readonly');
     const documentsStore = transaction.objectStore('documents');
     const query = [collectionReference.path];
-    const idbRequest = documentsStore.getAll(query);
+    const index = documentsStore.index('parentPath');
+    const idbRequest = index.getAll(query);
 
     if (observer) {
 
@@ -341,7 +344,8 @@ export class IdbDatabase extends Storage {
 
   async clear() {
     await this._deleteDatabase();
-    await IdbDatabase._createInstance(this.projectId, () => {});
+    await IdbDatabase._createInstance(this.projectId, () => {
+    });
   }
 }
 
