@@ -5,7 +5,7 @@ import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
 import {ObservedValuesOfBoardService} from './board-service.abstract';
 import {FirebaseBoardService} from './firebase-board.service';
-import {InMemoryBoardService} from './in-memory-board.service';
+import {StorageBoardService} from './storage-board.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class BoardService {
   storeType$ = this._authService.isLoggedIn$.pipe(
     getProtectedRxjsPipe(),
     filter((isLoggedIn): isLoggedIn is boolean => isLoggedIn !== undefined),
-    map((isLoggedIn) => isLoggedIn ? 'firebase' : 'in-memory')
+    map((isLoggedIn) => isLoggedIn ? 'firebase' : 'storage')
   );
 
   abstractBoardService$ = this.storeType$.pipe(
@@ -24,7 +24,7 @@ export class BoardService {
       if (storeType === 'firebase') {
         return this._firebaseBoardService;
       }
-      return this._inMemoryBoardService;
+      return this._storageBoardService;
     })
   );
 
@@ -68,7 +68,7 @@ export class BoardService {
 
   constructor(
     private readonly _firebaseBoardService: FirebaseBoardService,
-    private readonly _inMemoryBoardService: InMemoryBoardService,
+    private readonly _storageBoardService: StorageBoardService,
     private readonly _authService: AuthService,
     private readonly _ngZone: NgZone
   ) {
@@ -91,7 +91,7 @@ export class BoardService {
         if (storeType === 'firebase') {
           return this._firebaseBoardService[observedValuesOf];
         }
-        return this._inMemoryBoardService[observedValuesOf];
+        return this._storageBoardService[observedValuesOf];
       }),
       runInZoneRxjsPipe(this._ngZone),
       shareReplay()

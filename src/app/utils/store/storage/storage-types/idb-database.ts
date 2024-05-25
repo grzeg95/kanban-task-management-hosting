@@ -15,7 +15,7 @@ export class IdbDatabase extends Storage {
 
   private constructor(
     public override readonly projectId: string,
-    private readonly _access: IdbDatabaseAccess
+    private _access: IdbDatabaseAccess
   ) {
     super(projectId);
   }
@@ -35,15 +35,15 @@ export class IdbDatabase extends Storage {
     });
   }
 
-  private static _createInstance(projectId: string) {
+  private static _createAccess(projectId: string) {
 
-    return new Promise<IdbDatabase>((resolve, reject) => {
+    return new Promise<IdbDatabaseAccess>((resolve, reject) => {
 
       const idbOpenDbRequest = indexedDB.open(projectId, 1);
 
       idbOpenDbRequest.onsuccess = function () {
         const idbDatabase = idbOpenDbRequest.result;
-        resolve(new IdbDatabase(projectId, {idbDatabase}));
+        resolve({idbDatabase});
       }
 
       idbOpenDbRequest.onblocked = function (ev) {
@@ -64,7 +64,7 @@ export class IdbDatabase extends Storage {
 
         objectStore.createIndex(DocumentFields.parentPath, [DocumentFields.parentPath]);
 
-        resolve(new IdbDatabase(projectId, {idbDatabase}));
+        resolve({idbDatabase});
       }
 
       idbOpenDbRequest.onerror = function (ev) {
@@ -73,20 +73,15 @@ export class IdbDatabase extends Storage {
     });
   }
 
+  private static async _createInstance(projectId: string) {
+    return new IdbDatabase(projectId, await IdbDatabase._createAccess(projectId));
+  }
+
   static getInstance(projectId: string) {
 
     const instance = IdbDatabase._extension.get(projectId)
 
     return instance ? Promise.resolve(instance) : IdbDatabase._createInstance(projectId);
-  }
-
-  private _getTransaction(writeBatch: WriteBatch) {
-
-    if (this._registeredWriteBatches.has(writeBatch)) {
-      return this._access.idbDatabase.transaction(StoreNames.documents, 'readwrite');
-    }
-
-    throw `This write batch wasn't registered`;
   }
 
   getDocument(documentReference: DocumentReference, documentsStore?: IDBObjectStore): Promise<Document> {
@@ -135,6 +130,29 @@ export class IdbDatabase extends Storage {
     this._registeredWriteBatches.delete(writeBatch);
   }
 
+  private async _getDocumentsStore(writeBatch: WriteBatch) {
+
+    if (this._registeredWriteBatches.has(writeBatch)) {
+
+      let transaction: IDBTransaction;
+      let documentsStore: IDBObjectStore;
+
+      try {
+        transaction = this._access.idbDatabase.transaction(StoreNames.documents, 'readwrite');
+        documentsStore = transaction.objectStore(StoreNames.documents);
+      } catch {
+        this._access.idbDatabase.close();
+        this._access = await IdbDatabase._createAccess(this.projectId);
+        transaction = this._access.idbDatabase.transaction(StoreNames.documents, 'readwrite');
+        documentsStore = transaction.objectStore(StoreNames.documents);
+      }
+
+      return documentsStore;
+    }
+
+    throw `This write batch wasn't registered`;
+  }
+
   static async runWriteBatch(idbDatabase: IdbDatabase, writeBatch: WriteBatch, writeBatchOperations: WriteBatchOperation[]) {
 
     idbDatabase._registerWriteBatch(writeBatch);
@@ -148,102 +166,102 @@ export class IdbDatabase extends Storage {
 
         const date = new Date();
 
-        const transaction = idbDatabase._getTransaction(writeBatch);
-        const documentsStore = transaction.objectStore(StoreNames.documents);
+        result = await idbDatabase._getDocumentsStore(writeBatch).then(async (documentsStore) => {
 
-        transaction.onerror = function () {
-          throw new WriteBatchError('idbDatabase transaction error');
-        }
-
-        for (const writeBatchOperation of writeBatchOperations) {
-          writeBatchOperation.documentPromise = idbDatabase.getDocument(writeBatchOperation.documentReference, documentsStore);
-        }
-
-        for (const writeBatchOperation of writeBatchOperations) {
-
-          const document = await writeBatchOperation.documentPromise!;
-
-          if (writeBatchOperation.type === WriteBatchOperationType.create) {
-
-            if (document.exists) {
-              transaction.abort();
-              throw new WriteBatchError(`WriteBatch detected that ${writeBatchOperation.documentReference.id} document exists but was to be created`);
-            }
-
-            document.createdAt = date;
-            document.modifiedAt = date;
-            document.data = writeBatchOperation.data!;
-            documentsStore.add(document.toJSON());
+          documentsStore.transaction.onerror = function () {
+            throw new WriteBatchError('idbDatabase transaction error');
           }
 
-          if (writeBatchOperation.type === WriteBatchOperationType.set) {
+          for (const writeBatchOperation of writeBatchOperations) {
+            writeBatchOperation.documentPromise = idbDatabase.getDocument(writeBatchOperation.documentReference, documentsStore);
+          }
 
-            document.modifiedAt = date;
-            document.data = writeBatchOperation.data!;
+          for (const writeBatchOperation of writeBatchOperations) {
 
-            if (document.exists) {
-              documentsStore.put(document.toJSON());
-            } else {
+            const document = await writeBatchOperation.documentPromise!;
+
+            if (writeBatchOperation.type === WriteBatchOperationType.create) {
+
+              if (document.exists) {
+                documentsStore.transaction.abort();
+                throw new WriteBatchError(`WriteBatch detected that ${writeBatchOperation.documentReference.id} document exists but was to be created`);
+              }
+
+              document.createdAt = date;
+              document.modifiedAt = date;
+              document.data = writeBatchOperation.data!;
               documentsStore.add(document.toJSON());
             }
-          }
 
-          if (writeBatchOperation.type === WriteBatchOperationType.update) {
+            if (writeBatchOperation.type === WriteBatchOperationType.set) {
 
-            if (!document.exists) {
-              transaction.abort();
-              throw new WriteBatchError(`WriteBatch detected that ${document.documentReference.id} document doesn't exist but was to be updated`);
+              document.modifiedAt = date;
+              document.data = writeBatchOperation.data!;
+
+              if (document.exists) {
+                documentsStore.put(document.toJSON());
+              } else {
+                documentsStore.add(document.toJSON());
+              }
             }
 
-            document.modifiedAt = date;
-            document.data = mergeData(document.data, writeBatchOperation.data!);
+            if (writeBatchOperation.type === WriteBatchOperationType.update) {
 
-            documentsStore.put(document.toJSON());
-          }
+              if (!document.exists) {
+                documentsStore.transaction.abort();
+                throw new WriteBatchError(`WriteBatch detected that ${document.documentReference.id} document doesn't exist but was to be updated`);
+              }
 
-          if (writeBatchOperation.type === WriteBatchOperationType.delete) {
+              document.modifiedAt = date;
+              document.data = mergeData(document.data, writeBatchOperation.data!);
 
-            if (document.exists) {
-              transaction.abort();
-              throw new WriteBatchError(`WriteBatch detected that ${document.documentReference.id} doesn't exist but was to be deleted`);
+              documentsStore.put(document.toJSON());
             }
 
-            const query = [
-              document.documentReference.parentReference.path,
-              document.documentReference.id
-            ];
+            if (writeBatchOperation.type === WriteBatchOperationType.delete) {
 
-            documentsStore.delete(query);
-          }
-        }
+              if (document.exists) {
+                documentsStore.transaction.abort();
+                throw new WriteBatchError(`WriteBatch detected that ${document.documentReference.id} doesn't exist but was to be deleted`);
+              }
 
-        transaction.commit();
+              const query = [
+                document.documentReference.parentReference.path,
+                document.documentReference.id
+              ];
 
-        result = await new Promise<boolean>((resolve, reject) => {
-
-          transaction.oncomplete = async () => {
-
-            // reload document
-
-            for (const operation of writeBatchOperations) {
-              operation.documentPromise = idbDatabase.getDocument(operation.documentReference);
+              documentsStore.delete(query);
             }
-
-            for (const operation of writeBatchOperations) {
-              operation.document = await operation.documentPromise!;
-            }
-
-            for (const operation of writeBatchOperations) {
-              operation.document!.notifyObservers();
-              idbDatabase.notifyRegisteredGetDocuments(operation.document!.documentReference.parentReference);
-            }
-
-            resolve(true);
           }
 
-          transaction.onerror = function () {
-            reject(false);
-          }
+          documentsStore.transaction.commit();
+
+          return new Promise<boolean>((resolve, reject) => {
+
+            documentsStore.transaction.oncomplete = async () => {
+
+              // reload document
+
+              for (const operation of writeBatchOperations) {
+                operation.documentPromise = idbDatabase.getDocument(operation.documentReference);
+              }
+
+              for (const operation of writeBatchOperations) {
+                operation.document = await operation.documentPromise!;
+              }
+
+              for (const operation of writeBatchOperations) {
+                operation.document!.notifyObservers();
+                idbDatabase.notifyRegisteredGetDocuments(operation.document!.documentReference.parentReference);
+              }
+
+              resolve(true);
+            }
+
+            documentsStore.transaction.onerror = function () {
+              reject(false);
+            }
+          });
         });
 
         if (result) {
@@ -254,7 +272,7 @@ export class IdbDatabase extends Storage {
 
         if (error instanceof DOMException && error.NOT_FOUND_ERR) {
           await idbDatabase._deleteDatabase();
-          idbDatabase = await IdbDatabase.getInstance(idbDatabase.projectId);
+          await idbDatabase.reloadAccess();
           continue;
         }
 
@@ -343,8 +361,14 @@ export class IdbDatabase extends Storage {
   }
 
   async clear() {
-    await this._deleteDatabase();
-    await IdbDatabase._createInstance(this.projectId);
+
+    try {
+      await this._deleteDatabase();
+    } catch { /* empty */ }
+  }
+
+  async reloadAccess() {
+    this._access = await IdbDatabase._createAccess(this.projectId);
   }
 }
 

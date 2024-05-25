@@ -37,7 +37,7 @@
     <app-pop-menu-item (click)="openEditBoardDialog($event); setShowNavMenuOptions(false);">Edit board</app-pop-menu-item>
     <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event); setShowNavMenuOptions(false);">Delete board</app-pop-menu-item>
   }
-  @if (storeType() === 'in-memory') {
+  @if (storeType() === 'storage') {
     <app-pop-menu-item [danger]="true" (click)="restoreDefault(); setShowNavMenuOptions(false);">Restore default</app-pop-menu-item>
   }
 </ng-template>

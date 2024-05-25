@@ -19,7 +19,7 @@ import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {SvgDirective} from './directives/svg.directive';
 import {AppService} from './services/app.service';
 import {BoardService} from './services/board/board.service';
-import {InMemoryBoardService} from './services/board/in-memory-board.service';
+import {StorageBoardService} from './services/board/storage-board.service';
 import {LayoutService} from './services/layout.service';
 import {getProtectedRxjsPipe} from './utils/get-protected.rxjs-pipe';
 import {handleTabIndex} from './utils/handle-tabindex';
@@ -143,7 +143,7 @@ export class AppComponent {
     this._boardService.abstractBoardService$.pipe(
       take(1)
     ).subscribe((abstractBoardService) => {
-      if (abstractBoardService instanceof InMemoryBoardService) {
+      if (abstractBoardService instanceof StorageBoardService) {
         abstractBoardService.loadDefault();
       }
     });
@@ -221,6 +221,6 @@ export class AppComponent {
   }
 
   restoreDefault() {
-    (this.abstractBoardService() as InMemoryBoardService)?.loadDefault();
+    (this.abstractBoardService() as StorageBoardService)?.loadDefault();
   }
 }

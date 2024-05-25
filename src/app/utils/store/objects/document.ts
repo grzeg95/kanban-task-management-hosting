@@ -27,9 +27,8 @@ export class Document {
     public readonly documentReference: DocumentReference,
     public data: Data,
     public createdAt: Date | null,
-    public modifiedAt: Date | null,
-    public got = false
-  )  {
+    public modifiedAt: Date | null
+  ) {
   }
 
   private static _createInstance(documentReference: DocumentReference) {
@@ -38,8 +37,7 @@ export class Document {
       documentReference,
       {},
       null,
-      null,
-      false
+      null
     );
 
     this._extension.set(documentReference, document);
@@ -51,7 +49,19 @@ export class Document {
   }
 
   async get() {
-    return this.documentReference.parentReference.storage.getDocument(this.documentReference);
+
+    let document: Document;
+
+    for (let i = 0; i < 5; i++) {
+
+      try {
+        document = await this.documentReference.parentReference.storage.getDocument(this.documentReference);
+      } catch (e) {
+        await this.documentReference.parentReference.storage.reloadAccess();
+      }
+    }
+
+    return document!;
   }
 
   private _notifyObserver(observer: Observer<DocumentSnapshot, DocumentSnapshotError>) {
@@ -82,22 +92,16 @@ export class Document {
 
   async snapshot(): Promise<DocumentSnapshot> {
 
-    const getDocumentSnapshot = (document: Document) => {
-      return Promise.resolve(new DocumentSnapshot(
-        this.documentReference.parentReference.storage,
-        this.data,
-        this.documentReference.id,
-        this.documentReference.parentReference.path,
-        this.createdAt,
-        this.modifiedAt
-      ));
-    };
+    const document = await this.get();
 
-    if (this.got) {
-      return getDocumentSnapshot(this);
-    }
-
-    return getDocumentSnapshot(await this.get());
+    return new DocumentSnapshot(
+      document.documentReference.parentReference.storage,
+      document.data,
+      document.documentReference.id,
+      document.documentReference.parentReference.path,
+      document.createdAt,
+      document.modifiedAt
+    )
   }
 
   static snapshots(documentReference: DocumentReference, observer: Observer<DocumentSnapshot, DocumentSnapshotError>): Unsubscribe {

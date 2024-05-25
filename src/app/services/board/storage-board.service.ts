@@ -36,7 +36,7 @@ import {BoardServiceAbstract} from './board-service.abstract';
 @Injectable({
   providedIn: 'root'
 })
-export class InMemoryBoardService extends BoardServiceAbstract {
+export class StorageBoardService extends BoardServiceAbstract {
 
   private _userId = '0';
 
@@ -54,7 +54,7 @@ export class InMemoryBoardService extends BoardServiceAbstract {
           complete: subscriber.complete.bind(subscriber)
         });
         return {unsubscribe};
-      })
+      });
     }),
     map(Config.storeData),
     getProtectedRxjsPipe(),

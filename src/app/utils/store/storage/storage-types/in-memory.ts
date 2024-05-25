@@ -245,6 +245,10 @@ export class InMemory extends Storage {
     this._access.collections.clear();
     this._access.documents.clear();
   }
+
+  async reloadAccess() {
+    return Promise.resolve();
+  }
 }
 
 export function getInMemory(projectId: string) {

@@ -58,11 +58,12 @@ export abstract class Storage {
     document.data = documentJSON[DocumentFields.data];
     document.createdAt = documentJSON[DocumentFields.createdAt] ? new Date(documentJSON[DocumentFields.createdAt]!) : null
     document.modifiedAt = documentJSON[DocumentFields.modifiedAt] ? new Date(documentJSON[DocumentFields.modifiedAt]!) : null
-    document.got = true;
 
     return document;
   }
 
   abstract clear(): Promise<void>;
+
+  abstract reloadAccess(): Promise<void>;
 }
 
