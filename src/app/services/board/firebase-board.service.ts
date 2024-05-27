@@ -25,6 +25,7 @@ import {Config} from '../../models/config';
 import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
+import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
 import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
 import {collectionSnapshots, docSnapshots, updateDoc} from '../firebase/firestore';
@@ -38,7 +39,16 @@ import {BoardServiceAbstract} from './board-service.abstract';
 export class FirebaseBoardService extends BoardServiceAbstract {
 
   override user$ = this._authService.user$.pipe(
-    getProtectedRxjsPipe()
+    getProtectedRxjsPipe(),
+    tapOnce(() => {
+      this.firstLoadingUserBoards$.next(true);
+      this.firstLoadingBoard$.next(true);
+      this.firstLoadingBoardStatuses$.next(true);
+      this.firstLoadingBoardTasks$.next(true);
+      this.firstLoadingBoardTask$.next(true);
+      this.firstLoadingBoardTaskSubtasks$.next(true);
+    }),
+    shareReplay()
   );
 
   override config$ = docSnapshots(Config.firestoreRef(this._firestore, 'global')).pipe(
@@ -80,11 +90,11 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingUserBoards$.next(false);
       this.firstLoadingUserBoards$.next(false);
     }),
-    catchError(() => of(null)),
     getProtectedRxjsPipe(),
     shareReplay()
   );

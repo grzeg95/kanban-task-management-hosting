@@ -57,6 +57,7 @@ export class StorageBoardService extends BoardServiceAbstract {
       });
     }),
     map(Config.storeData),
+    catchError(() => of(null)),
     getProtectedRxjsPipe(),
     shareReplay()
   );
@@ -74,6 +75,7 @@ export class StorageBoardService extends BoardServiceAbstract {
       })
     }),
     map(User.storeData),
+    catchError(() => of(null)),
     getProtectedRxjsPipe(),
     tapOnce(() => {
       this.firstLoadingUserBoards$.next(true);
@@ -83,7 +85,7 @@ export class StorageBoardService extends BoardServiceAbstract {
       this.firstLoadingBoardTask$.next(true);
       this.firstLoadingBoardTaskSubtasks$.next(true);
     }),
-    shareReplay()
+    shareReplay(),
   );
 
   override userBoards$ = combineLatest([
@@ -127,6 +129,7 @@ export class StorageBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingUserBoards$.next(false);
       this.firstLoadingUserBoards$.next(false);
@@ -227,6 +230,7 @@ export class StorageBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardStatuses$.next(false);
       this.firstLoadingBoardStatuses$.next(false);
@@ -275,6 +279,7 @@ export class StorageBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardTasks$.next(false);
       this.firstLoadingBoardTasks$.next(false);
@@ -306,6 +311,7 @@ export class StorageBoardService extends BoardServiceAbstract {
 
       return boardTasks[boardTaskId] || null;
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardTask$.next(false);
       this.firstLoadingBoardTask$.next(false);
@@ -354,6 +360,7 @@ export class StorageBoardService extends BoardServiceAbstract {
         }),
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardTaskSubtasks$.next(false);
       this.firstLoadingBoardTaskSubtasks$.next(false);
