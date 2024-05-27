@@ -86,7 +86,6 @@ export class Watcher {
         await runWriteBatchPromise!.then((writeBatchRespond: boolean) => {
           observer.next?.(writeBatchRespond);
         }).catch((writeBatchError: WriteBatchError) => {
-          console.log(writeBatchError);
           observer.error?.(writeBatchError);
         }).finally(() => {
           this._lock = false;

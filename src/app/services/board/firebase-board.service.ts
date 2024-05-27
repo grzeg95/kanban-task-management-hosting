@@ -43,6 +43,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
   override config$ = docSnapshots(Config.firestoreRef(this._firestore, 'global')).pipe(
     map(Config.firestoreData),
+    catchError(() => of(null)),
     getProtectedRxjsPipe(),
     shareReplay()
   );
@@ -54,7 +55,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     tap(() => this.loadingUserBoards$.next(true)),
     switchMap(([user, config]) => {
 
-      if (user === null) {
+      if (user === null || config === null) {
         return of(null);
       }
 
@@ -83,6 +84,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       this.loadingUserBoards$.next(false);
       this.firstLoadingUserBoards$.next(false);
     }),
+    catchError(() => of(null)),
     getProtectedRxjsPipe(),
     shareReplay()
   );
@@ -121,6 +123,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoard$.next(false);
       this.firstLoadingBoard$.next(false);
@@ -137,7 +140,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     tap(() => this.loadingBoardStatuses$.next(true)),
     switchMap(([board, user, config]) => {
 
-      if (board === null || user === null) {
+      if (board === null || user === null || config === null) {
         return of(null);
       }
 
@@ -161,6 +164,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardStatuses$.next(false);
       this.firstLoadingBoardStatuses$.next(false);
@@ -177,7 +181,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     tap(() => this.loadingBoardTasks$.next(true)),
     switchMap(([board, user, config]) => {
 
-      if (board === null || user === null) {
+      if (board === null || user === null || config === null) {
         return of(null);
       }
 
@@ -201,6 +205,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         })
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardTasks$.next(false);
       this.firstLoadingBoardTasks$.next(false);
@@ -248,7 +253,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     tap(() => this.loadingBoardTask$.next(true)),
     switchMap(([board, boardTask, config]) => {
 
-      if (board === null || boardTask === null) {
+      if (board === null || boardTask === null || config === null) {
         return of(null);
       }
 
@@ -273,6 +278,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         }),
       );
     }),
+    catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
       this.loadingBoardTask$.next(false);
       this.firstLoadingBoardTask$.next(false);

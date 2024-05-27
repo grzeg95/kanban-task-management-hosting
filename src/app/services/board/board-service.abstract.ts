@@ -49,7 +49,7 @@ export type ObservedValuesOfBoardService =
 
 export interface BoardServiceInterface {
 
-  config$: Observable<Config | undefined> | undefined;
+  config$: Observable<Config | null | undefined> | undefined;
 
   boardId$: BehaviorSubject<string | null | undefined>;
   boardTaskId$: BehaviorSubject<string | null | undefined> | undefined;
@@ -92,7 +92,7 @@ export interface BoardServiceInterface {
 @Injectable()
 export abstract class BoardServiceAbstract implements BoardServiceInterface {
 
-  config$: Observable<Config | undefined> | undefined;
+  config$: Observable<Config | null | undefined> | undefined;
 
   readonly boardId$ = new BehaviorSubject<string | null | undefined>(undefined);
   readonly boardTaskId$ = new BehaviorSubject<string | null | undefined>(undefined);
@@ -104,19 +104,19 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
 
-  loadingUserBoards$= new BehaviorSubject(false);
-  loadingBoard$= new BehaviorSubject(false);
-  loadingBoardStatuses$= new BehaviorSubject(false);
-  loadingBoardTasks$= new BehaviorSubject(false);
-  loadingBoardTask$= new BehaviorSubject(false);
-  loadingBoardTaskSubtasks$= new BehaviorSubject(false);
+  loadingUserBoards$ = new BehaviorSubject(false);
+  loadingBoard$ = new BehaviorSubject(false);
+  loadingBoardStatuses$ = new BehaviorSubject(false);
+  loadingBoardTasks$ = new BehaviorSubject(false);
+  loadingBoardTask$ = new BehaviorSubject(false);
+  loadingBoardTaskSubtasks$ = new BehaviorSubject(false);
 
-  firstLoadingUserBoards$= new BehaviorSubject(true);
-  firstLoadingBoard$= new BehaviorSubject(true);
-  firstLoadingBoardStatuses$= new BehaviorSubject(true);
-  firstLoadingBoardTasks$= new BehaviorSubject(true);
-  firstLoadingBoardTask$= new BehaviorSubject(true);
-  firstLoadingBoardTaskSubtasks$= new BehaviorSubject(true);
+  firstLoadingUserBoards$ = new BehaviorSubject(true);
+  firstLoadingBoard$ = new BehaviorSubject(true);
+  firstLoadingBoardStatuses$ = new BehaviorSubject(true);
+  firstLoadingBoardTasks$ = new BehaviorSubject(true);
+  firstLoadingBoardTask$ = new BehaviorSubject(true);
+  firstLoadingBoardTaskSubtasks$ = new BehaviorSubject(true);
 
   abstract boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 

@@ -12,17 +12,17 @@ export const environment = {
   recaptchaEnterprise: '6Le2r3QpAAAAAAmARlznGeN2AHVUSrt16QP7_wL-',
   emulators: {
     firestore: {
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 8080,
       protocol: 'http'
     },
     functions: {
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 5001,
       protocol: 'http'
     },
     auth: {
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 9099,
       protocol: 'http'
     }
