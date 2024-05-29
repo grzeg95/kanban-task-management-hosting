@@ -23,7 +23,7 @@ import {
 import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {Config} from '../../models/config';
 import {InMemoryError} from '../../models/in-memory-error';
-import {User, UserDoc} from '../../models/user';
+import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {Data, doc, DocumentSnapshot, getIdbDatabase, WriteBatch, Storage} from '../../utils/store';
@@ -220,13 +220,13 @@ export class StorageBoardService extends BoardServiceAbstract {
       }).pipe(
         map((boardStatusesDocumentSnapshots) => {
 
-          const boardStatuses: { [key in string]: BoardStatus } = {};
+          const boardStatusesDocumentSnapshotsMap = new Map<string, BoardStatus>();
 
           for (const boardStatusesDocumentSnapshot of boardStatusesDocumentSnapshots) {
-            Object.assign(boardStatuses, {[boardStatusesDocumentSnapshot.id]: BoardStatus.storeData(boardStatusesDocumentSnapshot)});
+            boardStatusesDocumentSnapshotsMap.set(boardStatusesDocumentSnapshot.id, BoardStatus.storeData(boardStatusesDocumentSnapshot));
           }
 
-          return boardStatuses;
+          return boardStatusesDocumentSnapshotsMap;
         })
       );
     }),
@@ -269,13 +269,13 @@ export class StorageBoardService extends BoardServiceAbstract {
       }).pipe(
         map((boardTasksDocumentSnapshots) => {
 
-          const boardTasks: { [key in string]: BoardTask } = {};
+          const boardTasksDocumentSnapshotsMap = new Map<string, BoardTask>();
 
           for (const boardTasksDocumentSnapshot of boardTasksDocumentSnapshots) {
-            Object.assign(boardTasks, {[boardTasksDocumentSnapshot.id]: BoardTask.storeData(boardTasksDocumentSnapshot)});
+            boardTasksDocumentSnapshotsMap.set(boardTasksDocumentSnapshot.id, BoardTask.storeData(boardTasksDocumentSnapshot));
           }
 
-          return boardTasks;
+          return boardTasksDocumentSnapshotsMap;
         })
       );
     }),
@@ -309,7 +309,7 @@ export class StorageBoardService extends BoardServiceAbstract {
         return undefined;
       }
 
-      return boardTasks[boardTaskId] || null;
+      return boardTasks.get(boardTaskId) || null;
     }),
     catchError(() => of(null)),
     tapTimeoutRxjsPipe(() => {
@@ -350,13 +350,13 @@ export class StorageBoardService extends BoardServiceAbstract {
       }).pipe(
         map((boardTaskSubtasksDocumentSnapshots) => {
 
-          const boardTaskSubtasks: { [key in string]: BoardTaskSubtask } = {};
+          const boardTaskSubtasksDocumentSnapshotsMap = new Map<string, BoardTaskSubtask>();
 
           for (const boardTaskSubtasksDocumentSnapshot of boardTaskSubtasksDocumentSnapshots) {
-            Object.assign(boardTaskSubtasks, {[boardTaskSubtasksDocumentSnapshot.id]: BoardTaskSubtask.storeData(boardTaskSubtasksDocumentSnapshot)});
+            boardTaskSubtasksDocumentSnapshotsMap.set(boardTaskSubtasksDocumentSnapshot.id, BoardTaskSubtask.storeData(boardTaskSubtasksDocumentSnapshot));
           }
 
-          return boardTaskSubtasks;
+          return boardTaskSubtasksDocumentSnapshotsMap;
         }),
       );
     }),
@@ -499,7 +499,7 @@ export class StorageBoardService extends BoardServiceAbstract {
 
       const userRef = doc(storage, `${Collections.users}/${this._userId}`);
       const userSnap = await userRef.get();
-      const user = userSnap.data as UserDoc;
+      const user = User.storeData(userSnap);
       InMemoryError.testRequirement(user.disabled, {code: 'permission-denied', message: 'User is disabled'});
       InMemoryError.testRequirement(!user.boardsIds.find((boardId) => boardId === data.id), {
         code: 'permission-denied',

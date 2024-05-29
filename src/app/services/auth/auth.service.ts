@@ -1,10 +1,9 @@
 import {Injectable, NgZone} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from '@angular/fire/auth';
-import {Firestore} from '@angular/fire/firestore';
+import {docSnapshots, Firestore} from '@angular/fire/firestore';
 import {BehaviorSubject, map, Observable, Subscription} from 'rxjs';
-import {User, UserDoc} from '../../models/user';
+import {User} from '../../models/user';
 import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
-import {docSnapshots} from '../firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -38,10 +37,9 @@ export class AuthService {
             this.resetFirstLoadings$.next();
 
             const userRef = User.firestoreRef(this._firestore, nextFirebaseUser.uid);
-            this._userDocSnapSub = docSnapshots<User, UserDoc>(userRef).pipe(
-              map((user) => {
-                return User.firestoreData(user);
-              }),
+            this._userDocSnapSub = docSnapshots<User>(userRef).pipe(
+              runInZoneRxjsPipe(this._ngZone),
+              map(User.firestoreData)
             ).subscribe((user) => {
               this.user$.next(user);
             });

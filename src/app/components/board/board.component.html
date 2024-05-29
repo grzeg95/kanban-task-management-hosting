@@ -2,7 +2,7 @@
   @if (!firstLoadingBoardStatuses() && boardStatuses(); as boardStatuses) {
 
     @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
-      @if (boardStatuses[boardStatusId]; as boardStatus) {
+      @if (boardStatuses.get(boardStatusId); as boardStatus) {
 
         <div class="app-board__status">
           <div class="app-board__status__title-wrapper">
@@ -13,7 +13,7 @@
           @if (!firstLoadingBoardTasks() && boardTasks(); as boardTasks) {
 
             @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
-              @if (boardTasks[boardStatusTaskId]; as boardStatusTask) {
+              @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
 
                 <div class="app-board__task" tabindex="{{tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
                   <div class="app-board__task__title-wrapper">

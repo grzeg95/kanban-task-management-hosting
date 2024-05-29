@@ -50,7 +50,7 @@
 
       @if (boardTaskSubtasks(); as boardTaskSubtasks) {
 
-        @if (boardTaskSubtasks[boardTaskSubtaskId]; as boardTaskSubtask) {
+        @if (boardTaskSubtasks.get(boardTaskSubtaskId); as boardTaskSubtask) {
           <app-checkbox
             class="app-view-board-task__subtask"
             (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtaskId, appCheckbox.checked)"

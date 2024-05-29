@@ -9,18 +9,10 @@ import {
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
-import {Board, BoardDoc} from './board';
+import {Board} from './board';
 import {BoardStatus} from './board-status';
 
-export type BoardTaskDoc = {
-  title: string;
-  description: string;
-  boardTaskSubtasksIds: string[];
-  boardStatusId: string;
-  completedBoardTaskSubtasks: number;
-}
-
-export class BoardTask implements BoardTaskDoc {
+export class BoardTask {
 
   constructor(
     public readonly id: string,
@@ -35,17 +27,17 @@ export class BoardTask implements BoardTaskDoc {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: BoardTask._snapToThis
-  } as FirestoreDataConverter<BoardTask, BoardTaskDoc>;
+  } as FirestoreDataConverter<BoardTask>;
 
-  static firestoreRef(ref: firestoreDocumentReference<Board, BoardDoc>, id: string) {
+  static firestoreRef(ref: firestoreDocumentReference<Board>, id: string) {
     return firestoreDoc(ref, Collections.boardTasks, id).withConverter(BoardTask._converter);
   }
 
-  static firestoreCollectionRef(ref: firestoreDocumentReference<Board, BoardDoc>) {
+  static firestoreCollectionRef(ref: firestoreDocumentReference<Board>) {
     return firestoreCollection(ref, Collections.boardTasks).withConverter(BoardTask._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask>) {
     return BoardTask._snapToThis(snap);
   }
 
@@ -73,7 +65,7 @@ export class BoardTask implements BoardTaskDoc {
     return BoardTask._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask | DocumentData, BoardTaskDoc> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask | DocumentData> | storeDocumentSnapshot) {
 
     let data: any;
 

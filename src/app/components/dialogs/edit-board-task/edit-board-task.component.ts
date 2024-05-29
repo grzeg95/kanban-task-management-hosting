@@ -111,10 +111,10 @@ export class EditBoardTaskComponent {
       return [];
     }
 
-    return board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
+    return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((status) => !!status).map((status) => {
       return {
-        value: status.id,
-        label: status.name
+        value: status!.id,
+        label: status!.name
       } as PopMenuItem;
     });
 
@@ -186,8 +186,8 @@ export class EditBoardTaskComponent {
 
         this.form.controls.boardTaskSubtasks.clear();
 
-        boardTask.boardTaskSubtasksIds.map((boardTaskSubtaskId) => boardTaskSubtasks[boardTaskSubtaskId]).filter((boardTaskSubtask) => !!boardTaskSubtask).forEach((boardTaskSubtask) => {
-          this.addNewBoardTaskSubtask(boardTaskSubtask.id, boardTaskSubtask.title);
+        boardTask.boardTaskSubtasksIds.map((boardTaskSubtaskId) => boardTaskSubtasks.get(boardTaskSubtaskId)).filter((boardTaskSubtask) => !!boardTaskSubtask).forEach((boardTaskSubtask) => {
+          this.addNewBoardTaskSubtask(boardTaskSubtask!.id, boardTaskSubtask!.title);
         });
       }
     });

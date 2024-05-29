@@ -61,10 +61,10 @@ export class AddNewBordTaskComponent {
       return [];
     }
 
-    return board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
+    return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
       return {
-        value: boardStatus.id,
-        label: boardStatus.name
+        value: boardStatus!.id,
+        label: boardStatus!.name
       } as PopMenuItem;
     });
   });

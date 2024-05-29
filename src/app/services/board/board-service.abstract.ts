@@ -56,9 +56,10 @@ export interface BoardServiceInterface {
   user$: Observable<User | null | undefined> | undefined;
   userBoards$: Observable<UserBoard[] | null | undefined> | undefined;
   board$: Observable<Board | null | undefined> | undefined;
-  boardStatuses$: Observable<{ [key in string]: BoardStatus } | null | undefined> | undefined;
+  boardStatuses$: Observable<Map<string, BoardStatus> | null | undefined> | undefined;
+  boardTasks$: Observable<Map<string, BoardTask> | null | undefined> | undefined;
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
-  boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
+  boardTaskSubtasks$: Observable<Map<string, BoardTaskSubtask> | null | undefined> | undefined;
 
   loadingUserBoards$: BehaviorSubject<boolean> | undefined;
   loadingBoard$: BehaviorSubject<boolean> | undefined;
@@ -99,10 +100,10 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
   user$: Observable<User | null | undefined> | undefined;
   userBoards$: Observable<UserBoard[] | null | undefined> | undefined;
   board$: Observable<Board | null | undefined> | undefined;
-  boardStatuses$: Observable<{ [key in string]: BoardStatus } | null | undefined> | undefined;
-  boardTasks$: Observable<{ [key in string]: BoardTask } | null | undefined> | undefined;
+  boardStatuses$: Observable<Map<string, BoardStatus> | null | undefined> | undefined;
+  boardTasks$: Observable<Map<string, BoardTask> | null | undefined> | undefined;
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
-  boardTaskSubtasks$: Observable<{ [key in string]: BoardTaskSubtask } | null | undefined> | undefined;
+  boardTaskSubtasks$: Observable<Map<string, BoardTaskSubtask> | null | undefined> | undefined;
 
   loadingUserBoards$ = new BehaviorSubject(false);
   loadingBoard$ = new BehaviorSubject(false);

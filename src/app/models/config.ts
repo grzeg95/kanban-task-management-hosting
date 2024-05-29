@@ -4,14 +4,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
-export type ConfigDoc = {
-  maxUserBoards: number;
-  maxBoardStatuses: number;
-  maxBoardTasks: number;
-  maxBoardTaskSubtasks: number;
-};
-
-export class Config implements ConfigDoc {
+export class Config {
 
   constructor(
     public readonly id: string,
@@ -25,13 +18,13 @@ export class Config implements ConfigDoc {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: Config._snapToThis
-  } as FirestoreDataConverter<Config, ConfigDoc>;
+  } as FirestoreDataConverter<Config>;
 
   static firestoreRef(firestore: Firestore, id: string) {
     return firestoreDoc(firestore, Collections.configs, id).withConverter(Config._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<Config, ConfigDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<Config>) {
     return Config._snapToThis(snap);
   }
 
@@ -43,7 +36,7 @@ export class Config implements ConfigDoc {
     return Config._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<Config | DocumentData, ConfigDoc> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Config | DocumentData> | storeDocumentSnapshot) {
 
     let data: any;
 

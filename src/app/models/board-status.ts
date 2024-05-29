@@ -13,14 +13,9 @@ import {
   DocumentReference as storeDocumentReference,
   DocumentSnapshot as storeDocumentSnapshot
 } from '../utils/store';
-import {Board, BoardDoc} from './board';
+import {Board} from './board';
 
-export type BoardStatusDoc = {
-  name: string;
-  boardTasksIds: string[]
-};
-
-export class BoardStatus implements BoardStatusDoc {
+export class BoardStatus {
 
   constructor(
     public readonly id: string,
@@ -32,17 +27,17 @@ export class BoardStatus implements BoardStatusDoc {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: BoardStatus._snapToThis
-  } as FirestoreDataConverter<BoardStatus, BoardStatusDoc>;
+  } as FirestoreDataConverter<BoardStatus>;
 
   static firestoreRef(ref: firestoreDocumentReference<Board>, statusId: string) {
     return firestoreDoc(ref, Collections.boardStatuses, statusId).withConverter(BoardStatus._converter);
   }
 
-  static firestoreCollectionRef(ref: firestoreDocumentReference<Board, BoardDoc>) {
+  static firestoreCollectionRef(ref: firestoreDocumentReference<Board>) {
     return firestoreCollection(ref, Collections.boardStatuses).withConverter(BoardStatus._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus>) {
     return BoardStatus._snapToThis(snap);
   }
 
@@ -70,7 +65,7 @@ export class BoardStatus implements BoardStatusDoc {
     return BoardStatus._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus | DocumentData, BoardStatusDoc> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus | DocumentData> | storeDocumentSnapshot) {
 
     let data: any;
 

@@ -82,9 +82,9 @@ export class EditBoardComponent {
       if (!this.form.controls.boardStatuses.dirty) {
         this.form.controls.boardStatuses.reset();
 
-        board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((boardStatus) => !!boardStatus).forEach((boardStatus) => {
-          this.addNewStatusName(boardStatus.id, boardStatus.name);
-          this.initialBoardStatuses.set(boardStatus.id, boardStatus.name);
+        board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((boardStatus) => !!boardStatus).forEach((boardStatus) => {
+          this.addNewStatusName(boardStatus!.id, boardStatus!.name);
+          this.initialBoardStatuses.set(boardStatus!.id, boardStatus!.name);
         });
       }
     });

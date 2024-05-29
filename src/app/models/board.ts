@@ -9,13 +9,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
-export type BoardDoc = {
-  name: string;
-  boardStatusesIds: string[];
-  boardTasksIds: string[];
-};
-
-export class Board implements BoardDoc {
+export class Board {
 
   constructor(
     public readonly id: string,
@@ -28,13 +22,13 @@ export class Board implements BoardDoc {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: Board._snapToThis
-  } as FirestoreDataConverter<Board, BoardDoc>;
+  } as FirestoreDataConverter<Board>;
 
   static firestoreRef(firestore: Firestore, id: string) {
     return firestoreDoc(firestore, Collections.boards, id).withConverter(Board._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<Board, BoardDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<Board>) {
     return Board._snapToThis(snap);
   }
 
@@ -46,7 +40,7 @@ export class Board implements BoardDoc {
     return Board._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<Board | DocumentData, BoardDoc> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Board | DocumentData> | storeDocumentSnapshot) {
 
     let data: any;
 

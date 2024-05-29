@@ -92,10 +92,10 @@ export class ViewBoardTaskComponent {
       return [];
     }
 
-    return board.boardStatusesIds.map((boardStatusId) => boardStatuses[boardStatusId]).filter((status) => !!status).map((status) => {
+    return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((status) => !!status).map((status) => {
       return {
-        value: status.id,
-        label: status.name
+        value: status!.id,
+        label: status!.name
       } as PopMenuItem;
     });
   });
@@ -218,9 +218,9 @@ export class ViewBoardTaskComponent {
         id: currentBoardStatusId,
         newId: newBoardStatusId
       },
-      boardTaskSubtasks: boardTask.boardTaskSubtasksIds.map((boardTaskSubtaskId) => boardTaskSubtasks[boardTaskSubtaskId]).filter((boardTaskSubtask) => !!boardTaskSubtask).map((boardTaskSubtask) => ({
-        id: boardTaskSubtask.id,
-        title: boardTaskSubtask.title
+      boardTaskSubtasks: boardTask.boardTaskSubtasksIds.map((boardTaskSubtaskId) => boardTaskSubtasks.get(boardTaskSubtaskId)).filter((boardTaskSubtask) => !!boardTaskSubtask).map((boardTaskSubtask) => ({
+        id: boardTaskSubtask!.id,
+        title: boardTaskSubtask!.title
       }))
     };
 

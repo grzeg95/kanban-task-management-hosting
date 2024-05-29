@@ -13,11 +13,7 @@ import {
   DocumentReference as storeDocumentReference,
   DocumentSnapshot as storeDocumentSnapshot
 } from '../utils/store';
-import {User, UserDoc} from './user';
-
-export type UserBoardDoc = {
-  name: string;
-};
+import {User} from './user';
 
 export class UserBoard {
 
@@ -30,16 +26,16 @@ export class UserBoard {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: UserBoard._snapToThis
-  } as FirestoreDataConverter<UserBoard, UserBoardDoc>;
+  } as FirestoreDataConverter<UserBoard>;
 
-  static firestoreCollectionRef(ref: DocumentReference<User, UserDoc>) {
+  static firestoreCollectionRef(ref: DocumentReference<User>) {
     return firestoreCollection(ref, Collections.userBoards).withConverter(UserBoard._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
-  static firestoreData(snap: firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
+  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard>): UserBoard;
+  static firestoreData(snap: firestoreQueryDocumentSnapshot<UserBoard>): UserBoard;
 
-  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc> | firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard> | firestoreQueryDocumentSnapshot<UserBoard>) {
     return UserBoard._snapToThis(snap);
   }
 
@@ -55,7 +51,7 @@ export class UserBoard {
     return UserBoard._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<UserBoard | DocumentData, UserBoardDoc> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<UserBoard | DocumentData> | storeDocumentSnapshot) {
 
     let data: any;
 
