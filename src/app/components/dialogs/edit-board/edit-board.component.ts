@@ -1,5 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, ViewEncapsulation} from '@angular/core';
+import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -36,6 +36,8 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class EditBoardComponent {
 
+  protected isDone = signal(false);
+  protected isRequesting = signal(false);
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
@@ -88,31 +90,35 @@ export class EditBoardComponent {
         });
       }
     });
-  }
 
-  addNewStatusName(id: null | string = null, name = '') {
-    this.form.controls.boardStatuses.push(
-      new FormGroup({
-        id: new FormControl(id),
-        name: new FormControl(name, [Validators.required])
-      })
-    );
-  }
+    effect(() => {
 
-  boardUpdate() {
+      if (this.isDone()) {
+        this.close();
+      }
+    });
 
-    this.form.updateValueAndValidity();
-    this.form.markAllAsTouched();
+    effect(() => {
 
-    if (this.form.invalid) {
-      return;
-    }
+      if (this.isRequesting()) {
+        this.form.disable();
+      } else {
+        this.form.enable();
+      }
+    });
 
-    const abstractBoardService = this.abstractBoardService();
+    effect(() => {
 
-    if (abstractBoardService) {
+      if (!this.isRequesting()) {
+        return;
+      }
 
-      this.form.disable();
+      this.form.updateValueAndValidity();
+      this.form.markAllAsTouched();
+
+      if (this.form.invalid) {
+        return;
+      }
 
       const updateBoardData = {
         id: this.form.value.boardId,
@@ -131,21 +137,25 @@ export class EditBoardComponent {
       const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this.initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
       const boardStatusAddedOrDeleted = this.initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
 
-      abstractBoardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
+      this.abstractBoardService()?.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
         catchError(() => {
-
-          try {
-            this.form.enable();
-          } catch {
-            /* empty */
-          }
-
+          this.isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.close();
+        this.isDone.set(true);
+        this.isRequesting.set(false);
       });
-    }
+    });
+  }
+
+  addNewStatusName(id: null | string = null, name = '') {
+    this.form.controls.boardStatuses.push(
+      new FormGroup({
+        id: new FormControl(id),
+        name: new FormControl(name, [Validators.required])
+      })
+    );
   }
 
   close() {

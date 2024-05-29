@@ -32,18 +32,18 @@
     app-button
     appearance="secondary"
     (click)="addNewBoardStatusName()"
-    [disabled]="form.disabled"
+    [disabled]="isRequesting()"
   >+ Add New Column</button>
 
   <button
     class="app-add-new-board__add-new-board-button"
     app-button
     appearance="primary"
-    (click)="boardCreate()"
-    [disabled]="form.disabled"
+    (click)="isRequesting.set(true)"
+    [disabled]="isRequesting()"
   >
     Create New Board
-    @if (form.disabled) {
+    @if (isRequesting()) {
       <app-loader/>
     }
   </button>

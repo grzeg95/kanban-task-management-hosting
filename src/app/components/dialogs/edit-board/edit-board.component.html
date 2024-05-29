@@ -33,18 +33,18 @@
     app-button
     appearance="secondary"
     (click)="addNewStatusName()"
-    [disabled]="form.disabled"
+    [disabled]="isRequesting()"
   >+ Add New Column</button>
 
   <button
     class="app-edit-board__update-board-button"
     app-button
     appearance="primary"
-    (click)="boardUpdate()"
-    [disabled]="form.disabled"
+    (click)="isRequesting.set(true)"
+    [disabled]="isRequesting()"
   >
     Save Changes
-    @if (form.disabled) {
+    @if (isRequesting()) {
       <app-loader/>
     }
   </button>

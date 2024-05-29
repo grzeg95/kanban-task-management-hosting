@@ -8,7 +8,7 @@
   class="app-delete-board-task__delete-task-button"
   app-button
   appearance="warn"
-  (click)="boardTaskDelete()"
+  (click)="isRequesting.set(true)"
   [disabled]="isRequesting()"
 >
   Delete

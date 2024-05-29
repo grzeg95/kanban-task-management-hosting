@@ -41,7 +41,7 @@
     app-button
     appearance="secondary"
     (click)="addNewSubtask()"
-    [disabled]="form.disabled"
+    [disabled]="isRequesting()"
   >+ Add New Board Task Subtask
   </button>
 
@@ -59,11 +59,11 @@
     class="app-view-board-task__create-task-button"
     app-button
     appearance="primary"
-    (click)="boardTaskCreate()"
-    [disabled]="form.disabled"
+    (click)="isRequesting.set(true)"
+    [disabled]="isRequesting()"
   >
     Create Board Task
-    @if (form.disabled) {
+    @if (isRequesting()) {
       <app-loader/>
     }
   </button>

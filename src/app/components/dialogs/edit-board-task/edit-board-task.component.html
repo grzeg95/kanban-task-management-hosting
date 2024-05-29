@@ -41,7 +41,7 @@
     app-button
     appearance="secondary"
     (click)="addNewBoardTaskSubtask()"
-    [disabled]="form.disabled"
+    [disabled]="isRequesting()"
   >+ Add New Board Task Subtask
   </button>
 
@@ -59,11 +59,10 @@
     class="app-edit-board-task__update-task-button"
     app-button
     appearance="primary"
-    (click)="boardTaskUpdate()"
-    [disabled]="form.disabled"
+    (click)="isRequesting.set(true)"
   >
     Save Changes
-    @if (form.disabled) {
+    @if (isRequesting()) {
       <app-loader/>
     }
   </button>

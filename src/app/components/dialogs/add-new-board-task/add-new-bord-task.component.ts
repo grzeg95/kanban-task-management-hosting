@@ -1,5 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, computed, effect, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -41,6 +41,8 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class AddNewBordTaskComponent {
 
+  protected isDone = signal(false);
+  protected isRequesting = signal(false);
   protected board = toSignal(this._boardService.board$);
   protected boardStatuses = toSignal(this._boardService.boardStatuses$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
@@ -119,25 +121,34 @@ export class AddNewBordTaskComponent {
       });
     });
 
-    this.addNewSubtask();
-  }
+    effect(() => {
 
-  addNewSubtask() {
-    this.form.controls.boardTaskSubtasksTitles.push(new FormControl('', [Validators.required]));
-  }
+      if (this.isDone()) {
+        this.close();
+      }
+    });
 
-  boardTaskCreate() {
+    effect(() => {
 
-    this.form.updateValueAndValidity();
-    this.form.markAllAsTouched();
+      if (this.isRequesting()) {
+        this.form.disable();
+      } else {
+        this.form.enable();
+      }
+    });
 
-    if (this.form.invalid) {
-      return;
-    }
+    effect(() => {
 
-    const abstractBoardService = this.abstractBoardService();
+      if (!this.isRequesting()) {
+        return;
+      }
 
-    if (abstractBoardService) {
+      this.form.updateValueAndValidity();
+      this.form.markAllAsTouched();
+
+      if (this.form.invalid) {
+        return;
+      }
 
       const createTaskData = {
         boardId: this.form.value.boardId,
@@ -147,23 +158,22 @@ export class AddNewBordTaskComponent {
         boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
       } as BoardTaskCreateData;
 
-      this.form.disable();
-
-      abstractBoardService.boardTaskCreate(createTaskData).pipe(
+      this.abstractBoardService()?.boardTaskCreate(createTaskData).pipe(
         catchError(() => {
-
-          try {
-            this.form.enable();
-          } catch {
-            /* empty */
-          }
-
+          this.isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.close();
+        this.isDone.set(true);
+        this.isRequesting.set(false);
       });
-    }
+    });
+
+    this.addNewSubtask();
+  }
+
+  addNewSubtask() {
+    this.form.controls.boardTaskSubtasksTitles.push(new FormControl('', [Validators.required]));
   }
 
   close() {

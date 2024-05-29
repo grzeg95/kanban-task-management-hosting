@@ -5,7 +5,6 @@ import {ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardService} from '../../../services/board/board.service';
-import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
@@ -43,8 +42,7 @@ export class DeleteBoardTaskComponent {
 
   constructor(
     private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>,
-    private readonly _snackBarService: SnackBarService
+    private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>
   ) {
 
     effect(() => {
@@ -53,7 +51,6 @@ export class DeleteBoardTaskComponent {
       const boardTask = this.boardTask();
 
       if (!board && board !== undefined) {
-        this._snackBarService.open(`This board want's found`, 3000);
         this.close();
         return;
       }
@@ -63,46 +60,32 @@ export class DeleteBoardTaskComponent {
       }
 
       if (!boardTask && boardTask !== undefined) {
-        this._snackBarService.open(`This board task want's found`, 3000);
         this.close();
-        return;
       }
     });
-  }
 
-  boardTaskDelete() {
+    effect(() => {
 
-    const board = this.board();
-    const boardTask = this.boardTask();
+      const isRequesting = this.isRequesting();
+      const board = this.board();
+      const boardTask = this.boardTask();
 
-    if (!board || !boardTask) {
-      return;
-    }
+      if (!board || !boardTask || !isRequesting) {
+        return;
+      }
 
-    const abstractBoardService = this.abstractBoardService();
-
-    if (abstractBoardService) {
-
-      this.isRequesting.set(true);
-
-      abstractBoardService.boardTaskDelete({
+      this.abstractBoardService()?.boardTaskDelete({
         id: boardTask.id,
         boardId: board.id
       }).pipe(
         catchError(() => {
-
-          try {
-            this.isRequesting.set(false);
-          } catch {
-            /* empty */
-          }
-
+          this.isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.close();
-      })
-    }
+        this.isRequesting.set(false);
+      });
+    });
   }
 
   close() {

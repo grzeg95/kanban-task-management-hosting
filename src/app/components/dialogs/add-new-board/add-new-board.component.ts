@@ -1,5 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, ViewEncapsulation} from '@angular/core';
+import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
@@ -35,6 +35,8 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class AddNewBoardComponent {
 
+  protected isDone = signal(false);
+  protected isRequesting = signal(false);
   protected user = toSignal(this._boardService.user$);
   protected storeType = toSignal(this._boardService.storeType$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
@@ -59,48 +61,56 @@ export class AddNewBoardComponent {
       }
     });
 
-    this.addNewBoardStatusName();
-  }
+    effect(() => {
 
-  addNewBoardStatusName() {
-    this.form.controls.boardStatusesNames.push(new FormControl('', [Validators.required]));
-  }
+      if (this.isDone()) {
+        this.close();
+      }
+    });
 
-  boardCreate() {
+    effect(() => {
 
-    this.form.updateValueAndValidity();
-    this.form.markAllAsTouched();
+      if (this.isRequesting()) {
+        this.form.disable();
+      } else {
+        this.form.enable();
+      }
+    });
 
-    if (this.form.invalid) {
-      return;
-    }
+    effect(() => {
 
-    const abstractBoardService = this.abstractBoardService();
+      if (!this.isRequesting()) {
+        return;
+      }
 
-    if (abstractBoardService) {
+      this.form.updateValueAndValidity();
+      this.form.markAllAsTouched();
 
-      this.form.disable();
+      if (this.form.invalid) {
+        return;
+      }
 
       const createBoardData = {
         name: this.form.value.name,
         boardStatusesNames: this.form.value.boardStatusesNames,
       } as BoardCreateData;
 
-      abstractBoardService.boardCreate(createBoardData).pipe(
+      this.abstractBoardService()?.boardCreate(createBoardData).pipe(
         catchError(() => {
-
-          try {
-            this.form.enable();
-          } catch {
-            /* empty */
-          }
-
+          this.isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.close();
+        this.isDone.set(true);
+        this.isRequesting.set(false);
       });
-    }
+    });
+
+    this.addNewBoardStatusName();
+  }
+
+  addNewBoardStatusName() {
+    this.form.controls.boardStatusesNames.push(new FormControl('', [Validators.required]));
   }
 
   close() {

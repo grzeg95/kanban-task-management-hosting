@@ -5,7 +5,6 @@ import {ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardService} from '../../../services/board/board.service';
-import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
@@ -35,14 +34,14 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class DeleteBoardComponent {
 
+  protected isDone = signal(false);
   protected isRequesting = signal(false);
   protected board = toSignal(this._boardService.board$);
   protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
 
   constructor(
     private readonly _dialogRef: DialogRef<DeleteBoardComponent>,
-    private readonly _boardService: BoardService,
-    private readonly _snackBarService: SnackBarService
+    private readonly _boardService: BoardService
   ) {
 
     effect(() => {
@@ -50,42 +49,35 @@ export class DeleteBoardComponent {
       const board = this.board();
 
       if (!board && board !== undefined) {
-        this._snackBarService.open(`This board want's found`, 3000);
         this.close();
-        return;
       }
     });
-  }
 
-  boardDelete() {
+    effect(() => {
 
-    const board = this.board();
+      if (this.isDone()) {
+        this.close();
+      }
+    });
 
-    if (!board) {
-      return;
-    }
+    effect(() => {
 
-    const abstractBoardService = this.abstractBoardService();
+      const board = this.board();
 
-    if (abstractBoardService) {
+      if (!this.isRequesting() || !board) {
+        return;
+      }
 
-      this.isRequesting.set(true);
-
-      abstractBoardService.boardDelete({id: board.id}).pipe(
+      this.abstractBoardService()?.boardDelete({id: board.id}).pipe(
         catchError(() => {
-
-          try {
-            this.isRequesting.set(false);
-          } catch {
-            /* empty */
-          }
-
+          this.isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.close();
+        this.isDone.set(true);
+        this.isRequesting.set(false);
       });
-    }
+    });
   }
 
   close() {
