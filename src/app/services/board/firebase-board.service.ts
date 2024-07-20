@@ -1,6 +1,18 @@
 import {Inject, Injectable} from '@angular/core';
 import {Firestore, limit, updateDoc} from 'firebase/firestore';
-import {catchError, combineLatest, defer, distinctUntilChanged, map, of, shareReplay, switchMap, tap} from 'rxjs';
+import isEqual from 'lodash/isEqual';
+import {
+  catchError,
+  combineLatest,
+  defer,
+  distinctUntilChanged,
+  filter,
+  map,
+  of,
+  shareReplay,
+  switchMap,
+  tap
+} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -20,7 +32,7 @@ import {
   BoardTaskUpdateData,
   BoardTaskUpdateResult
 } from '../../models/board-task';
-import {BoardTaskSubtask} from '../../models/board-task-subtask';
+import {BoardTaskSubtask, BoardTaskSubtaskDoc} from '../../models/board-task-subtask';
 import {Config} from '../../models/config';
 import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
@@ -33,7 +45,6 @@ import {collectionSnapshots, docSnapshots} from '../firebase/firestore';
 import {FunctionsService} from '../firebase/functions.service';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
-import isEqual from 'lodash/isEqual';
 
 @Injectable({
   providedIn: 'root'
@@ -60,8 +71,15 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     shareReplay()
   );
 
+  private _userBoardsIds$ = this.user$.pipe(
+    filter((user): user is User => !!user),
+    map((user) => {
+      return user.boardsIds;
+    })
+  );
+
   override userBoards$ = combineLatest([
-    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.boardsIds, b?.boardsIds))),
+    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.id, b?.id))),
     this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxUserBoards, b?.maxUserBoards))),
   ]).pipe(
     tap(() => this.loadingUserBoards$.next(true)),
@@ -76,27 +94,34 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       }
 
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, user.id));
-      return collectionSnapshots(userBoardCollectionRef, limit(config.maxUserBoards)).pipe(
-        map((querySnapUserBoards) => {
+
+      return combineLatest([
+        this._userBoardsIds$.pipe(distinctUntilChanged((a, b) => isEqual(a, b))),
+        collectionSnapshots(userBoardCollectionRef, limit(config.maxUserBoards)).pipe(
+          map((querySnapUserBoards) => {
+            return querySnapUserBoards.docs;
+          })
+        )
+      ]).pipe(
+        map(([userBoardsIds, queryDocSnapsUserBoard]) => {
 
           const querySnapUserBoardsMap = new Map<string, UserBoard>();
 
-          for (const queryDocSnapUserBoard of querySnapUserBoards.docs) {
+          for (const queryDocSnapUserBoard of queryDocSnapsUserBoard) {
             querySnapUserBoardsMap.set(queryDocSnapUserBoard.id, UserBoard.firestoreData(queryDocSnapUserBoard));
           }
 
-          return user.boardsIds.map((boardId) => {
+          return userBoardsIds.map((boardId) => {
             return querySnapUserBoardsMap.get(boardId);
           }).filter((userBoard) => !!userBoard) as UserBoard[];
+        }),
+        catchError(() => of(null)),
+        tapTimeoutRxjsPipe(() => {
+          this.loadingUserBoards$.next(false);
+          this.firstLoadingUserBoards$.next(false);
         })
       );
     }),
-    catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingUserBoards$.next(false);
-      this.firstLoadingUserBoards$.next(false);
-    }),
-    getProtectedRxjsPipe(),
     shareReplay()
   );
 
@@ -276,7 +301,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       const boardTaskRef = BoardTask.firestoreRef(boardRef, boardTask.id);
       const boardTaskSubtasksRef = BoardTaskSubtask.firestoreRefs(boardTaskRef);
 
-      return collectionSnapshots(boardTaskSubtasksRef, limit(config.maxBoardTaskSubtasks)).pipe(
+      return collectionSnapshots<BoardTaskSubtask, BoardTaskSubtaskDoc>(boardTaskSubtasksRef, limit(config.maxBoardTaskSubtasks)).pipe(
         map((querySnapBoardTaskSubtasks) => {
 
           const querySnapUserBoardTaskSubtasksMap = new Map<string, BoardTaskSubtask>();

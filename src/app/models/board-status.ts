@@ -15,7 +15,12 @@ import {
 } from '../utils/store';
 import {Board} from './board';
 
-export class BoardStatus {
+export interface BoardStatusDoc extends DocumentData {
+  readonly name: string;
+  readonly boardTasksIds: string[];
+}
+
+export class BoardStatus implements BoardStatusDoc {
 
   constructor(
     public readonly id: string,
@@ -27,7 +32,7 @@ export class BoardStatus {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: BoardStatus._snapToThis
-  } as FirestoreDataConverter<BoardStatus>;
+  } as FirestoreDataConverter<BoardStatus, BoardStatusDoc>;
 
   static firestoreRef(ref: firestoreDocumentReference<Board>, statusId: string) {
     return firestoreDoc(ref, Collections.boardStatuses, statusId).withConverter(BoardStatus._converter);
@@ -37,7 +42,7 @@ export class BoardStatus {
     return firestoreCollection(ref, Collections.boardStatuses).withConverter(BoardStatus._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc>) {
     return BoardStatus._snapToThis(snap);
   }
 
@@ -65,7 +70,7 @@ export class BoardStatus {
     return BoardStatus._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus | DocumentData> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc> | storeDocumentSnapshot) {
 
     let data: any;
 

@@ -1,10 +1,17 @@
-import {doc as firestoreDoc, DocumentData, Firestore, FirestoreDataConverter} from 'firebase/firestore';
 import {DocumentSnapshot as firestoreDocumentSnapshot} from '@firebase/firestore';
+import {doc as firestoreDoc, DocumentData, Firestore, FirestoreDataConverter} from 'firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
-export class Config {
+export interface ConfigDoc extends DocumentData {
+  readonly maxUserBoards: number;
+  readonly maxBoardStatuses: number;
+  readonly maxBoardTasks: number;
+  readonly maxBoardTaskSubtasks: number;
+}
+
+export class Config implements ConfigDoc {
 
   constructor(
     public readonly id: string,
@@ -18,13 +25,13 @@ export class Config {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: Config._snapToThis
-  } as FirestoreDataConverter<Config>;
+  } as FirestoreDataConverter<Config, ConfigDoc>;
 
   static firestoreRef(firestore: Firestore, id: string) {
     return firestoreDoc(firestore, Collections.configs, id).withConverter(Config._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<Config>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<Config, ConfigDoc>) {
     return Config._snapToThis(snap);
   }
 
@@ -36,7 +43,7 @@ export class Config {
     return Config._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<Config | DocumentData> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Config, ConfigDoc> | storeDocumentSnapshot) {
 
     let data: any;
 

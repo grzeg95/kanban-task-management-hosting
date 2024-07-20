@@ -12,7 +12,15 @@ import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDo
 import {Board} from './board';
 import {BoardStatus} from './board-status';
 
-export class BoardTask {
+export interface BoardTaskDoc extends DocumentData {
+  readonly title: string;
+  readonly description: string;
+  readonly boardTaskSubtasksIds: string[];
+  readonly boardStatusId: string;
+  readonly completedBoardTaskSubtasks: number;
+}
+
+export class BoardTask implements BoardTaskDoc {
 
   constructor(
     public readonly id: string,
@@ -27,7 +35,7 @@ export class BoardTask {
   private static _converter = {
     toFirestore: cloneDeep,
     fromFirestore: BoardTask._snapToThis
-  } as FirestoreDataConverter<BoardTask>;
+  } as FirestoreDataConverter<BoardTask, BoardTaskDoc>;
 
   static firestoreRef(ref: firestoreDocumentReference<Board>, id: string) {
     return firestoreDoc(ref, Collections.boardTasks, id).withConverter(BoardTask._converter);
@@ -37,7 +45,7 @@ export class BoardTask {
     return firestoreCollection(ref, Collections.boardTasks).withConverter(BoardTask._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc>) {
     return BoardTask._snapToThis(snap);
   }
 
@@ -65,7 +73,7 @@ export class BoardTask {
     return BoardTask._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask | DocumentData> | storeDocumentSnapshot) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc> | storeDocumentSnapshot) {
 
     let data: any;
 

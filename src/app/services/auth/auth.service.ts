@@ -1,9 +1,9 @@
 import {Inject, Injectable} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
-import {DocumentData, Firestore} from 'firebase/firestore';
+import {Firestore} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
-import {BehaviorSubject, concatMap, distinctUntilChanged, from, map, Observable, of, switchMap} from 'rxjs';
-import {User} from '../../models/user';
+import {BehaviorSubject, distinctUntilChanged, from, map, Observable, of, shareReplay, switchMap} from 'rxjs';
+import {User, UserDoc} from '../../models/user';
 import {AuthInjectionToken, FirestoreInjectionToken} from '../../tokens/firebase';
 import {docSnapshots} from '../firebase/firestore';
 
@@ -15,16 +15,17 @@ export class AuthService {
   readonly authStateReady$ = from(this._auth.authStateReady());
 
   readonly _firebaseUser$ = this.authStateReady$.pipe(
-    concatMap(() => {
+    switchMap(() => {
       return new Observable<FirebaseUser | null>((subscriber) => {
         const unsubscribe = onAuthStateChanged(this._auth, {
           next: subscriber.next.bind(subscriber),
           error: subscriber.error.bind(subscriber),
-          complete: subscriber.complete.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
         });
         return {unsubscribe};
       });
-    })
+    }),
+    shareReplay()
   );
 
   readonly isLoggedIn$ = this._firebaseUser$.pipe(
@@ -40,7 +41,7 @@ export class AuthService {
         this.resetFirstLoadings$.next();
 
         const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
-        return docSnapshots<User, DocumentData>(userRef).pipe(
+        return docSnapshots<User, UserDoc>(userRef).pipe(
           map(User.firestoreData)
         );
       }
