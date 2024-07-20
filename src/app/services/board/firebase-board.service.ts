@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {collectionSnapshots, docSnapshots, Firestore, limit, query, updateDoc} from '@angular/fire/firestore';
-import {catchError, combineLatest, defer, map, of, shareReplay, switchMap, tap} from 'rxjs';
+import {catchError, combineLatest, defer, distinctUntilChanged, map, of, shareReplay, switchMap, tap} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -58,8 +58,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
   );
 
   override userBoards$ = combineLatest([
-    this.user$,
-    this.config$
+    this.user$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
+    this.config$.pipe(distinctUntilChanged((a, b) => a?.maxUserBoards === b?.maxUserBoards)),
   ]).pipe(
     tap(() => this.loadingUserBoards$.next(true)),
     switchMap(([user, config]) => {
