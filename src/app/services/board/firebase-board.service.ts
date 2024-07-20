@@ -1,5 +1,5 @@
-import {Injectable} from '@angular/core';
-import {collectionSnapshots, docSnapshots, Firestore, limit, query, updateDoc} from '@angular/fire/firestore';
+import {Inject, Injectable} from '@angular/core';
+import {Firestore, limit, updateDoc} from 'firebase/firestore';
 import {catchError, combineLatest, defer, distinctUntilChanged, map, of, shareReplay, switchMap, tap} from 'rxjs';
 import {
   Board,
@@ -24,13 +24,16 @@ import {BoardTaskSubtask} from '../../models/board-task-subtask';
 import {Config} from '../../models/config';
 import {User} from '../../models/user';
 import {UserBoard} from '../../models/user-board';
+import {FirestoreInjectionToken} from '../../tokens/firebase';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
 import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
+import {collectionSnapshots, docSnapshots} from '../firebase/firestore';
 import {FunctionsService} from '../firebase/functions.service';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
+import isEqual from 'lodash/isEqual';
 
 @Injectable({
   providedIn: 'root'
@@ -58,8 +61,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
   );
 
   override userBoards$ = combineLatest([
-    this.user$.pipe(distinctUntilChanged((a, b) => a?.id === b?.id)),
-    this.config$.pipe(distinctUntilChanged((a, b) => a?.maxUserBoards === b?.maxUserBoards)),
+    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.boardsIds, b?.boardsIds))),
+    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxUserBoards, b?.maxUserBoards))),
   ]).pipe(
     tap(() => this.loadingUserBoards$.next(true)),
     switchMap(([user, config]) => {
@@ -73,13 +76,13 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       }
 
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, user.id));
-      return collectionSnapshots(query(userBoardCollectionRef, limit(config.maxUserBoards))).pipe(
+      return collectionSnapshots(userBoardCollectionRef, limit(config.maxUserBoards)).pipe(
         map((querySnapUserBoards) => {
 
           const querySnapUserBoardsMap = new Map<string, UserBoard>();
 
-          for (const querySnapUserBoard of querySnapUserBoards) {
-            querySnapUserBoardsMap.set(querySnapUserBoard.id, UserBoard.firestoreData(querySnapUserBoard));
+          for (const queryDocSnapUserBoard of querySnapUserBoards.docs) {
+            querySnapUserBoardsMap.set(queryDocSnapUserBoard.id, UserBoard.firestoreData(queryDocSnapUserBoard));
           }
 
           return user.boardsIds.map((boardId) => {
@@ -106,7 +109,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         this.firstLoadingBoardTasks$.next(true);
       })
     ),
-    this.user$
+    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.boardsIds, b?.boardsIds))),
   ]).pipe(
     tap(() => this.loadingBoard$.next(true)),
     switchMap(([boardId, user]) => {
@@ -142,8 +145,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
   override boardStatuses$ = combineLatest([
     this.board$,
-    this.user$,
-    this.config$
+    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.id, b?.id))),
+    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxBoardStatuses, b?.maxBoardStatuses))),
   ]).pipe(
     tap(() => this.loadingBoardStatuses$.next(true)),
     switchMap(([board, user, config]) => {
@@ -159,13 +162,13 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
 
-      return collectionSnapshots(query(boardStatusesRef, limit(config.maxBoardStatuses))).pipe(
+      return collectionSnapshots(boardStatusesRef, limit(config.maxBoardStatuses)).pipe(
         map((querySnapBoardStatuses) => {
 
           const querySnapBoardStatusesMap = new Map<string, BoardStatus>();
 
-          for (const querySnapBoardStatus of querySnapBoardStatuses) {
-            querySnapBoardStatusesMap.set(querySnapBoardStatus.id, BoardStatus.firestoreData(querySnapBoardStatus));
+          for (const queryDocSnapBoardStatus of querySnapBoardStatuses.docs) {
+            querySnapBoardStatusesMap.set(queryDocSnapBoardStatus.id, BoardStatus.firestoreData(queryDocSnapBoardStatus));
           }
 
           return querySnapBoardStatusesMap;
@@ -183,8 +186,8 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
   override boardTasks$ = combineLatest([
     this.board$,
-    this.user$,
-    this.config$
+    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.id, b?.id))),
+    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxBoardTasks, b?.maxBoardTasks))),
   ]).pipe(
     tap(() => this.loadingBoardTasks$.next(true)),
     switchMap(([board, user, config]) => {
@@ -200,13 +203,13 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
 
-      return collectionSnapshots(query(boardTasksRef, limit(config.maxBoardTasks))).pipe(
+      return collectionSnapshots(boardTasksRef, limit(config.maxBoardTasks)).pipe(
         map((querySnapBoardTasks) => {
 
           const querySnapUserBoardTasksMap = new Map<string, BoardTask>();
 
-          for (const querySnapBoardTask of querySnapBoardTasks) {
-            querySnapUserBoardTasksMap.set(querySnapBoardTask.id, BoardTask.firestoreData(querySnapBoardTask));
+          for (const queryDocSnapBoardTask of querySnapBoardTasks.docs) {
+            querySnapUserBoardTasksMap.set(queryDocSnapBoardTask.id, BoardTask.firestoreData(queryDocSnapBoardTask));
           }
 
           return querySnapUserBoardTasksMap;
@@ -256,7 +259,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
   override boardTaskSubtasks$ = combineLatest([
     this.board$,
     this.boardTask$,
-    this.config$
+    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxBoardTaskSubtasks, b?.maxBoardTaskSubtasks))),
   ]).pipe(
     tap(() => this.loadingBoardTask$.next(true)),
     switchMap(([board, boardTask, config]) => {
@@ -273,13 +276,13 @@ export class FirebaseBoardService extends BoardServiceAbstract {
       const boardTaskRef = BoardTask.firestoreRef(boardRef, boardTask.id);
       const boardTaskSubtasksRef = BoardTaskSubtask.firestoreRefs(boardTaskRef);
 
-      return collectionSnapshots(query(boardTaskSubtasksRef, limit(config.maxBoardTaskSubtasks))).pipe(
+      return collectionSnapshots(boardTaskSubtasksRef, limit(config.maxBoardTaskSubtasks)).pipe(
         map((querySnapBoardTaskSubtasks) => {
 
           const querySnapUserBoardTaskSubtasksMap = new Map<string, BoardTaskSubtask>();
 
-          for (const querySnapBoardTaskSubtask of querySnapBoardTaskSubtasks) {
-            querySnapUserBoardTaskSubtasksMap.set(querySnapBoardTaskSubtask.id, BoardTaskSubtask.firestoreData(querySnapBoardTaskSubtask));
+          for (const queryDocSnapBoardTaskSubtask of querySnapBoardTaskSubtasks.docs) {
+            querySnapUserBoardTaskSubtasksMap.set(queryDocSnapBoardTaskSubtask.id, BoardTaskSubtask.firestoreData(queryDocSnapBoardTaskSubtask));
           }
 
           return querySnapUserBoardTaskSubtasksMap;
@@ -297,7 +300,7 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
   constructor(
     private readonly _authService: AuthService,
-    private readonly _firestore: Firestore,
+    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
     private readonly _functionsService: FunctionsService,
     private readonly _snackBarService: SnackBarService
   ) {

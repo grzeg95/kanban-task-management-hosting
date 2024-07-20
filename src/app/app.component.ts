@@ -4,10 +4,10 @@ import {AsyncPipe, NgStyle} from '@angular/common';
 import {Component, computed, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {Router, RouterOutlet} from '@angular/router';
-import {combineLatest, take} from 'rxjs';
+import {take} from 'rxjs';
 import {ButtonComponent} from './components/button/button.component';
-import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
+import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
 import {DeleteBoardComponent} from './components/dialogs/delete-board/delete-board.component';
 import {EditBoardComponent} from './components/dialogs/edit-board/edit-board.component';
 import {NavComponent} from './components/nav/nav.component';
@@ -21,7 +21,6 @@ import {AppService} from './services/app.service';
 import {BoardService} from './services/board/board.service';
 import {StorageBoardService} from './services/board/storage-board.service';
 import {LayoutService} from './services/layout.service';
-import {getProtectedRxjsPipe} from './utils/get-protected.rxjs-pipe';
 import {handleTabIndex} from './utils/handle-tabindex';
 
 @Component({

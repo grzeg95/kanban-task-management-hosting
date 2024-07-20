@@ -1,7 +1,6 @@
-import {Injectable, NgZone} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {filter, map, shareReplay, switchMap, take} from 'rxjs';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
-import {runInZoneRxjsPipe} from '../../utils/run-in-zone.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
 import {ObservedValuesOfBoardService} from './board-service.abstract';
 import {FirebaseBoardService} from './firebase-board.service';
@@ -69,8 +68,7 @@ export class BoardService {
   constructor(
     private readonly _firebaseBoardService: FirebaseBoardService,
     private readonly _storageBoardService: StorageBoardService,
-    private readonly _authService: AuthService,
-    private readonly _ngZone: NgZone
+    private readonly _authService: AuthService
   ) {
     this._authService.resetFirstLoadings$.subscribe(() => {
       this.abstractBoardService$.pipe(take(1)).subscribe((abstractBoardService) => {
@@ -93,7 +91,6 @@ export class BoardService {
         }
         return this._storageBoardService[observedValuesOf];
       }),
-      runInZoneRxjsPipe(this._ngZone),
       shareReplay()
     );
   }
