@@ -39,7 +39,6 @@ import {UserBoard} from '../../models/user-board';
 import {FirestoreInjectionToken} from '../../tokens/firebase';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
-import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
 import {collectionSnapshots, docSnapshots} from '../firebase/firestore';
 import {FunctionsService} from '../firebase/functions.service';
@@ -54,98 +53,86 @@ export class FirebaseBoardService extends BoardServiceAbstract {
   override user$ = this._authService.user$.pipe(
     getProtectedRxjsPipe(),
     tapOnce(() => {
-      this.firstLoadingUserBoards$.next(true);
-      this.firstLoadingBoard$.next(true);
-      this.firstLoadingBoardStatuses$.next(true);
-      this.firstLoadingBoardTasks$.next(true);
-      this.firstLoadingBoardTask$.next(true);
-      this.firstLoadingBoardTaskSubtasks$.next(true);
+      this.firstLoadingUserBoardsUpdate(true);
+      this.firstLoadingBoardUpdate(true);
+      this.firstLoadingBoardStatusesUpdate(true);
+      this.firstLoadingBoardTasksUpdate(true);
+      this.firstLoadingBoardTaskUpdate(true);
+      this.firstLoadingBoardTaskSubtasksUpdate(true);
     }),
     shareReplay()
   );
 
   override config$ = docSnapshots(Config.firestoreRef(this._firestore, 'global')).pipe(
-    map(Config.firestoreData),
+    map((docSnap) => Config.firestoreData(docSnap)),
     catchError(() => of(null)),
     getProtectedRxjsPipe(),
     shareReplay()
   );
 
-  private _userBoardsIds$ = this.user$.pipe(
-    filter((user): user is User => !!user),
-    map((user) => {
-      return user.boardsIds;
+  override userBoards$ = this.config$.pipe(
+    filter((config): config is Config => !!config),
+    distinctUntilChanged((a, b) => isEqual(a.maxUserBoards, b.maxUserBoards))
+  ).pipe(
+    tap(() => this.loadingUserBoardsUpdate(true)),
+    switchMap((config) => {
+
+      return this.user$.pipe(
+        filter((user): user is User => !!user),
+        distinctUntilChanged((a, b) => isEqual(a.id, b.id)),
+        switchMap((user) => {
+
+          const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, user.id));
+
+          return collectionSnapshots(userBoardCollectionRef, limit(config.maxUserBoards)).pipe(
+            map((querySnapUserBoards) => querySnapUserBoards.docs)
+          );
+        }),
+
+        switchMap((queryDocSnapsUserBoard) => {
+
+          return this.user$.pipe(
+            filter((user): user is User => !!user),
+            distinctUntilChanged((a, b) => isEqual(a.boardsIds, b.boardsIds)),
+            map((user) => user.boardsIds),
+            map((userBoardsIds) => {
+
+              const querySnapUserBoardsMap = new Map<string, UserBoard>();
+
+              for (const queryDocSnapUserBoard of queryDocSnapsUserBoard) {
+                querySnapUserBoardsMap.set(queryDocSnapUserBoard.id, UserBoard.firestoreData(queryDocSnapUserBoard));
+              }
+
+              return userBoardsIds
+                .map((boardId) => querySnapUserBoardsMap.get(boardId))
+                .filter((userBoard) => !!userBoard) as UserBoard[];
+
+            }),
+            catchError(() => of(null)),
+            tap(() => {
+              this.loadingUserBoardsUpdate(false);
+              this.firstLoadingUserBoardsUpdate(false);
+            })
+          )
+        }),
+        getProtectedRxjsPipe(),
+        shareReplay()
+      );
     })
   );
 
-  override userBoards$ = combineLatest([
-    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.id, b?.id))),
-    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxUserBoards, b?.maxUserBoards))),
-  ]).pipe(
-    tap(() => this.loadingUserBoards$.next(true)),
-    switchMap(([user, config]) => {
-
-      if (user === null || config === null) {
-        return of(null);
-      }
-
-      if (user === undefined || config === undefined) {
-        return of(undefined);
-      }
-
-      const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, user.id));
-
-      return combineLatest([
-        this._userBoardsIds$.pipe(distinctUntilChanged((a, b) => isEqual(a, b))),
-        collectionSnapshots(userBoardCollectionRef, limit(config.maxUserBoards)).pipe(
-          map((querySnapUserBoards) => {
-            return querySnapUserBoards.docs;
-          })
-        )
-      ]).pipe(
-        map(([userBoardsIds, queryDocSnapsUserBoard]) => {
-
-          const querySnapUserBoardsMap = new Map<string, UserBoard>();
-
-          for (const queryDocSnapUserBoard of queryDocSnapsUserBoard) {
-            querySnapUserBoardsMap.set(queryDocSnapUserBoard.id, UserBoard.firestoreData(queryDocSnapUserBoard));
-          }
-
-          return userBoardsIds.map((boardId) => {
-            return querySnapUserBoardsMap.get(boardId);
-          }).filter((userBoard) => !!userBoard) as UserBoard[];
-        }),
-        catchError(() => of(null)),
-        tapTimeoutRxjsPipe(() => {
-          this.loadingUserBoards$.next(false);
-          this.firstLoadingUserBoards$.next(false);
-        })
-      );
-    }),
-    shareReplay()
-  );
-
-  override board$ = combineLatest([
-    this.boardId$.pipe(
-      getProtectedRxjsPipe(),
-      tap(() => {
-        this.firstLoadingBoard$.next(true);
-        this.firstLoadingBoardStatuses$.next(true);
-        this.firstLoadingBoardTasks$.next(true);
-      })
-    ),
-    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.boardsIds, b?.boardsIds))),
-  ]).pipe(
-    tap(() => this.loadingBoard$.next(true)),
-    switchMap(([boardId, user]) => {
-
-      if (boardId === null || user === null) {
-        return of(null);
-      }
-
-      if (user === undefined || boardId === undefined) {
-        return of(undefined);
-      }
+  override board$ = this.boardId$.pipe(
+    filter((boardId): boardId is string => !!boardId),
+    distinctUntilChanged((a, b) => isEqual(a, b)),
+    getProtectedRxjsPipe(),
+    tap(() => {
+      this.firstLoadingBoardUpdate(true);
+      this.firstLoadingBoardStatusesUpdate(true);
+      this.firstLoadingBoardTasksUpdate(true);
+    })
+  ).pipe(
+    tap(() => this.loadingBoardUpdate(true)),
+    switchMap((boardId) => {
 
       const boardRef = Board.firestoreRef(this._firestore, boardId);
       return docSnapshots(boardRef).pipe(
@@ -156,33 +143,30 @@ export class FirebaseBoardService extends BoardServiceAbstract {
           }
 
           return Board.firestoreData(boardSnap);
+        }),
+        catchError(() => of(null)),
+        tap(() => {
+          this.loadingBoardUpdate(false);
+          this.firstLoadingBoardUpdate(false);
         })
       );
-    }),
-    catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoard$.next(false);
-      this.firstLoadingBoard$.next(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
   );
 
   override boardStatuses$ = combineLatest([
-    this.board$,
-    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.id, b?.id))),
-    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxBoardStatuses, b?.maxBoardStatuses))),
+    this.board$.pipe(
+      filter((board): board is Board => !!board),
+      distinctUntilChanged((a, b) => isEqual(a.id, b.id))
+    ),
+    this.config$.pipe(
+      filter((config): config is Config => !!config),
+      distinctUntilChanged((a, b) => isEqual(a.maxBoardStatuses, b.maxBoardStatuses))
+    ),
   ]).pipe(
-    tap(() => this.loadingBoardStatuses$.next(true)),
-    switchMap(([board, user, config]) => {
-
-      if (board === null || user === null || config === null) {
-        return of(null);
-      }
-
-      if (board === undefined || user === undefined || config === undefined) {
-        return of(undefined);
-      }
+    tap(() => this.loadingBoardStatusesUpdate(true)),
+    switchMap(([board, config]) => {
 
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
@@ -197,33 +181,30 @@ export class FirebaseBoardService extends BoardServiceAbstract {
           }
 
           return querySnapBoardStatusesMap;
+        }),
+        catchError(() => of(null)),
+        tap(() => {
+          this.loadingBoardStatusesUpdate(false);
+          this.firstLoadingBoardStatusesUpdate(false);
         })
       );
-    }),
-    catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardStatuses$.next(false);
-      this.firstLoadingBoardStatuses$.next(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
   );
 
   override boardTasks$ = combineLatest([
-    this.board$,
-    this.user$.pipe(distinctUntilChanged((a, b) => isEqual(a?.id, b?.id))),
-    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxBoardTasks, b?.maxBoardTasks))),
+    this.board$.pipe(
+      filter((board): board is Board => !!board),
+      distinctUntilChanged((a, b) => isEqual(a.id, b.id))
+    ),
+    this.config$.pipe(
+      filter((config): config is Config => !!config),
+      distinctUntilChanged((a, b) => isEqual(a.maxBoardTasks, b.maxBoardTasks))
+    ),
   ]).pipe(
-    tap(() => this.loadingBoardTasks$.next(true)),
-    switchMap(([board, user, config]) => {
-
-      if (board === null || user === null || config === null) {
-        return of(null);
-      }
-
-      if (board === undefined || user === undefined || config === undefined) {
-        return of(undefined);
-      }
+    tap(() => this.loadingBoardTasksUpdate(true)),
+    switchMap(([board, config]) => {
 
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
@@ -238,64 +219,59 @@ export class FirebaseBoardService extends BoardServiceAbstract {
           }
 
           return querySnapUserBoardTasksMap;
-        })
+        }),
+        catchError(() => of(null)),
+        tap(() => {
+          this.loadingBoardTasksUpdate(false);
+          this.firstLoadingBoardTasksUpdate(false);
+        }),
       );
-    }),
-    catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTasks$.next(false);
-      this.firstLoadingBoardTasks$.next(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
   );
 
   override boardTask$ = combineLatest([
-    this.boardTasks$,
+    this.boardTasks$.pipe(
+      filter((boardTasks): boardTasks is Map<string, BoardTask> => !!boardTasks),
+      distinctUntilChanged((a, b) => isEqual(a, b))
+    ),
     this.boardTaskId$.pipe(
-      getProtectedRxjsPipe(),
+      filter((boardTaskId): boardTaskId is string => !!boardTaskId),
       tap(() => {
-        this.firstLoadingBoardTask$.next(true);
-        this.firstLoadingBoardTaskSubtasks$.next(true);
+        this.firstLoadingBoardTaskUpdate(true);
+        this.firstLoadingBoardTaskSubtasksUpdate(true);
       })
     )
   ]).pipe(
-    tap(() => this.loadingBoardTask$.next(true)),
+    tap(() => this.loadingBoardTaskUpdate(true)),
     map(([boardTasks, boardTaskId]) => {
-
-      if (boardTasks === null || boardTaskId === null) {
-        return null;
-      }
-
-      if (boardTasks === undefined || boardTaskId === undefined) {
-        return undefined;
-      }
-
       return boardTasks.get(boardTaskId) || null;
     }),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTask$.next(false);
-      this.firstLoadingBoardTask$.next(false);
+    tap(() => {
+      this.loadingBoardTaskUpdate(false);
+      this.firstLoadingBoardTaskUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
   );
 
   override boardTaskSubtasks$ = combineLatest([
-    this.board$,
-    this.boardTask$,
-    this.config$.pipe(distinctUntilChanged((a, b) => isEqual(a?.maxBoardTaskSubtasks, b?.maxBoardTaskSubtasks))),
+    this.board$.pipe(
+      filter((board): board is Board => !!board),
+      distinctUntilChanged((a, b) => isEqual(a.id, b.id))
+    ),
+    this.boardTask$.pipe(
+      filter((boardTask): boardTask is BoardTask => !!boardTask),
+      distinctUntilChanged((a, b) => isEqual(a, b))
+    ),
+    this.config$.pipe(
+      filter((config): config is Config => !!config),
+      distinctUntilChanged((a, b) => isEqual(a.maxBoardTaskSubtasks, b.maxBoardTaskSubtasks))
+    ),
   ]).pipe(
-    tap(() => this.loadingBoardTask$.next(true)),
+    tap(() => this.loadingBoardTaskUpdate(true)),
     switchMap(([board, boardTask, config]) => {
-
-      if (board === null || boardTask === null || config === null) {
-        return of(null);
-      }
-
-      if (board === undefined || boardTask === undefined || config === undefined) {
-        return of(undefined);
-      }
 
       const boardRef = Board.firestoreRef(this._firestore, board.id);
       const boardTaskRef = BoardTask.firestoreRef(boardRef, boardTask.id);
@@ -312,12 +288,12 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
           return querySnapUserBoardTaskSubtasksMap;
         }),
+        catchError(() => of(null)),
+        tap(() => {
+          this.loadingBoardTaskUpdate(false);
+          this.firstLoadingBoardTaskUpdate(false);
+        })
       );
-    }),
-    catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTask$.next(false);
-      this.firstLoadingBoardTask$.next(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -339,18 +315,18 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
         this._snackBarService.open('Board has been created', 3000);
 
-        this.loadingUserBoards$.next(true);
+        this.loadingUserBoardsUpdate(true);
 
         if (this.boardId$.value) {
-          this.loadingBoard$.next(true);
+          this.loadingBoardUpdate(true);
         }
       }),
       catchError((error) => {
 
-        this.loadingUserBoards$.next(false);
+        this.loadingUserBoardsUpdate(false);
 
         if (this.boardId$.value) {
-          this.loadingBoard$.next(false);
+          this.loadingBoardUpdate(false);
         }
 
         throw error;
@@ -363,10 +339,10 @@ export class FirebaseBoardService extends BoardServiceAbstract {
     return this._functionsService.httpsCallable<BoardDeleteData, BoardDeleteResult>('board-delete', data).pipe(
       tap(() => {
         this._snackBarService.open('Board has been deleted', 3000);
-        this.loadingUserBoards$.next(true);
+        this.loadingUserBoardsUpdate(true);
       }),
       catchError((error) => {
-        this.loadingUserBoards$.next(false);
+        this.loadingUserBoardsUpdate(false);
         throw error;
       })
     );
@@ -381,16 +357,16 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
         if (this.boardId$.value) {
           if (boardNameWasChanged) {
-            this.loadingBoard$.next(true);
-            this.loadingUserBoards$.next(true);
+            this.loadingBoardUpdate(true);
+            this.loadingUserBoardsUpdate(true);
           }
 
           if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-            this.loadingBoardStatuses$.next(true);
+            this.loadingBoardStatusesUpdate(true);
           }
 
           if (boardStatusAddedOrDeleted) {
-            this.loadingBoardTasks$.next(true);
+            this.loadingBoardTasksUpdate(true);
           }
         }
       }),
@@ -398,16 +374,16 @@ export class FirebaseBoardService extends BoardServiceAbstract {
 
         if (this.boardId$.value) {
           if (boardNameWasChanged) {
-            this.loadingBoard$.next(false);
-            this.loadingUserBoards$.next(false);
+            this.loadingBoardUpdate(false);
+            this.loadingUserBoardsUpdate(false);
           }
 
           if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-            this.loadingBoardStatuses$.next(false);
+            this.loadingBoardStatusesUpdate(false);
           }
 
           if (boardStatusAddedOrDeleted) {
-            this.loadingBoardTasks$.next(false);
+            this.loadingBoardTasksUpdate(false);
           }
         }
 
@@ -424,15 +400,15 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         this._snackBarService.open('Board task has been created', 3000);
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(true);
-          this.loadingBoardStatuses$.next(true);
+          this.loadingBoardTasksUpdate(true);
+          this.loadingBoardStatusesUpdate(true);
         }
       }),
       catchError((error) => {
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(false);
-          this.loadingBoardStatuses$.next(false);
+          this.loadingBoardTasksUpdate(false);
+          this.loadingBoardStatusesUpdate(false);
         }
 
         throw error;
@@ -448,15 +424,15 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         this._snackBarService.open('Board task has been deleted', 3000);
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(true);
-          this.loadingBoardStatuses$.next(true);
+          this.loadingBoardTasksUpdate(true);
+          this.loadingBoardStatusesUpdate(true);
         }
       }),
       catchError((error) => {
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(false);
-          this.loadingBoardStatuses$.next(false);
+          this.loadingBoardTasksUpdate(false);
+          this.loadingBoardStatusesUpdate(false);
         }
 
         throw error;
@@ -472,16 +448,16 @@ export class FirebaseBoardService extends BoardServiceAbstract {
         this._snackBarService.open('Board task has been updated', 3000);
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(true);
-          this.loadingBoardStatuses$.next(true);
+          this.loadingBoardTasksUpdate(true);
+          this.loadingBoardStatusesUpdate(true);
         }
 
       }),
       catchError((error) => {
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(false);
-          this.loadingBoardStatuses$.next(false);
+          this.loadingBoardTasksUpdate(false);
+          this.loadingBoardStatusesUpdate(false);
         }
 
         throw error;

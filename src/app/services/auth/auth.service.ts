@@ -2,7 +2,18 @@ import {Inject, Injectable} from '@angular/core';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
-import {BehaviorSubject, distinctUntilChanged, from, map, Observable, of, shareReplay, switchMap} from 'rxjs';
+import {
+  BehaviorSubject,
+  distinctUntilChanged,
+  filter,
+  from,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  switchMap,
+  tap
+} from 'rxjs';
 import {User, UserDoc} from '../../models/user';
 import {AuthInjectionToken, FirestoreInjectionToken} from '../../tokens/firebase';
 import {docSnapshots} from '../firebase/firestore';
@@ -14,7 +25,7 @@ export class AuthService {
 
   readonly authStateReady$ = from(this._auth.authStateReady());
 
-  readonly _firebaseUser$ = this.authStateReady$.pipe(
+  private readonly _firebaseUser$ = this.authStateReady$.pipe(
     switchMap(() => {
       return new Observable<FirebaseUser | null>((subscriber) => {
         const unsubscribe = onAuthStateChanged(this._auth, {
@@ -29,11 +40,12 @@ export class AuthService {
   );
 
   readonly isLoggedIn$ = this._firebaseUser$.pipe(
-    map((user) => !!user)
+    map((firebaseUser) => !!firebaseUser)
   );
 
   readonly user$ = this._firebaseUser$.pipe(
-    distinctUntilChanged((a, b) => isEqual(a?.uid, b?.uid)),
+    filter((firebaseUser): firebaseUser is FirebaseUser => !!firebaseUser),
+    distinctUntilChanged((a, b) => isEqual(a.uid, b.uid)),
     switchMap((firebaseUser) => {
 
       if (firebaseUser) {

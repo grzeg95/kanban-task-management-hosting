@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, combineLatest, map, Observable, of} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -61,19 +61,31 @@ export interface BoardServiceInterface {
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<Map<string, BoardTaskSubtask> | null | undefined> | undefined;
 
-  loadingUserBoards$: BehaviorSubject<boolean> | undefined;
-  loadingBoard$: BehaviorSubject<boolean> | undefined;
-  loadingBoardStatuses$: BehaviorSubject<boolean> | undefined;
-  loadingBoardTasks$: BehaviorSubject<boolean> | undefined;
-  loadingBoardTask$: BehaviorSubject<boolean> | undefined;
-  loadingBoardTaskSubtasks$: BehaviorSubject<boolean> | undefined;
+  loadingUserBoards$: Observable<boolean>;
+  _loadingUserBoardsUpdate$: Observable<boolean>;
+  loadingBoard$: Observable<boolean>;
+  _loadingBoardUpdate$: Observable<boolean>;
+  loadingBoardStatuses$: Observable<boolean>;
+  _loadingBoardStatusesUpdate$: Observable<boolean>;
+  loadingBoardTasks$: Observable<boolean>;
+  _loadingBoardTasksUpdate$: Observable<boolean>;
+  loadingBoardTask$: Observable<boolean>;
+  _loadingBoardTaskUpdate$: Observable<boolean>;
+  loadingBoardTaskSubtasks$: Observable<boolean>;
+  _loadingBoardTaskSubtasksUpdate$: Observable<boolean>;
 
-  firstLoadingUserBoards$: BehaviorSubject<boolean> | undefined;
-  firstLoadingBoard$: BehaviorSubject<boolean> | undefined;
-  firstLoadingBoardStatuses$: BehaviorSubject<boolean> | undefined;
-  firstLoadingBoardTasks$: BehaviorSubject<boolean> | undefined;
-  firstLoadingBoardTask$: BehaviorSubject<boolean> | undefined;
-  firstLoadingBoardTaskSubtasks$: BehaviorSubject<boolean> | undefined;
+  firstLoadingUserBoards$: Observable<boolean>;
+  _firstLoadingUserBoardsUpdate$: Observable<boolean>;
+  firstLoadingBoard$: Observable<boolean>;
+  _firstLoadingBoardUpdate$: Observable<boolean>;
+  firstLoadingBoardStatuses$: Observable<boolean>;
+  _firstLoadingBoardStatusesUpdate$: Observable<boolean>;
+  firstLoadingBoardTasks$: Observable<boolean>;
+  _firstLoadingBoardTasksUpdate$: Observable<boolean>;
+  firstLoadingBoardTask$: Observable<boolean>;
+  _firstLoadingBoardTaskUpdate$: Observable<boolean>;
+  firstLoadingBoardTaskSubtasks$: Observable<boolean>;
+  _firstLoadingBoardTaskSubtasksUpdate$: Observable<boolean>;
 
   boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 
@@ -88,6 +100,30 @@ export interface BoardServiceInterface {
   boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult>;
 
   updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string): Observable<void>;
+
+  firstLoadingUserBoardsUpdate(val: boolean): void;
+
+  loadingUserBoardsUpdate(val: boolean): void;
+
+  firstLoadingBoardUpdate(val: boolean): void;
+
+  loadingBoardUpdate(val: boolean): void;
+
+  firstLoadingBoardStatusesUpdate(val: boolean): void;
+
+  loadingBoardStatusesUpdate(val: boolean): void;
+
+  firstLoadingBoardTasksUpdate(val: boolean): void;
+
+  loadingBoardTasksUpdate(val: boolean): void;
+
+  firstLoadingBoardTaskUpdate(val: boolean): void;
+
+  loadingBoardTaskUpdate(val: boolean): void;
+
+  firstLoadingBoardTaskSubtasksUpdate(val: boolean): void;
+
+  loadingBoardTaskSubtasksUpdate(val: boolean): void;
 }
 
 @Injectable()
@@ -105,19 +141,65 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
   boardTask$: Observable<BoardTask | null | undefined> | undefined;
   boardTaskSubtasks$: Observable<Map<string, BoardTaskSubtask> | null | undefined> | undefined;
 
-  loadingUserBoards$ = new BehaviorSubject(false);
-  loadingBoard$ = new BehaviorSubject(false);
-  loadingBoardStatuses$ = new BehaviorSubject(false);
-  loadingBoardTasks$ = new BehaviorSubject(false);
-  loadingBoardTask$ = new BehaviorSubject(false);
-  loadingBoardTaskSubtasks$ = new BehaviorSubject(false);
+  _loadingUserBoardsUpdate$ = new BehaviorSubject(false);
+  _firstLoadingUserBoardsUpdate$ = new BehaviorSubject(true);
+  firstLoadingUserBoards$ = this._firstLoadingUserBoardsUpdate$.asObservable();
+  loadingUserBoards$ = combineLatest([
+    this._loadingUserBoardsUpdate$,
+    ((this!.userBoards$! || of(undefined)).pipe(map((val) => !!val)))
+  ]).pipe(
+    map((values) => values.every((val) => !!val))
+  );
 
-  firstLoadingUserBoards$ = new BehaviorSubject(true);
-  firstLoadingBoard$ = new BehaviorSubject(true);
-  firstLoadingBoardStatuses$ = new BehaviorSubject(true);
-  firstLoadingBoardTasks$ = new BehaviorSubject(true);
-  firstLoadingBoardTask$ = new BehaviorSubject(true);
-  firstLoadingBoardTaskSubtasks$ = new BehaviorSubject(true);
+  _loadingBoardUpdate$ = new BehaviorSubject(false);
+  _firstLoadingBoardUpdate$ = new BehaviorSubject(true);
+  firstLoadingBoard$ = this._firstLoadingBoardUpdate$.asObservable();
+  loadingBoard$ = combineLatest([
+    this._loadingUserBoardsUpdate$,
+    ((this!.board$! || of(undefined)).pipe(map((val) => !!val)))
+  ]).pipe(
+    map((values) => values.every((val) => !!val))
+  );
+
+  _loadingBoardStatusesUpdate$ = new BehaviorSubject(false);
+  _firstLoadingBoardStatusesUpdate$ = new BehaviorSubject(true);
+  firstLoadingBoardStatuses$ = this._firstLoadingBoardStatusesUpdate$.asObservable();
+  loadingBoardStatuses$ = combineLatest([
+    this._loadingBoardStatusesUpdate$,
+    ((this!.boardStatuses$! || of(undefined)).pipe(map((val) => !!val)))
+  ]).pipe(
+    map((values) => values.every((val) => !!val))
+  );
+
+  _loadingBoardTasksUpdate$ = new BehaviorSubject(false);
+  _firstLoadingBoardTasksUpdate$ = new BehaviorSubject(true);
+  firstLoadingBoardTasks$ = this._firstLoadingBoardTasksUpdate$.asObservable();
+  loadingBoardTasks$ = combineLatest([
+    this._loadingBoardTasksUpdate$,
+    ((this!.boardTasks$! || of(undefined)).pipe(map((val) => !!val)))
+  ]).pipe(
+    map((values) => values.every((val) => !!val))
+  );
+
+  _loadingBoardTaskUpdate$ = new BehaviorSubject(false);
+  _firstLoadingBoardTaskUpdate$ = new BehaviorSubject(true);
+  firstLoadingBoardTask$ = this._firstLoadingBoardTaskUpdate$.asObservable();
+  loadingBoardTask$ = combineLatest([
+    this._loadingBoardTaskUpdate$,
+    ((this!.boardTask$! || of(undefined)).pipe(map((val) => !!val)))
+  ]).pipe(
+    map((values) => values.every((val) => !!val))
+  );
+
+  _loadingBoardTaskSubtasksUpdate$ = new BehaviorSubject(false);
+  _firstLoadingBoardTaskSubtasksUpdate$ = new BehaviorSubject(true);
+  firstLoadingBoardTaskSubtasks$ = this._firstLoadingBoardTaskSubtasksUpdate$.asObservable();
+  loadingBoardTaskSubtasks$ = combineLatest([
+    this._loadingBoardTaskSubtasksUpdate$,
+    ((this!.boardTaskSubtasks$! || of(undefined)).pipe(map((val) => !!val)))
+  ]).pipe(
+    map((values) => values.every((val) => !!val))
+  );
 
   abstract boardCreate(data: BoardCreateData): Observable<BoardCreateResult>;
 
@@ -132,4 +214,52 @@ export abstract class BoardServiceAbstract implements BoardServiceInterface {
   abstract boardTaskUpdate(data: BoardTaskUpdateData): Observable<BoardTaskUpdateResult>;
 
   abstract updateBoardTaskSubtaskIsCompleted(isCompleted: boolean, boardId: string, boardTaskId: string, boardTaskSubtaskId: string): Observable<void>;
+
+  firstLoadingUserBoardsUpdate(val: boolean) {
+    this._firstLoadingUserBoardsUpdate$.next(val);
+  }
+
+  loadingUserBoardsUpdate(val: boolean) {
+    this._loadingUserBoardsUpdate$.next(val);
+  }
+
+  firstLoadingBoardUpdate(val: boolean) {
+    this._firstLoadingBoardUpdate$.next(val);
+  }
+
+  loadingBoardUpdate(val: boolean) {
+    this._loadingBoardUpdate$.next(val);
+  }
+
+  firstLoadingBoardStatusesUpdate(val: boolean) {
+    this._firstLoadingBoardStatusesUpdate$.next(val);
+  }
+
+  loadingBoardStatusesUpdate(val: boolean) {
+    this._loadingBoardStatusesUpdate$.next(val);
+  }
+
+  firstLoadingBoardTasksUpdate(val: boolean) {
+    this._firstLoadingBoardTasksUpdate$.next(val);
+  }
+
+  loadingBoardTasksUpdate(val: boolean) {
+    this._loadingBoardTasksUpdate$.next(val);
+  }
+
+  firstLoadingBoardTaskUpdate(val: boolean) {
+    this._firstLoadingBoardTaskUpdate$.next(val);
+  }
+
+  loadingBoardTaskUpdate(val: boolean) {
+    this._loadingBoardTaskUpdate$.next(val);
+  }
+
+  firstLoadingBoardTaskSubtasksUpdate(val: boolean) {
+    this._firstLoadingBoardTaskSubtasksUpdate$.next(val);
+  }
+
+  loadingBoardTaskSubtasksUpdate(val: boolean) {
+    this._loadingBoardTaskSubtasksUpdate$.next(val);
+  }
 }

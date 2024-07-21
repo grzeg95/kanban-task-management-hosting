@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {filter, map, shareReplay, switchMap, take} from 'rxjs';
+import {filter, map, shareReplay, switchMap, take, tap} from 'rxjs';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {AuthService} from '../auth/auth.service';
 import {ObservedValuesOfBoardService} from './board-service.abstract';
@@ -72,12 +72,12 @@ export class BoardService {
   ) {
     this._authService.resetFirstLoadings$.subscribe(() => {
       this.abstractBoardService$.pipe(take(1)).subscribe((abstractBoardService) => {
-        abstractBoardService.firstLoadingUserBoards$.next(true);
-        abstractBoardService.firstLoadingBoard$.next(true);
-        abstractBoardService.firstLoadingBoardStatuses$.next(true);
-        abstractBoardService.firstLoadingBoardTasks$.next(true);
-        abstractBoardService.firstLoadingBoardTask$.next(true);
-        abstractBoardService.firstLoadingBoardTaskSubtasks$.next(true);
+        abstractBoardService.firstLoadingUserBoardsUpdate(true);
+        abstractBoardService.firstLoadingBoardUpdate(true);
+        abstractBoardService.firstLoadingBoardStatusesUpdate(true);
+        abstractBoardService.firstLoadingBoardTasksUpdate(true);
+        abstractBoardService.firstLoadingBoardTaskUpdate(true);
+        abstractBoardService.firstLoadingBoardTaskSubtasksUpdate(true);
       });
     });
   }

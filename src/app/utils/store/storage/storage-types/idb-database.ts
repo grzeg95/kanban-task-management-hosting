@@ -169,7 +169,7 @@ export class IdbDatabase extends Storage {
         result = await idbDatabase._getDocumentsStore(writeBatch).then(async (documentsStore) => {
 
           documentsStore.transaction.onerror = function () {
-            throw new WriteBatchError('idbDatabase transaction error');
+            throw new WriteBatchError(`idbDatabase transaction error: ${documentsStore.transaction.error}`);
           }
 
           for (const writeBatchOperation of writeBatchOperations) {
@@ -220,7 +220,7 @@ export class IdbDatabase extends Storage {
 
             if (writeBatchOperation.type === WriteBatchOperationType.delete) {
 
-              if (document.exists) {
+              if (!document.exists) {
                 documentsStore.transaction.abort();
                 throw new WriteBatchError(`WriteBatch detected that ${document.documentReference.id} doesn't exist but was to be deleted`);
               }

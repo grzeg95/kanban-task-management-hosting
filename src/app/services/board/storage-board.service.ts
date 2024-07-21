@@ -28,7 +28,6 @@ import {UserBoard} from '../../models/user-board';
 import {getProtectedRxjsPipe} from '../../utils/get-protected.rxjs-pipe';
 import {Data, doc, DocumentSnapshot, getIdbDatabase, WriteBatch, Storage} from '../../utils/store';
 import {tapOnce} from '../../utils/tap-once.rxjs-pipe';
-import {tapTimeoutRxjsPipe} from '../../utils/tap-timeout.rxjs-pipe';
 import {Collections} from '../firebase/collections';
 import {SnackBarService} from '../snack-bar.service';
 import {BoardServiceAbstract} from './board-service.abstract';
@@ -41,6 +40,32 @@ export class StorageBoardService extends BoardServiceAbstract {
   private _userId = '0';
 
   private _storage$ = from(getIdbDatabase(environment.firebase.projectId));
+
+  override user$ = this._storage$.pipe(
+    switchMap((storage) => {
+      return new Observable<DocumentSnapshot>((subscriber) => {
+
+        const unsubscribe = User.storeRef(storage, this._userId).snapshots({
+          next: subscriber.next.bind(subscriber),
+          error: subscriber.error.bind(subscriber),
+          complete: subscriber.complete.bind(subscriber)
+        });
+        return {unsubscribe};
+      })
+    }),
+    map(User.storeData),
+    catchError(() => of(null)),
+    getProtectedRxjsPipe(),
+    tapOnce(() => {
+      this.firstLoadingUserBoardsUpdate(true);
+      this.firstLoadingBoardUpdate(true);
+      this.firstLoadingBoardStatusesUpdate(true);
+      this.firstLoadingBoardTasksUpdate(true);
+      this.firstLoadingBoardTaskUpdate(true);
+      this.firstLoadingBoardTaskSubtasksUpdate(true);
+    }),
+    shareReplay(),
+  );
 
   override config$ = this._storage$.pipe(
     switchMap((storage) => {
@@ -62,37 +87,11 @@ export class StorageBoardService extends BoardServiceAbstract {
     shareReplay()
   );
 
-  override user$ = this._storage$.pipe(
-    switchMap((storage) => {
-      return new Observable<DocumentSnapshot>((subscriber) => {
-
-        const unsubscribe = User.storeRef(storage, this._userId).snapshots({
-          next: subscriber.next.bind(subscriber),
-          error: subscriber.error.bind(subscriber),
-          complete: subscriber.complete.bind(subscriber)
-        });
-        return {unsubscribe};
-      })
-    }),
-    map(User.storeData),
-    catchError(() => of(null)),
-    getProtectedRxjsPipe(),
-    tapOnce(() => {
-      this.firstLoadingUserBoards$.next(true);
-      this.firstLoadingBoard$.next(true);
-      this.firstLoadingBoardStatuses$.next(true);
-      this.firstLoadingBoardTasks$.next(true);
-      this.firstLoadingBoardTask$.next(true);
-      this.firstLoadingBoardTaskSubtasks$.next(true);
-    }),
-    shareReplay(),
-  );
-
   override userBoards$ = combineLatest([
     this._storage$,
     this.user$
   ]).pipe(
-    tap(() => this.loadingUserBoards$.next(true)),
+    tap(() => this.loadingUserBoardsUpdate(true)),
     switchMap(([storage, user]) => {
 
       if (user === null) {
@@ -130,9 +129,9 @@ export class StorageBoardService extends BoardServiceAbstract {
       );
     }),
     catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingUserBoards$.next(false);
-      this.firstLoadingUserBoards$.next(false);
+    tap(() => {
+      this.loadingUserBoardsUpdate(false);
+      this.firstLoadingUserBoardsUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -143,14 +142,14 @@ export class StorageBoardService extends BoardServiceAbstract {
     this.boardId$.pipe(
       getProtectedRxjsPipe(),
       tap(() => {
-        this.firstLoadingBoard$.next(true);
-        this.firstLoadingBoardStatuses$.next(true);
-        this.firstLoadingBoardTasks$.next(true);
+        this.firstLoadingBoardUpdate(true);
+        this.firstLoadingBoardStatusesUpdate(true);
+        this.firstLoadingBoardTasksUpdate(true);
       })
     ),
     this.user$
   ]).pipe(
-    tap(() => this.loadingBoard$.next(true)),
+    tap(() => this.loadingBoardUpdate(true)),
     switchMap(([storage, boardId, user]) => {
 
       if (boardId === null || user === null) {
@@ -182,9 +181,9 @@ export class StorageBoardService extends BoardServiceAbstract {
         })
       );
     }),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoard$.next(false);
-      this.firstLoadingBoard$.next(false);
+    tap(() => {
+      this.loadingBoardUpdate(false);
+      this.firstLoadingBoardUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -195,7 +194,7 @@ export class StorageBoardService extends BoardServiceAbstract {
     this.board$,
     this.user$
   ]).pipe(
-    tap(() => this.loadingBoardStatuses$.next(true)),
+    tap(() => this.loadingBoardStatusesUpdate(true)),
     switchMap(([storage, board, user]) => {
 
       if (board === null || user === null) {
@@ -231,9 +230,9 @@ export class StorageBoardService extends BoardServiceAbstract {
       );
     }),
     catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardStatuses$.next(false);
-      this.firstLoadingBoardStatuses$.next(false);
+    tap(() => {
+      this.loadingBoardStatusesUpdate(false);
+      this.firstLoadingBoardStatusesUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -244,7 +243,7 @@ export class StorageBoardService extends BoardServiceAbstract {
     this.board$,
     this.user$
   ]).pipe(
-    tap(() => this.loadingBoardTasks$.next(true)),
+    tap(() => this.loadingBoardTasksUpdate(true)),
     switchMap(([storage, board, user]) => {
 
       if (board === null || user === null) {
@@ -280,9 +279,9 @@ export class StorageBoardService extends BoardServiceAbstract {
       );
     }),
     catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTasks$.next(false);
-      this.firstLoadingBoardTasks$.next(false);
+    tap(() => {
+      this.loadingBoardTasksUpdate(false);
+      this.firstLoadingBoardTasksUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -293,12 +292,12 @@ export class StorageBoardService extends BoardServiceAbstract {
     this.boardTaskId$.pipe(
       getProtectedRxjsPipe(),
       tap(() => {
-        this.firstLoadingBoardTask$.next(true);
-        this.firstLoadingBoardTaskSubtasks$.next(true);
+        this.firstLoadingBoardTaskUpdate(true);
+        this.firstLoadingBoardTaskSubtasksUpdate(true);
       })
     )
   ]).pipe(
-    tap(() => this.loadingBoardTask$.next(true)),
+    tap(() => this.loadingBoardTaskUpdate(true)),
     map(([boardTasks, boardTaskId]) => {
 
       if (boardTasks === null || boardTaskId === null) {
@@ -312,9 +311,9 @@ export class StorageBoardService extends BoardServiceAbstract {
       return boardTasks.get(boardTaskId) || null;
     }),
     catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTask$.next(false);
-      this.firstLoadingBoardTask$.next(false);
+    tap(() => {
+      this.loadingBoardTaskUpdate(false);
+      this.firstLoadingBoardTaskUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -325,7 +324,7 @@ export class StorageBoardService extends BoardServiceAbstract {
     this.board$,
     this.boardTask$
   ]).pipe(
-    tap(() => this.loadingBoardTaskSubtasks$.next(true)),
+    tap(() => this.loadingBoardTaskSubtasksUpdate(true)),
     switchMap(([storage, board, boardTask]) => {
 
       if (board === null || boardTask === null) {
@@ -361,9 +360,9 @@ export class StorageBoardService extends BoardServiceAbstract {
       );
     }),
     catchError(() => of(null)),
-    tapTimeoutRxjsPipe(() => {
-      this.loadingBoardTaskSubtasks$.next(false);
-      this.firstLoadingBoardTaskSubtasks$.next(false);
+    tap(() => {
+      this.loadingBoardTaskSubtasksUpdate(false);
+      this.firstLoadingBoardTaskSubtasksUpdate(false);
     }),
     getProtectedRxjsPipe(),
     shareReplay()
@@ -472,18 +471,18 @@ export class StorageBoardService extends BoardServiceAbstract {
 
         this._snackBarService.open('Board has been created', 3000);
 
-        this.loadingUserBoards$.next(true);
+        this.loadingUserBoardsUpdate(true);
 
         if (this.boardId$.value) {
-          this.loadingBoard$.next(true);
+          this.loadingBoardUpdate(true);
         }
       }),
       catchError((error) => {
 
-        this.loadingUserBoards$.next(false);
+        this.loadingUserBoardsUpdate(false);
 
         if (this.boardId$.value) {
-          this.loadingBoard$.next(false);
+          this.loadingBoardUpdate(false);
         }
 
         throw error;
@@ -569,10 +568,10 @@ export class StorageBoardService extends BoardServiceAbstract {
     }).pipe(
       tap(() => {
         this._snackBarService.open('Board has been deleted', 3000);
-        this.loadingUserBoards$.next(true);
+        this.loadingUserBoardsUpdate(true);
       }),
       catchError((error) => {
-        this.loadingUserBoards$.next(false);
+        this.loadingUserBoardsUpdate(false);
         throw error;
       })
     );
@@ -725,16 +724,16 @@ export class StorageBoardService extends BoardServiceAbstract {
 
         if (this.boardId$.value) {
           if (boardNameWasChanged) {
-            this.loadingBoard$.next(true);
-            this.loadingUserBoards$.next(true);
+            this.loadingBoardUpdate(true);
+            this.loadingUserBoardsUpdate(true);
           }
 
           if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-            this.loadingBoardStatuses$.next(true);
+            this.loadingBoardStatusesUpdate(true);
           }
 
           if (boardStatusAddedOrDeleted) {
-            this.loadingBoardTasks$.next(true);
+            this.loadingBoardTasksUpdate(true);
           }
         }
       }),
@@ -742,16 +741,16 @@ export class StorageBoardService extends BoardServiceAbstract {
 
         if (this.boardId$.value) {
           if (boardNameWasChanged) {
-            this.loadingBoard$.next(false);
-            this.loadingUserBoards$.next(false);
+            this.loadingBoardUpdate(false);
+            this.loadingUserBoardsUpdate(false);
           }
 
           if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-            this.loadingBoardStatuses$.next(false);
+            this.loadingBoardStatusesUpdate(false);
           }
 
           if (boardStatusAddedOrDeleted) {
-            this.loadingBoardTasks$.next(false);
+            this.loadingBoardTasksUpdate(false);
           }
         }
 
@@ -853,15 +852,15 @@ export class StorageBoardService extends BoardServiceAbstract {
         this._snackBarService.open('Board task has been created', 3000);
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(true);
-          this.loadingBoardStatuses$.next(true);
+          this.loadingBoardTasksUpdate(true);
+          this.loadingBoardStatusesUpdate(true);
         }
       }),
       catchError((error) => {
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(false);
-          this.loadingBoardStatuses$.next(false);
+          this.loadingBoardTasksUpdate(false);
+          this.loadingBoardStatusesUpdate(false);
         }
 
         throw error;
@@ -929,15 +928,15 @@ export class StorageBoardService extends BoardServiceAbstract {
         this._snackBarService.open('Board task has been deleted', 3000);
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(true);
-          this.loadingBoardStatuses$.next(true);
+          this.loadingBoardTasksUpdate(true);
+          this.loadingBoardStatusesUpdate(true);
         }
       }),
       catchError((error) => {
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(false);
-          this.loadingBoardStatuses$.next(false);
+          this.loadingBoardTasksUpdate(false);
+          this.loadingBoardStatusesUpdate(false);
         }
 
         throw error;
@@ -1079,16 +1078,16 @@ export class StorageBoardService extends BoardServiceAbstract {
         this._snackBarService.open('Board task has been updated', 3000);
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(true);
-          this.loadingBoardStatuses$.next(true);
+          this.loadingBoardTasksUpdate(true);
+          this.loadingBoardStatusesUpdate(true);
         }
 
       }),
       catchError((error) => {
 
         if (this.boardId$.value) {
-          this.loadingBoardTasks$.next(false);
-          this.loadingBoardStatuses$.next(false);
+          this.loadingBoardTasksUpdate(false);
+          this.loadingBoardStatusesUpdate(false);
         }
 
         throw error;
