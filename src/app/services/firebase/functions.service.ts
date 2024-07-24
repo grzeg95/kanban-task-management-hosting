@@ -1,8 +1,7 @@
-import {Inject, Injectable} from '@angular/core';
-import {Functions, httpsCallable} from 'firebase/functions';
+import {Injectable} from '@angular/core';
+import {Functions, httpsCallable} from '@angular/fire/functions';
 import {defer} from 'rxjs';
 import {SnackBarService} from '../snack-bar.service';
-import {FunctionsInjectionToken} from '../../tokens/firebase';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +9,7 @@ import {FunctionsInjectionToken} from '../../tokens/firebase';
 export class FunctionsService {
 
   constructor(
-    @Inject(FunctionsInjectionToken) private readonly _functions: Functions,
+    private readonly _functions: Functions,
     private readonly _snackBarService: SnackBarService
   ) {
   }

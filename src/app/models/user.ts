@@ -4,10 +4,9 @@ import {
   DocumentSnapshot as firestoreDocumentSnapshot,
   Firestore,
   FirestoreDataConverter
-} from 'firebase/firestore';
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
 export interface UserDoc extends DocumentData {
   readonly disabled: boolean,
@@ -34,27 +33,13 @@ export class User implements UserDoc {
     return firestoreDoc(firestore, Collections.users, id).withConverter(User._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<User, UserDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<User>) {
     return User._snapToThis(snap);
   }
 
-  static storeRef(storage: Storage, id: string) {
-    return storeDoc(storage, [Collections.users, id].join('/'));
-  }
+  private static _snapToThis(snap: firestoreDocumentSnapshot<User>) {
 
-  static storeData(snap: storeDocumentSnapshot) {
-    return User._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<User, UserDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let disabled = false;
     let boardsIds: string[] = [];

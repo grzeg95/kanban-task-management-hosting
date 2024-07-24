@@ -37,9 +37,7 @@ export class AddNewBoardComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected user = toSignal(this._boardService.user$);
-  protected storeType = toSignal(this._boardService.storeType$);
-  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected user = this._boardService.user;
 
   protected form = new FormGroup({
     name: new FormControl('', [Validators.required]),
@@ -54,9 +52,8 @@ export class AddNewBoardComponent {
     effect(() => {
 
       const user = this.user();
-      const storeType = this.storeType();
 
-      if (!user && storeType === 'firebase') {
+      if (!user) {
         this.close();
       }
     });
@@ -95,7 +92,7 @@ export class AddNewBoardComponent {
         boardStatusesNames: this.form.value.boardStatusesNames,
       } as BoardCreateData;
 
-      this.abstractBoardService()?.boardCreate(createBoardData).pipe(
+      this._boardService.boardCreate(createBoardData).pipe(
         catchError(() => {
           this.isRequesting.set(false);
           return NEVER;
@@ -104,7 +101,7 @@ export class AddNewBoardComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    });
+    }, {allowSignalWrites: true});
 
     this.addNewBoardStatusName();
   }

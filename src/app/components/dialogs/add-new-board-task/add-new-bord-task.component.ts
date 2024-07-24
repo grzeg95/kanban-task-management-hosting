@@ -1,6 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
@@ -43,9 +42,8 @@ export class AddNewBordTaskComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = toSignal(this._boardService.board$);
-  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected board = this._boardService.board;
+  protected boardStatuses = this._boardService.boardStatuses;
 
   protected boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
 
@@ -104,7 +102,6 @@ export class AddNewBordTaskComponent {
       }
 
       this.form.controls.boardId.setValue(board.id);
-
     });
 
     effect(() => {
@@ -158,7 +155,7 @@ export class AddNewBordTaskComponent {
         boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
       } as BoardTaskCreateData;
 
-      this.abstractBoardService()?.boardTaskCreate(createTaskData).pipe(
+      this._boardService.boardTaskCreate(createTaskData).pipe(
         catchError(() => {
           this.isRequesting.set(false);
           return NEVER;
@@ -167,7 +164,7 @@ export class AddNewBordTaskComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    });
+    }, {allowSignalWrites: true});
 
     this.addNewSubtask();
   }

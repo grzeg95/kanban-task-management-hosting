@@ -52,14 +52,14 @@ export class BoardComponent implements OnDestroy {
   protected heightNav = toSignal(this._layoutService.heightNav$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
 
-  protected board = toSignal(this._boardService.board$);
-  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected boardTasks = toSignal(this._boardService.boardTasks$);
+  protected board = this._boardService.board;
+  protected boardStatuses = this._boardService.boardStatuses;
+  protected boardTasks = this._boardService.boardTasks;
 
-  protected loadingBoard = toSignal(this._boardService.firstLoadingBoard$);
-  protected firstLoadingBoard = toSignal(this._boardService.firstLoadingBoard$);
-  protected firstLoadingBoardStatuses = toSignal(this._boardService.firstLoadingBoardStatuses$);
-  protected firstLoadingBoardTasks = toSignal(this._boardService.firstLoadingBoardTasks$);
+  protected loadingBoard = this._boardService.firstLoadingBoard;
+  protected firstLoadingBoard = this._boardService.firstLoadingBoard;
+  protected firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatuses;
+  protected firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasks;
 
   protected tabIndex = computed(() => {
 
@@ -109,7 +109,7 @@ export class BoardComponent implements OnDestroy {
     this._activatedRoute.params.pipe(
       map((params) => params['id'])
     ).subscribe((id) => {
-      this._boardService.boardId = id;
+      this._boardService.boardId.set(id);
     });
 
     effect(() => {
@@ -133,7 +133,7 @@ export class BoardComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._boardService.boardTaskId = boardTaskId;
+    this._boardService.boardTaskId.set(boardTaskId);
     this._dialog.open(ViewBoardTaskComponent);
   }
 
@@ -151,6 +151,6 @@ export class BoardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this._boardService.boardId = undefined;
+    this._boardService.boardId.set(undefined);
   }
 }

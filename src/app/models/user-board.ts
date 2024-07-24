@@ -5,14 +5,9 @@ import {
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter,
   QueryDocumentSnapshot as firestoreQueryDocumentSnapshot
-} from 'firebase/firestore';
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {
-  collection as storeCollection,
-  DocumentReference as storeDocumentReference,
-  DocumentSnapshot as storeDocumentSnapshot
-} from '../utils/store';
 import {User} from './user';
 
 export interface UserBoardDoc extends DocumentData {
@@ -36,34 +31,16 @@ export class UserBoard implements UserBoardDoc {
     return firestoreCollection(ref, Collections.userBoards).withConverter(UserBoard._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
-  static firestoreData(snap: firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
+  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard>): UserBoard;
+  static firestoreData(snap: firestoreQueryDocumentSnapshot<UserBoard>): UserBoard;
 
-  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc> | firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard> | firestoreQueryDocumentSnapshot<UserBoard>) {
     return UserBoard._snapToThis(snap);
   }
 
-  static storeCollectionRef(ref: storeDocumentReference) {
-    return storeCollection(ref, Collections.userBoards);
-  }
+  private static _snapToThis(snap: firestoreDocumentSnapshot<UserBoard>) {
 
-  static storeRef(ref: storeDocumentReference, userBoardId: string) {
-    return ref.collection(Collections.userBoards).doc(userBoardId);
-  }
-
-  static storeData(snap: storeDocumentSnapshot) {
-    return UserBoard._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let name = '';
 

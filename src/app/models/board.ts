@@ -4,10 +4,9 @@ import {
   DocumentSnapshot as firestoreDocumentSnapshot,
   Firestore,
   FirestoreDataConverter
-} from 'firebase/firestore';
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
 export interface BoardDoc extends DocumentData {
   readonly name: string;
@@ -34,27 +33,13 @@ export class Board implements BoardDoc {
     return firestoreDoc(firestore, Collections.boards, id).withConverter(Board._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<Board, BoardDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<Board>) {
     return Board._snapToThis(snap);
   }
 
-  static storeRef(storage: Storage, id?: string) {
-    return storeDoc(storage, [Collections.boards, id].filter(p => !!p).join('/'));
-  }
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Board>) {
 
-  static storeData(snap: storeDocumentSnapshot) {
-    return Board._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<Board, BoardDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let name = '';
     let boardStatusesIds: string[] = [];

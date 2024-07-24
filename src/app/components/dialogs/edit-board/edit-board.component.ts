@@ -1,6 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
@@ -38,9 +37,8 @@ export class EditBoardComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = toSignal(this._boardService.board$);
-  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
+  protected board = this._boardService.board;
+  protected boardStatuses = this._boardService.boardStatuses;
   protected initialBoardName = '';
   protected initialBoardStatuses = new Map<string, string>();
 
@@ -74,6 +72,7 @@ export class EditBoardComponent {
         return;
       }
 
+      console.log('now');
       this.form.controls.boardId.setValue(board.id);
 
       if (!this.form.controls.boardName.dirty) {
@@ -137,7 +136,7 @@ export class EditBoardComponent {
       const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this.initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
       const boardStatusAddedOrDeleted = this.initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
 
-      this.abstractBoardService()?.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
+      this._boardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
         catchError(() => {
           this.isRequesting.set(false);
           return NEVER;
@@ -146,7 +145,7 @@ export class EditBoardComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    });
+    }, {allowSignalWrites: true});
   }
 
   addNewStatusName(id: null | string = null, name = '') {

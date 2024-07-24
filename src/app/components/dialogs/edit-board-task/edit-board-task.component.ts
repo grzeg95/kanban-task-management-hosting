@@ -1,6 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
@@ -46,11 +45,10 @@ export class EditBoardTaskComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = toSignal(this._boardService.board$);
-  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
-  protected boardTask = toSignal(this._boardService.boardTask$);
-  protected boardTaskSubtasks = toSignal(this._boardService.boardTaskSubtasks$);
+  protected board = this._boardService.board;
+  protected boardStatuses = this._boardService.boardStatuses;
+  protected boardTask = this._boardService.boardTask;
+  protected boardTaskSubtasks = this._boardService.boardTaskSubtasks;
 
   protected boardStatusId = computed(() => {
 
@@ -269,7 +267,7 @@ export class EditBoardTaskComponent {
         delete boardTaskUpdateData.boardStatus.newId;
       }
 
-      this.abstractBoardService()?.boardTaskUpdate(boardTaskUpdateData).pipe(
+      this._boardService.boardTaskUpdate(boardTaskUpdateData).pipe(
         catchError(() => {
           this.isRequesting.set(false);
           return NEVER;

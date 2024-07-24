@@ -37,91 +37,99 @@
     <app-pop-menu-item (click)="openEditBoardDialog($event); setShowNavMenuOptions(false);">Edit board</app-pop-menu-item>
     <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event); setShowNavMenuOptions(false);">Delete board</app-pop-menu-item>
   }
-  @if (storeType() === 'storage') {
-    <app-pop-menu-item [danger]="true" (click)="restoreDefault(); setShowNavMenuOptions(false);">Restore default</app-pop-menu-item>
-  }
 </ng-template>
 
 <!-- appSideBarItemsTitleTemplateRef -->
 <ng-template #appSideBarItemsTitleTemplateRef>
-  All Boards ({{userBoards()?.length || 0}})
+  @if (isLoggedIn()) {
+    All Boards ({{userBoards()?.length || 0}})
+  }
 </ng-template>
 
 <!-- appSideBarItemsContainerTemplateRef -->
 <ng-template #appSideBarItemsContainerTemplateRef>
-  @if (userBoards(); as boards) {
-    @for (board of boards; track board) {
-      <button
-        [tabIndex]="tabIndexSideBar()"
-        class="app-root__app-side-bar__items__container__button"
-        [class.app-root__app-side-bar__items__container__button--active]="board.id === boardId()"
-        app-button
-        svg="left"
-        (click)="select(board.id)"
-      >
-        <svg
-          class="app-root__app-side-bar__items__container__button__svg"
-          [class.app-root__app-side-bar__items__container__button__svg--active]="board.id === boardId()"
-          appSvg="icon-board"
-        />
-        {{ board.name }}
-      </button>
-    }
-  }
 
-  <button
-    [tabIndex]="tabIndexSideBar()"
-    class="app-root__app-side-bar__items__container__button"
-    app-button
-    svg="left"
-    (click)="openAddBoardDialog($event)"
-  >
-    <svg
-      class="app-root__app-side-bar__items__container__button__svg"
-      appSvg="icon-board"
-    />
-    + Create New Board
-  </button>
+  @if (isLoggedIn()) {
+
+    @if (userBoardsSorted(); as boards) {
+      @for (board of boards; track board.id) {
+        <button
+          [tabIndex]="tabIndexSideBar()"
+          class="app-root__app-side-bar__items__container__button"
+          [class.app-root__app-side-bar__items__container__button--active]="board.id === boardId()"
+          app-button
+          svg="left"
+          (click)="select(board.id)"
+        >
+          <svg
+            class="app-root__app-side-bar__items__container__button__svg"
+            [class.app-root__app-side-bar__items__container__button__svg--active]="board.id === boardId()"
+            appSvg="icon-board"
+          />
+          {{ board.name }}
+        </button>
+      }
+    }
+
+    <button
+      [tabIndex]="tabIndexSideBar()"
+      class="app-root__app-side-bar__items__container__button"
+      app-button
+      svg="left"
+      (click)="openAddBoardDialog($event)"
+    >
+      <svg
+        class="app-root__app-side-bar__items__container__button__svg"
+        appSvg="icon-board"
+      />
+      + Create New Board
+    </button>
+  }
 </ng-template>
 
 <!-- appSideBarPhoneItemsTitleTemplateRef -->
 <ng-template #appSideBarPhoneItemsTitleTemplateRef>
-  All Boards ({{userBoards()?.length || 0}})
+  @if (isLoggedIn()) {
+    All Boards ({{userBoards()?.length || 0}})
+  }
 </ng-template>
 
 <!-- appSideBarPhoneItemsContainerTemplateRef -->
 <ng-template #appSideBarPhoneItemsContainerTemplateRef>
-  @if (userBoards(); as boards) {
-    @for (board of boards; track board) {
-      <button
-        class="app-root__app-side-bar-mobile__items__container__button"
-        [class.app-root__app-side-bar-mobile__items__container__button--active]="board.id === boardId()"
-        app-button
-        svg="left"
-        (click)="select(board.id); setShowSideBar($event,false)"
-      >
-        <svg
-          class="app-root__app-side-bar-mobile__items__container__button__svg"
-          [class.app-root__app-side-bar-mobile__items__container__button__svg--active]="board.id === boardId()"
-          appSvg="icon-board"
-        />
-        {{ board.name }}
-      </button>
-    }
-  }
 
-  <button
-    class="app-root__app-side-bar-mobile__items__container__button"
-    app-button
-    svg="left"
-    (click)="openAddBoardDialog($event); setShowSideBar($event,false)"
-  >
-    <svg
-      class="app-root__app-side-bar-mobile__items__container__button__svg"
-      appSvg="icon-board"
-    />
-    + Create New Board
-  </button>
+  @if (isLoggedIn()) {
+    @if (userBoardsSorted(); as boards) {
+      @for (board of boards; track board) {
+        <button
+          class="app-root__app-side-bar-mobile__items__container__button"
+          [class.app-root__app-side-bar-mobile__items__container__button--active]="board.id === boardId()"
+          app-button
+          svg="left"
+          (click)="select(board.id); setShowSideBar($event,false)"
+        >
+          <svg
+            class="app-root__app-side-bar-mobile__items__container__button__svg"
+            [class.app-root__app-side-bar-mobile__items__container__button__svg--active]="board.id === boardId()"
+            appSvg="icon-board"
+          />
+          {{ board.name }}
+        </button>
+      }
+    }
+
+    <button
+      class="app-root__app-side-bar-mobile__items__container__button"
+      app-button
+      svg="left"
+      (click)="openAddBoardDialog($event); setShowSideBar($event,false)"
+    >
+      <svg
+        class="app-root__app-side-bar-mobile__items__container__button__svg"
+        appSvg="icon-board"
+      />
+      + Create New Board
+    </button>
+  }
 </ng-template>
 
 <app-nav

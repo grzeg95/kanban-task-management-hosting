@@ -1,8 +1,7 @@
 import {DocumentSnapshot as firestoreDocumentSnapshot} from '@firebase/firestore';
-import {doc as firestoreDoc, DocumentData, Firestore, FirestoreDataConverter} from 'firebase/firestore';
+import {doc as firestoreDoc, DocumentData, Firestore, FirestoreDataConverter} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {doc as storeDoc, DocumentSnapshot as storeDocumentSnapshot, Storage} from '../utils/store';
 
 export interface ConfigDoc extends DocumentData {
   readonly maxUserBoards: number;
@@ -31,27 +30,13 @@ export class Config implements ConfigDoc {
     return firestoreDoc(firestore, Collections.configs, id).withConverter(Config._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<Config, ConfigDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<Config>) {
     return Config._snapToThis(snap);
   }
 
-  static storeRef(storage: Storage, id?: string) {
-    return storeDoc(storage, [Collections.configs, id].filter(p => !!p).join('/'));
-  }
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Config>) {
 
-  static storeData(snap: storeDocumentSnapshot) {
-    return Config._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<Config, ConfigDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let maxUserBoards = 5;
     let maxBoardStatuses = 5;

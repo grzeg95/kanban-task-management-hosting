@@ -1,22 +1,9 @@
-import {Inject, Injectable} from '@angular/core';
-import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
-import {Firestore} from 'firebase/firestore';
+import {Injectable, NgZone} from '@angular/core';
+import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from '@angular/fire/auth';
+import {docSnapshots, Firestore} from '@angular/fire/firestore';
 import isEqual from 'lodash/isEqual';
-import {
-  BehaviorSubject,
-  distinctUntilChanged,
-  filter,
-  from,
-  map,
-  Observable,
-  of,
-  shareReplay,
-  switchMap,
-  tap
-} from 'rxjs';
-import {User, UserDoc} from '../../models/user';
-import {AuthInjectionToken, FirestoreInjectionToken} from '../../tokens/firebase';
-import {docSnapshots} from '../firebase/firestore';
+import {BehaviorSubject, distinctUntilChanged, filter, from, map, Observable, of, shareReplay, switchMap} from 'rxjs';
+import {User} from '../../models/user';
 
 @Injectable({
   providedIn: 'root'
@@ -53,7 +40,7 @@ export class AuthService {
         this.resetFirstLoadings$.next();
 
         const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
-        return docSnapshots<User, UserDoc>(userRef).pipe(
+        return docSnapshots(userRef).pipe(
           map(User.firestoreData)
         );
       }
@@ -67,8 +54,9 @@ export class AuthService {
   readonly whileLoginIn$ = new BehaviorSubject<boolean>(false);
 
   constructor(
-    @Inject(AuthInjectionToken) private readonly _auth: Auth,
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore
+    private readonly _ngZone: NgZone,
+    private readonly _auth: Auth,
+    private readonly _firestore: Firestore
   ) {
   }
 

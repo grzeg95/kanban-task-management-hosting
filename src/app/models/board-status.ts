@@ -5,14 +5,9 @@ import {
   DocumentReference as firestoreDocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter
-} from 'firebase/firestore';
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {
-  collection as storeCollection,
-  DocumentReference as storeDocumentReference,
-  DocumentSnapshot as storeDocumentSnapshot
-} from '../utils/store';
 import {Board} from './board';
 
 export interface BoardStatusDoc extends DocumentData {
@@ -42,43 +37,13 @@ export class BoardStatus implements BoardStatusDoc {
     return firestoreCollection(ref, Collections.boardStatuses).withConverter(BoardStatus._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus>) {
     return BoardStatus._snapToThis(snap);
   }
 
-  static storeRef(ref: storeDocumentReference, statusId?: string) {
-    return ref.collection(Collections.boardStatuses).doc(statusId);
-  }
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus>) {
 
-  static storeCollectionRefs(ref: storeDocumentReference, board: Board) {
-
-    const boardStatusesCollectionRef = ref.collection(Collections.boardStatuses);
-    const boardStatusesRefs = [];
-
-    for (const boardStatusId of board.boardStatusesIds) {
-      boardStatusesRefs.push(boardStatusesCollectionRef.doc(boardStatusId));
-    }
-
-    return boardStatusesRefs;
-  }
-
-  static storeCollectionRef(ref: storeDocumentReference) {
-    return storeCollection(ref, Collections.boardStatuses);
-  }
-
-  static storeData(snap: storeDocumentSnapshot) {
-    return BoardStatus._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let name = '';
     let boardTasksIds: string[] = [];

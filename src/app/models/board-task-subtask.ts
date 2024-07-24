@@ -5,14 +5,9 @@ import {
   DocumentReference as firestoreDocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter
-} from 'firebase/firestore';
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {
-  collection as storeCollection,
-  DocumentReference as storeDocumentReference,
-  DocumentSnapshot as storeDocumentSnapshot
-} from '../utils/store';
 import {BoardTask} from './board-task';
 
 export interface BoardTaskSubtaskDoc extends DocumentData {
@@ -42,52 +37,13 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return firestoreCollection(ref, Collections.boardTaskSubtasks).withConverter(BoardTaskSubtask._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardTaskSubtask, BoardTaskSubtaskDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTaskSubtask>) {
     return BoardTaskSubtask._snapToThis(snap);
   }
 
-  static storeRef(ref: storeDocumentReference, id?: string) {
-    const boardTaskCollectionRef = ref.collection(Collections.boardTaskSubtasks);
-    let boardTaskSubtaskRef;
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTaskSubtask>) {
 
-    if (!id) {
-      boardTaskSubtaskRef = boardTaskCollectionRef.doc();
-    } else {
-      boardTaskSubtaskRef = boardTaskCollectionRef.doc(id);
-    }
-
-    return boardTaskSubtaskRef;
-  }
-
-  static storeRefs(ref: storeDocumentReference) {
-    return storeCollection(ref, Collections.boardTaskSubtasks);
-  }
-
-  static storeRefsFromBoardTask(ref: storeDocumentReference, boardTask: BoardTask) {
-
-    const boardTaskSubtasksCollectionRef = ref.collection(Collections.boardTaskSubtasks);
-    const boardTaskSubtasksRefs = [];
-
-    for (const boardTaskSubtaskId of boardTask.boardTaskSubtasksIds) {
-      boardTaskSubtasksRefs.push(boardTaskSubtasksCollectionRef.doc(boardTaskSubtaskId));
-    }
-
-    return boardTaskSubtasksRefs;
-  }
-
-  static storeData(snap: storeDocumentSnapshot) {
-    return BoardTaskSubtask._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTaskSubtask, BoardTaskSubtaskDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let title = '';
     let isCompleted = false;

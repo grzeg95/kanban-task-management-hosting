@@ -78,7 +78,7 @@
         <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
       }
 
-      @if (storeType() === 'firebase') {
+      @if (isLoggedIn()) {
         <app-pop-menu-item [danger]="true" (click)="setShowNavMenuOptions($event,false); signOut();">Sign Out</app-pop-menu-item>
       }
     </app-pop-menu>

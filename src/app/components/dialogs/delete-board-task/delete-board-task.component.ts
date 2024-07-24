@@ -1,6 +1,5 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
@@ -35,10 +34,9 @@ import {LoaderComponent} from '../../loader/loader.component';
 export class DeleteBoardTaskComponent {
 
   protected isRequesting = signal(false);
-  protected board = toSignal(this._boardService.board$);
-  protected boardStatuses = toSignal(this._boardService.boardStatuses$);
-  protected abstractBoardService = toSignal(this._boardService.abstractBoardService$);
-  protected boardTask = toSignal(this._boardService.boardTask$);
+  protected board = this._boardService.board;
+  protected boardStatuses = this._boardService.boardStatuses;
+  protected boardTask = this._boardService.boardTask;
 
   constructor(
     private readonly _boardService: BoardService,
@@ -74,7 +72,7 @@ export class DeleteBoardTaskComponent {
         return;
       }
 
-      this.abstractBoardService()?.boardTaskDelete({
+      this._boardService.boardTaskDelete({
         id: boardTask.id,
         boardId: board.id
       }).pipe(

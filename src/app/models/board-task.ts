@@ -5,12 +5,10 @@ import {
   DocumentReference as firestoreDocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter
-} from 'firebase/firestore';
+} from '@angular/fire/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {DocumentReference as storeDocumentReference, DocumentSnapshot as storeDocumentSnapshot} from '../utils/store';
 import {Board} from './board';
-import {BoardStatus} from './board-status';
 
 export interface BoardTaskDoc extends DocumentData {
   readonly title: string;
@@ -45,43 +43,13 @@ export class BoardTask implements BoardTaskDoc {
     return firestoreCollection(ref, Collections.boardTasks).withConverter(BoardTask._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTask>) {
     return BoardTask._snapToThis(snap);
   }
 
-  static storeRef(ref: storeDocumentReference, id?: string) {
-    return ref.collection(Collections.boardTasks).doc(id);
-  }
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask>) {
 
-  static storeRefs(ref: storeDocumentReference, boardStatus: BoardStatus) {
-
-    const boardStatusesCollectionRef = ref.collection(Collections.boardStatuses);
-    const boardStatusesRefs = [];
-
-    for (const boardStatusId of boardStatus.boardTasksIds) {
-      boardStatusesRefs.push(boardStatusesCollectionRef.doc(boardStatusId));
-    }
-
-    return boardStatusesRefs;
-  }
-
-  static storeCollectionRef(ref: storeDocumentReference) {
-    return ref.collection(Collections.boardTasks);
-  }
-
-  static storeData(snap: storeDocumentSnapshot) {
-    return BoardTask._snapToThis(snap);
-  }
-
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTask, BoardTaskDoc> | storeDocumentSnapshot) {
-
-    let data: any;
-
-    if (snap instanceof firestoreDocumentSnapshot) {
-      data = snap.data();
-    } else {
-      data = snap.data;
-    }
+    const data = snap.data();
 
     let title = '';
     let description = '';

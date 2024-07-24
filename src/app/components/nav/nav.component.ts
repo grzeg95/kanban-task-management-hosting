@@ -79,14 +79,12 @@ export class NavComponent {
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
   protected moveBrandingForSideBarState = toSignal(this._appService.moveForSideBarState$);
   protected showSideBar = toSignal(this._appService.showSideBar$);
-  protected storeType = toSignal(this._boardService.storeType$)
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _authService: AuthService,
     private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
-    private readonly _boardService: BoardService,
     private readonly _router: Router
   ) {
   }
