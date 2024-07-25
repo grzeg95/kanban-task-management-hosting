@@ -2,6 +2,7 @@
 
 @use 'app/components/board/board' as board;
 @use 'app/components/button/button' as button;
+@use 'app/components/loading/loading' as loading;
 @use 'app/components/nav/nav' as nav;
 @use 'app/components/pop-menu/pop-menu' as pop-menu;
 @use 'app/components/pop-menu/pop-menu-item/pop-menu-item' as pop-menu-item;
@@ -91,6 +92,10 @@ body {
     warn-color: $white,
     warn-hover-background: $red-hover,
     warn-hover-color: $white
+  ));
+
+  @include loading.theme((
+    background-url: '/assets/images/loading-part.svg'
   ));
 
   @include nav.theme((
@@ -286,6 +291,10 @@ body {
     warn-color: $white,
     warn-hover-background: $red-hover,
     warn-hover-color: $white
+  ));
+
+  @include loading.theme((
+    background-url: '/assets/images/loading-part.svg'
   ));
 
   @include nav.theme((

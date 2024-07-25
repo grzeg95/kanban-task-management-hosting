@@ -21,13 +21,15 @@ import {handleTabIndex} from '../../utils/handle-tabindex';
 import {ButtonComponent} from '../button/button.component';
 import {EditBoardComponent} from '../dialogs/edit-board/edit-board.component';
 import {ViewBoardTaskComponent} from '../dialogs/view-board-task/view-board-task.component';
+import {LoadingComponent} from '../loading/loading.component';
 
 @Component({
   selector: 'app-board',
   standalone: true,
   imports: [
     NgStyle,
-    ButtonComponent
+    ButtonComponent,
+    LoadingComponent
   ],
   templateUrl: './board.component.html',
   styleUrl: './board.component.scss',

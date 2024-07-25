@@ -8,6 +8,7 @@ import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/a
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
 import {DeleteBoardComponent} from './components/dialogs/delete-board/delete-board.component';
 import {EditBoardComponent} from './components/dialogs/edit-board/edit-board.component';
+import {LoadingComponent} from './components/loading/loading.component';
 import {NavComponent} from './components/nav/nav.component';
 import {PopMenuItemComponent} from './components/pop-menu/pop-menu-item/pop-menu-item.component';
 import {
@@ -33,7 +34,8 @@ import {handleTabIndex} from './utils/handle-tabindex';
     NgStyle,
     ButtonComponent,
     PopMenuItemComponent,
-    SvgDirective
+    SvgDirective,
+    LoadingComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -105,28 +107,27 @@ export class AppComponent {
       .filter((userBoard) => !!userBoard) as UserBoard[];
   });
 
+  protected navTitleLoading = computed(() => {
+
+    const loadingUserBoards = this.loadingUserBoards();
+    const loadingBoard = this.loadingBoard();
+
+    return [loadingUserBoards, loadingBoard].some((val) => val);
+  });
+
   protected navTitle = computed(() => {
 
     const isLoggedIn = this.isLoggedIn();
     const userBoards = this.userBoards();
-    const loadingUserBoards = this.loadingUserBoards();
+
     const board = this.board();
-    const loadingBoard = this.loadingBoard();
 
     if (!isLoggedIn) {
       return 'Kanban App';
     }
 
-    if (loadingUserBoards) {
-      return 'Loading boards...';
-    }
-
     if (userBoards === null || userBoards?.length === 0) {
       return 'Create Board';
-    }
-
-    if (loadingBoard) {
-      return 'Loading board...';
     }
 
     if (board) {

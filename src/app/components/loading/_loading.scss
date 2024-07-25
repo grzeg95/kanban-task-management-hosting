@@ -1,0 +1,10 @@
+@mixin theme($theme) {
+
+  .app-loading {
+
+    &-dots {
+      $background-url: map-get($theme, 'background-url');
+      background-image: url($background-url);
+    }
+  }
+}
