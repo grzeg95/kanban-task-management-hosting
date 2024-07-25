@@ -1,6 +1,11 @@
 import {DOCUMENT, isPlatformBrowser} from '@angular/common';
-import {Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
+import {effect, Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
+import {Firestore} from 'firebase/firestore';
+import {User} from '../models/user';
+import {FirestoreInjectionToken} from '../tokens/firebase';
 import {Sig} from '../utils/Sig';
+import {AuthService} from './auth/auth.service';
+import {updateDoc} from './firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -9,13 +14,37 @@ export class ThemeSelectorService {
 
   private readonly _renderer: Renderer2;
   readonly isDark = new Sig<boolean | undefined>(undefined);
+  private readonly _user = this._authService.user.get();
 
   constructor(
     private readonly _rendererFactory: RendererFactory2,
     @Inject(DOCUMENT) private readonly _document: Document,
-    @Inject(PLATFORM_ID) private readonly _platformId: NonNullable<unknown>
+    @Inject(PLATFORM_ID) private readonly _platformId: NonNullable<unknown>,
+    private readonly _authService: AuthService,
+    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore
   ) {
     this._renderer = this._rendererFactory.createRenderer(null, null);
+
+    let userDarkMode: boolean | null;
+    effect(() => {
+
+      const user = this._authService.user.get()();
+
+      if (!user) {
+        return;
+      }
+
+      if (userDarkMode === user.darkMode) {
+        return;
+      }
+      userDarkMode = user.darkMode;
+
+      if (!userDarkMode) {
+        this.setLight();
+      } else {
+        this.setDark();
+      }
+    });
   }
 
   setLight() {
@@ -30,6 +59,16 @@ export class ThemeSelectorService {
     }
 
     this.isDark.set(false);
+
+    const user = this._user();
+
+    if (user && user.darkMode) {
+      const userRef= User.firestoreRef(this._firestore, user.id);
+
+      updateDoc(userRef, {
+        darkMode: false
+      }).subscribe();
+    }
   }
 
   setDark() {
@@ -44,6 +83,16 @@ export class ThemeSelectorService {
     }
 
     this.isDark.set(true);
+
+    const user = this._user();
+
+    if (user && !user.darkMode) {
+      const userRef = User.firestoreRef(this._firestore, user.id);
+
+      updateDoc(userRef, {
+        darkMode: true
+      }).subscribe();
+    }
   }
 
   loadTheme() {

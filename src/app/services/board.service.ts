@@ -76,21 +76,32 @@ export class BoardService {
   ) {
 
     // userBoards
-    effect(() => {
+    let userBoards_userId: string | undefined;
+    let userBoards_userConfigMaxUserBoards: number | undefined;
+    effect((onCleanup) => {
 
       const user = this.user();
-
-      this.userBoardsSub && !this.userBoardsSub.closed && this.userBoardsSub.unsubscribe();
 
       if (!user) {
         this.userBoards.set(undefined);
         return;
       }
 
-      this.loadingUserBoards.set(true);
-      const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, user.id));
+      if (userBoards_userId === user.id) {
+        return;
+      }
+      userBoards_userId = user.id;
 
-      this.userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(user.config.maxUserBoards)).pipe(
+      if (userBoards_userConfigMaxUserBoards === user.config.maxUserBoards) {
+        return;
+      }
+      userBoards_userConfigMaxUserBoards = user.config.maxUserBoards;
+
+      const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, userBoards_userId));
+
+      this.loadingUserBoards.set(true);
+      this.userBoardsSub && !this.userBoardsSub.closed && this.userBoardsSub.unsubscribe();
+      this.userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -111,24 +122,33 @@ export class BoardService {
         }
 
         this.userBoards.set(userBoards);
-      })
+      });
+
+      onCleanup(() => {
+        this.userBoardsSub && !this.userBoardsSub.closed && this.userBoardsSub.unsubscribe();
+      });
     });
 
     // board
-    effect(() => {
+    let board_boardId: string | undefined;
+    effect((onCleanup) => {
 
       const boardId = this.boardId.get()();
-
-      this.boardSub && !this.boardSub.closed && this.boardSub.unsubscribe();
 
       if (!boardId) {
         this.board.set(undefined);
         return;
       }
 
-      this.loadingBoard.set(true);
-      const boardRef = Board.firestoreRef(this._firestore, boardId);
+      if (board_boardId === boardId) {
+        return;
+      }
+      board_boardId = boardId;
 
+      const boardRef = Board.firestoreRef(this._firestore, board_boardId);
+
+      this.loadingBoard.set(true);
+      this.boardSub && !this.boardSub.closed && this.boardSub.unsubscribe();
       this.boardSub = docSnapshots(boardRef).pipe(
         map((docSnap) => Board.firestoreData(docSnap)),
         catchError((error) => {
@@ -147,26 +167,41 @@ export class BoardService {
 
         this.board.set(board);
       });
+
+      onCleanup(() => {
+        this.boardSub && !this.boardSub.closed && this.boardSub.unsubscribe();
+      });
     });
 
     // boardStatuses
-    effect(() => {
+    let boardStatuses_boardId: string | undefined;
+    let boardStatuses_userConfigMaxBoardStatuses: number | undefined;
+    effect((onCleanup) => {
 
       const board = this.board.get()();
       const user = this.user();
-
-      this.boardStatusesSub && !this.boardStatusesSub.closed && this.boardStatusesSub.unsubscribe();
 
       if (!board || !user) {
         this.boardStatuses.set(undefined);
         return;
       }
 
-      this.loadingBoardStatuses.set(true);
-      const boardRef = Board.firestoreRef(this._firestore, board.id);
+      if (boardStatuses_boardId === board.id) {
+        return;
+      }
+      boardStatuses_boardId = board.id;
+
+      if (boardStatuses_userConfigMaxBoardStatuses === user.config.maxBoardStatuses) {
+        return;
+      }
+      boardStatuses_userConfigMaxBoardStatuses = user.config.maxBoardStatuses;
+
+      const boardRef = Board.firestoreRef(this._firestore, boardStatuses_boardId);
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
 
-      this.boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(user.config.maxBoardStatuses)).pipe(
+      this.loadingBoardStatuses.set(true);
+      this.boardStatusesSub && !this.boardStatusesSub.closed && this.boardStatusesSub.unsubscribe();
+      this.boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(boardStatuses_userConfigMaxBoardStatuses)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -189,26 +224,41 @@ export class BoardService {
 
         this.boardStatuses.set(querySnapBoardStatusesMap);
       });
+
+      onCleanup(() => {
+        this.boardStatusesSub && !this.boardStatusesSub.closed && this.boardStatusesSub.unsubscribe();
+      });
     });
 
     // boardTasks
-    effect(() => {
+    let boardTasks_boardId: string | undefined;
+    let boardStatuses_userConfigMaxBoardTasks: number | undefined;
+    effect((onCleanup) => {
 
       const board = this.board.get()();
       const user = this.user();
-
-      this.boardTasksSub && !this.boardTasksSub.closed && this.boardTasksSub.unsubscribe();
 
       if (!board || !user) {
         this.boardTasks.set(undefined);
         return;
       }
 
-      this.loadingBoardTasks.set(true);
-      const boardRef = Board.firestoreRef(this._firestore, board.id);
+      if (boardTasks_boardId === board.id) {
+        return;
+      }
+      boardTasks_boardId = board.id;
+
+      if (boardStatuses_userConfigMaxBoardTasks === user.config.maxBoardTasks) {
+        return;
+      }
+      boardStatuses_userConfigMaxBoardTasks = user.config.maxBoardTasks;
+
+      const boardRef = Board.firestoreRef(this._firestore, boardTasks_boardId);
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
 
-      this.boardTasksSub = collectionSnapshots(boardTasksRef, limit(user.config.maxBoardTasks)).pipe(
+      this.loadingBoardTasks.set(true);
+      this.boardTasksSub && !this.boardTasksSub.closed && this.boardTasksSub.unsubscribe();
+      this.boardTasksSub = collectionSnapshots(boardTasksRef, limit(boardStatuses_userConfigMaxBoardTasks)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -231,6 +281,10 @@ export class BoardService {
 
         this.boardTasks.set(querySnapUserBoardTasksMap);
       });
+
+      onCleanup(() => {
+        this.boardTasksSub && !this.boardTasksSub.closed && this.boardTasksSub.unsubscribe();
+      });
     });
 
     // boardTask
@@ -248,25 +302,35 @@ export class BoardService {
     });
 
     // boardTaskSubtasks
-    effect(() => {
+    let boardTaskSubtasks_boardId: string | undefined;
+    let boardTaskSubtasks_boardTaskId: string | undefined;
+    effect((onCleanup) => {
 
       const board = this.board.get()();
       const boardTask = this.boardTask.get()();
       const user = this.user();
-
-      this.boardTaskSubtasksSub && !this.boardTaskSubtasksSub.closed && this.boardTaskSubtasksSub.unsubscribe();
 
       if (!board || !boardTask || !user) {
         this.boardTaskSubtasks.set(undefined);
         return;
       }
 
-      this.loadingBoardTaskSubtasks.set(true);
+      if (boardTaskSubtasks_boardId === board.id) {
+        return;
+      }
+      boardTaskSubtasks_boardId = board.id;
 
-      const boardRef = Board.firestoreRef(this._firestore, board.id);
-      const boardTaskRef = BoardTask.firestoreRef(boardRef, boardTask.id);
+      if (boardTaskSubtasks_boardTaskId === boardTask.id) {
+        return;
+      }
+      boardTaskSubtasks_boardTaskId = boardTask.id;
+
+      const boardRef = Board.firestoreRef(this._firestore, boardTaskSubtasks_boardId);
+      const boardTaskRef = BoardTask.firestoreRef(boardRef, boardTaskSubtasks_boardTaskId);
       const boardTaskSubtasksRef = BoardTaskSubtask.firestoreRefs(boardTaskRef);
 
+      this.loadingBoardTaskSubtasks.set(true);
+      this.boardTaskSubtasksSub && !this.boardTaskSubtasksSub.closed && this.boardTaskSubtasksSub.unsubscribe();
       this.boardTaskSubtasksSub = collectionSnapshots(boardTaskSubtasksRef, limit(user.config.maxBoardTaskSubtasks)).pipe(
         catchError((error) => {
           console.error(error);
@@ -289,6 +353,10 @@ export class BoardService {
         }
 
         this.boardTaskSubtasks.set(querySnapUserBoardTaskSubtasksMap);
+      });
+
+      onCleanup(() => {
+        this.boardTaskSubtasksSub && !this.boardTaskSubtasksSub.closed && this.boardTaskSubtasksSub.unsubscribe();
       });
     });
   }

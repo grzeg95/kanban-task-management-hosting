@@ -39,20 +39,25 @@ export class AuthService {
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore
   ) {
 
+    let firebaseUserUid: string | undefined;
     effect(() => {
 
       const firebaseUser = this.firebaseUser();
-
-      this.userSub && !this.userSub.closed && this.userSub.unsubscribe();
 
       if (!firebaseUser) {
         return;
       }
 
-      const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
+      if (firebaseUserUid === firebaseUser.uid) {
+        return;
+      }
+      firebaseUserUid = firebaseUser.uid;
+
+      const userRef = User.firestoreRef(this._firestore, firebaseUserUid);
 
       this.userIsLoaded.set(false);
 
+      this.userSub && !this.userSub.closed && this.userSub.unsubscribe();
       this.userSub = docSnapshots(userRef).pipe(
         map(User.firestoreData),
         catchError((error) => {
