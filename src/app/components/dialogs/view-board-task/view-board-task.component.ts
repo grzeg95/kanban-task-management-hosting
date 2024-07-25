@@ -54,11 +54,11 @@ import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.compone
 export class ViewBoardTaskComponent {
 
   protected isRequesting = signal(false);
-  protected board = this._boardService.getBoard();
-  protected boardStatuses = this._boardService.getBoardStatuses();
+  protected board = this._boardService.board.get();
+  protected boardStatuses = this._boardService.boardStatuses.get();
   protected showMenuOptions = signal(false);
-  protected boardTask = this._boardService.getBoardTask();
-  protected boardTaskSubtasks = this._boardService.getBoardTaskSubtasks();
+  protected boardTask = this._boardService.boardTask.get();
+  protected boardTaskSubtasks = this._boardService.boardTaskSubtasks.get();
 
   protected boardStatusesPopMenuItems = computed(() => {
 
@@ -210,7 +210,7 @@ export class ViewBoardTaskComponent {
     const boardTask = this.boardTask();
 
     if (boardTask) {
-      this._boardService.boardTaskId = boardTask.id;
+      this._boardService.boardTaskId.set(boardTask.id);
       this._dialog.open(EditBoardTaskComponent);
 
       this.close();
@@ -225,7 +225,7 @@ export class ViewBoardTaskComponent {
     const boardTask = this.boardTask();
 
     if (boardTask) {
-      this._boardService.boardTaskId = boardTask.id;
+      this._boardService.boardTaskId.set(boardTask.id);
       this._dialog.open(DeleteBoardTaskComponent);
 
       this.close();

@@ -2,7 +2,6 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import {Dialog} from '@angular/cdk/dialog';
 import {NgStyle} from '@angular/common';
 import {Component, computed, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {Router, RouterOutlet} from '@angular/router';
 import {ButtonComponent} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
@@ -74,21 +73,21 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
-  protected userSig = this._boardService.userSig;
-  protected userBoards = this._boardService.getUserBoards();
-  protected loadingUserBoards = this._boardService.getLoadingUserBoards();
-  protected board = this._boardService.getBoard();
-  protected boardId = this._boardService.getBoardId();
-  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
-  protected moveRouterOutletForSideBar = toSignal(this._appService.moveForSideBarState$);
-  protected heightNav = toSignal(this._layoutService.heightNav$);
-  protected showSideBar = toSignal(this._appService.showSideBar$);
-  protected loadingBoard = this._boardService.getLoadingBoard();
-  protected isLoggedIn = toSignal(this._authService.isLoggedIn$);
+  protected user = this._boardService.user;
+  protected userBoards = this._boardService.userBoards.get();
+  protected loadingUserBoards = this._boardService.loadingUserBoards.get();
+  protected board = this._boardService.board.get();
+  protected boardId = this._boardService.boardId.get();
+  protected isOnPhone = this._layoutService.isOnPhone.get();
+  protected moveRouterOutletForSideBar = this._appService.moveForSideBarState.get();
+  protected heightNav = this._layoutService.heightNav.get();
+  protected showSideBar = this._appService.showSideBar.get();
+  protected loadingBoard = this._boardService.loadingBoard.get();
+  protected isLoggedIn = this._authService.isLoggedIn;
 
   protected userBoardsSorted = computed(() => {
 
-    const user = this.userSig();
+    const user = this.user();
     const userBoards = this.userBoards();
 
     if (!user || !userBoards) {
@@ -219,11 +218,11 @@ export class AppComponent {
       }
     }
 
-    this._appService.showSideBar$.next(value);
+    this._appService.showSideBar.set(value);
   }
 
   setShowNavMenuOptions(value: boolean) {
-    this._appService.showNavMenuOptions$.next(value);
+    this._appService.showNavMenuOptions.set(value);
   }
 
   select(boardId: string) {

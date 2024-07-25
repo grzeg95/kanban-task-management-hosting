@@ -42,8 +42,8 @@ export class AddNewBordTaskComponent {
 
   protected readonly isDone = signal(false);
   protected readonly isRequesting = signal(false);
-  protected readonly board = this._boardService.getBoard();
-  protected readonly boardStatuses = this._boardService.getBoardStatuses();
+  protected readonly board = this._boardService.board.get();
+  protected readonly boardStatuses = this._boardService.boardStatuses.get();
 
   protected readonly boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
 

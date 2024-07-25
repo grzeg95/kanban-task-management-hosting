@@ -1,8 +1,8 @@
 import {BreakpointObserver} from '@angular/cdk/layout';
-import {Injectable} from '@angular/core';
+import {effect, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {BehaviorSubject, combineLatest} from 'rxjs';
 import {Breakpoints, BreakpointsDevices} from '../models/breakpoints';
+import {Sig} from '../utils/Sig';
 
 @Injectable({
   providedIn: 'root'
@@ -15,11 +15,10 @@ export class LayoutService {
     [Breakpoints.desktop.selector, BreakpointsDevices.desktop]
   ]);
 
-  readonly isOnPhone$ = new BehaviorSubject(false);
-  readonly isOnTablet$ = new BehaviorSubject(false);
-  readonly isOnDesktop$ = new BehaviorSubject(false);
-
-  readonly heightNav$ = new BehaviorSubject(0);
+  readonly isOnPhone = new Sig(false);
+  readonly isOnTablet = new Sig(false);
+  readonly isOnDesktop = new Sig(false);
+  readonly heightNav = new Sig(0);
 
   constructor(
     private _breakpointObserver: BreakpointObserver
@@ -38,48 +37,46 @@ export class LayoutService {
 
           const breakpointsDevice = this._displayNameMap.get(query);
 
-          this.isOnPhone$.next(false);
-          this.isOnTablet$.next(false);
-          this.isOnDesktop$.next(false);
+          this.isOnPhone.set(false);
+          this.isOnTablet.set(false);
+          this.isOnDesktop.set(false);
 
           if (breakpointsDevice === BreakpointsDevices.phone) {
-            this.isOnPhone$.next(true);
+            this.isOnPhone.set(true);
           }
 
           if (breakpointsDevice === BreakpointsDevices.tablet) {
-            this.isOnTablet$.next(true);
+            this.isOnTablet.set(true);
           }
 
           if (breakpointsDevice === BreakpointsDevices.desktop) {
-            this.isOnDesktop$.next(true);
+            this.isOnDesktop.set(true);
           }
         }
       }
-    });
 
-    combineLatest([
-      this.isOnPhone$,
-      this.isOnTablet$,
-      this.isOnDesktop$
-    ]).pipe(
-      takeUntilDestroyed()
-    ).subscribe(([isOnPhone, isOnTablet, isOnDesktop]) => {
+      effect(() => {
 
-      let height = 0;
+        const isOnPhone = this.isOnPhone.get()();
+        const isOnTablet = this.isOnTablet.get()();
+        const isOnDesktop = this.isOnDesktop.get()();
 
-      if (isOnPhone) {
-        height = 64;
-      }
+        let height = 0;
 
-      if (isOnTablet) {
-        height = 80;
-      }
+        if (isOnPhone) {
+          height = 64;
+        }
 
-      if (isOnDesktop) {
-        height = 97;
-      }
+        if (isOnTablet) {
+          height = 80;
+        }
 
-      this.heightNav$.next(height);
+        if (isOnDesktop) {
+          height = 97;
+        }
+
+        this.heightNav.set(height);
+      });
     });
   }
 }

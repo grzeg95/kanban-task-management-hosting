@@ -35,7 +35,7 @@ export class DeleteBoardComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = this._boardService.getBoard();
+  protected board = this._boardService.board.get();
 
   constructor(
     private readonly _dialogRef: DialogRef<DeleteBoardComponent>,

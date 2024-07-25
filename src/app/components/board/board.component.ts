@@ -11,7 +11,6 @@ import {
   OnDestroy,
   ViewEncapsulation
 } from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {AppService} from '../../services/app.service';
@@ -46,19 +45,19 @@ export class BoardComponent implements OnDestroy {
   protected statusesColorStart = Color.hexStringColorToColor('#285be0');
   protected statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
 
-  protected showSideBar = toSignal(this._appService.showSideBar$);
+  protected showSideBar = this._appService.showSideBar.get();
 
-  protected heightNav = toSignal(this._layoutService.heightNav$);
-  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
+  protected heightNav = this._layoutService.heightNav.get();
+  protected isOnPhone = this._layoutService.isOnPhone.get();
 
-  protected board = this._boardService.getBoard();
-  protected boardStatuses = this._boardService.getBoardStatuses();
-  protected boardTasks = this._boardService.getBoardTasks();
+  protected board = this._boardService.board.get();
+  protected boardStatuses = this._boardService.boardStatuses.get();
+  protected boardTasks = this._boardService.boardTasks.get();
 
-  protected loadingBoard = this._boardService.getFirstLoadingBoard();
-  protected firstLoadingBoard = this._boardService.getFirstLoadingBoard();
-  protected firstLoadingBoardStatuses = this._boardService.getFirstLoadingBoardStatuses();
-  protected firstLoadingBoardTasks = this._boardService.getFirstLoadingBoardTasks();
+  protected loadingBoard = this._boardService.firstLoadingBoard.get();
+  protected firstLoadingBoard = this._boardService.firstLoadingBoard.get();
+  protected firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatuses.get();
+  protected firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasks.get();
 
   protected tabIndex = computed(() => {
 
@@ -108,7 +107,7 @@ export class BoardComponent implements OnDestroy {
     this._activatedRoute.params.pipe(
       map((params) => params['id'])
     ).subscribe((id) => {
-      this._boardService.boardId = id;
+      this._boardService.boardId.set(id);
     });
 
     effect(() => {
@@ -132,7 +131,7 @@ export class BoardComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._boardService.boardTaskId = boardTaskId;
+    this._boardService.boardTaskId.set(boardTaskId);
     this._dialog.open(ViewBoardTaskComponent);
   }
 
@@ -150,6 +149,6 @@ export class BoardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this._boardService.boardId = undefined;
+    this._boardService.boardId.set(undefined);
   }
 }

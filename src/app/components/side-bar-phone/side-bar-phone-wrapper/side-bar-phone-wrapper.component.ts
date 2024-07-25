@@ -1,5 +1,4 @@
 import {Component, Input, TemplateRef} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {AppService} from '../../../services/app.service';
 import {LayoutService} from '../../../services/layout.service';
 import {SideBarPhoneComponent} from '../side-bar-phone.component';
@@ -11,7 +10,7 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
     SideBarPhoneComponent
   ],
   template: `
-    @if (isOnPhone() && showSideBar()) {
+    @if (isOnPhone.get()() && showSideBar.get()()) {
       <app-side-bar-phone
         [appSideBarPhoneItemsTitleTemplateRef]="appSideBarPhoneItemsTitleTemplateRef"
         [appSideBarPhoneItemsContainerTemplateRef]="appSideBarPhoneItemsContainerTemplateRef"
@@ -21,8 +20,8 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
 })
 export class SideBarPhoneWrapperComponent {
 
-  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
-  protected showSideBar = toSignal(this._appService.showSideBar$);
+  protected isOnPhone = this._layoutService.isOnPhone;
+  protected showSideBar = this._appService.showSideBar;
 
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;

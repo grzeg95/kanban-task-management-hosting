@@ -1,7 +1,6 @@
 import {animate, animation, style, transition, trigger} from '@angular/animations';
 import {NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
@@ -55,7 +54,7 @@ export class SideBarPhoneComponent {
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected isDark = toSignal(this._themeSelectorService.isDark$);
+  protected isDark = this._themeSelectorService.isDark.get();
 
   constructor(
     private readonly _appService: AppService,
@@ -72,6 +71,6 @@ export class SideBarPhoneComponent {
   }
 
   setShowSideBar(value: boolean) {
-    this._appService.showSideBar$.next(value);
+    this._appService.showSideBar.set(value);
   }
 }

@@ -1,5 +1,5 @@
-import {Injectable} from '@angular/core';
-import {BehaviorSubject, combineLatest} from 'rxjs';
+import {effect, Injectable} from '@angular/core';
+import {Sig} from '../utils/Sig';
 import {LayoutService} from './layout.service';
 
 @Injectable({
@@ -7,19 +7,19 @@ import {LayoutService} from './layout.service';
 })
 export class AppService {
 
-  showNavMenuOptions$ = new BehaviorSubject<boolean>(false);
-  showSideBar$ = new BehaviorSubject<boolean>(true);
-  moveForSideBarState$ = new BehaviorSubject('hidden');
+  showNavMenuOptions = new Sig(false);
+  showSideBar = new Sig(true);
+  moveForSideBarState = new Sig('hidden');
 
   constructor(
     private readonly _layoutService: LayoutService
   ) {
 
-    combineLatest([
-      this.showSideBar$,
-      this._layoutService.isOnDesktop$,
-      this._layoutService.isOnTablet$,
-    ]).subscribe(([showSideBar, isOnDesktop, isOnTablet]) => {
+    effect(() => {
+
+      const showSideBar = this.showSideBar.get()();
+      const isOnDesktop = this._layoutService.isOnDesktop.get()();
+      const isOnTablet = this._layoutService.isOnTablet.get()();
 
       let state = 'hidden';
 
@@ -31,7 +31,7 @@ export class AppService {
         }
       }
 
-      this.moveForSideBarState$.next(state);
+      this.moveForSideBarState.set(state);
     });
   }
 }

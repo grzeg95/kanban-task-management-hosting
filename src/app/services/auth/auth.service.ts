@@ -1,21 +1,11 @@
-import {Inject, Injectable} from '@angular/core';
+import {computed, effect, Inject, Injectable} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
-import isEqual from 'lodash/isEqual';
-import {
-  BehaviorSubject,
-  catchError,
-  distinctUntilChanged,
-  filter,
-  from,
-  map,
-  Observable,
-  of,
-  shareReplay,
-  switchMap
-} from 'rxjs';
+import {catchError, from, map, Observable, of, Subscription} from 'rxjs';
 import {User} from '../../models/user';
 import {AuthInjectionToken, FirestoreInjectionToken} from '../../tokens/firebase';
+import {Sig} from '../../utils/Sig';
 import {docSnapshots} from '../firebase/firestore';
 
 @Injectable({
@@ -23,63 +13,60 @@ import {docSnapshots} from '../firebase/firestore';
 })
 export class AuthService {
 
-  readonly authStateReady$ = from(this._auth.authStateReady());
+  readonly authStateReady = toSignal(from(this._auth.authStateReady()));
 
-  private readonly _firebaseUser$ = this.authStateReady$.pipe(
-    switchMap(() => {
-      return new Observable<FirebaseUser | null>((subscriber) => {
-        const unsubscribe = onAuthStateChanged(this._auth, {
-          next: subscriber.next.bind(subscriber),
-          error: subscriber.error.bind(subscriber),
-          complete: subscriber.complete.bind(subscriber)
-        });
-        return {unsubscribe};
-      });
-    }),
-    shareReplay()
-  );
+  readonly firebaseUser = toSignal(new Observable<FirebaseUser | null>((subscriber) => {
+    const unsubscribe = onAuthStateChanged(this._auth, {
+      next: subscriber.next.bind(subscriber),
+      error: subscriber.error.bind(subscriber),
+      complete: subscriber.complete.bind(subscriber)
+    });
+    return {unsubscribe};
+  }));
 
-  readonly isLoggedIn$ = this._firebaseUser$.pipe(
-    map((firebaseUser) => !!firebaseUser)
-  );
+  readonly isLoggedIn = computed(() => {
+    return !!this.firebaseUser();
+  });
 
-  readonly user$ = this._firebaseUser$.pipe(
-    filter((firebaseUser): firebaseUser is FirebaseUser => !!firebaseUser),
-    distinctUntilChanged((a, b) => isEqual(a.uid, b.uid)),
-    switchMap((firebaseUser) => {
+  readonly user = new Sig<User | null>();
+  userSub: Subscription | undefined;
 
-      if (firebaseUser) {
-
-        this.resetFirstLoadings$.next();
-
-        const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
-        return docSnapshots(userRef).pipe(
-          map(User.firestoreData),
-          catchError((error) => {
-            console.error(error);
-            return of(null);
-          }),
-        );
-      }
-
-      return of(null);
-    })
-  );
-
-  readonly resetFirstLoadings$ = new BehaviorSubject<void>(undefined);
-
-  readonly whileLoginIn$ = new BehaviorSubject<boolean>(false);
+  readonly whileLoginIn = new Sig<boolean>(false);
 
   constructor(
     @Inject(AuthInjectionToken) readonly _auth: Auth,
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore
   ) {
+
+    effect(() => {
+
+      const firebaseUser = this.firebaseUser();
+
+      this.userSub && !this.userSub.closed && this.userSub.unsubscribe();
+
+      if (!firebaseUser) {
+        return;
+      }
+
+      const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
+
+      this.userSub = docSnapshots(userRef).pipe(
+        map(User.firestoreData),
+        catchError((error) => {
+          console.error(error);
+          return of(null);
+        })
+      ).subscribe((user) => {
+        this.user.set(user);
+      });
+
+    });
   }
 
   signInAnonymously(): Promise<void> {
-    this.whileLoginIn$.next(true);
+    this.whileLoginIn.set(true);
     return signInAnonymously(this._auth).then(() => {
-      this.whileLoginIn$.next(false);
+      this.whileLoginIn.set(false);
     });
   }
 

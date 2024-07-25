@@ -11,7 +11,6 @@ import {
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
@@ -109,15 +108,15 @@ export class SideBarComponent {
   @Input() appSideBarItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected showSideBar = toSignal(this._appService.showSideBar$);
+  protected showSideBar = this._appService.showSideBar;
 
-  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
-  protected isOnTablet = toSignal(this._layoutService.isOnTablet$);
-  protected isOnDesktop = toSignal(this._layoutService.isOnDesktop$);
+  protected isOnPhone = this._layoutService.isOnPhone.get();
+  protected isOnTablet = this._layoutService.isOnTablet.get();
+  protected isOnDesktop = this._layoutService.isOnDesktop.get();
 
   protected moveForSideBarState = computed(() => {
 
-    const showSideBar = this.showSideBar();
+    const showSideBar = this.showSideBar.get()();
 
     if (!showSideBar) {
 
@@ -137,7 +136,7 @@ export class SideBarComponent {
 
   protected moveShowSideBarButtonForSideBarState = computed(() => {
 
-    const showSideBar = this.showSideBar();
+    const showSideBar = this.showSideBar.get()();
 
     if (!showSideBar) {
 
@@ -164,13 +163,13 @@ export class SideBarComponent {
     }
   });
 
-  protected isDark = toSignal(this._themeSelectorService.isDark$);
+  protected isDark = this._themeSelectorService.isDark.get();
   protected logo = computed(() => this.isDark() ? 'logo-light' : 'logo-dark');
 
   protected tabIndex = computed(() => {
 
     const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar();
+    const showSideBar = this.showSideBar.get()();
 
     if (isOnPhone && showSideBar || !showSideBar) {
       return -1;
@@ -182,7 +181,7 @@ export class SideBarComponent {
   protected tabIndexShowSidebar = computed(() => {
 
     const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar();
+    const showSideBar = this.showSideBar.get()();
 
     if (isOnPhone || showSideBar) {
       return -1;
@@ -205,7 +204,7 @@ export class SideBarComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._appService.showSideBar$.next(value);
+    this._appService.showSideBar.set(value);
 
     switch (this._document.activeElement) {
       case this.hideSideBarButton.nativeElement:

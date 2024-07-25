@@ -2,7 +2,6 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
@@ -69,15 +68,15 @@ export class NavComponent {
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavSelectedLabelTemplateRef: TemplateRef<any> | undefined;
 
-  protected showNavMenuOptions = toSignal(this._appService.showNavMenuOptions$);
-  protected isDark = toSignal(this._themeSelectorService.isDark$);
-  protected isLoggedIn = toSignal(this._authService.isLoggedIn$);
-  protected authStateReady = toSignal(this._authService.authStateReady$);
-  protected isOnDesktop = toSignal(this._layoutService.isOnDesktop$);
-  protected isOnTablet = toSignal(this._layoutService.isOnTablet$);
-  protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
-  protected moveBrandingForSideBarState = toSignal(this._appService.moveForSideBarState$);
-  protected showSideBar = toSignal(this._appService.showSideBar$);
+  protected showNavMenuOptions = this._appService.showNavMenuOptions.get();
+  protected isDark = this._themeSelectorService.isDark.get();
+  protected isLoggedIn = this._authService.isLoggedIn;
+  protected authStateReady = this._authService.authStateReady;
+  protected isOnDesktop = this._layoutService.isOnDesktop.get();
+  protected isOnTablet = this._layoutService.isOnTablet.get();
+  protected isOnPhone = this._layoutService.isOnPhone.get();
+  protected moveBrandingForSideBarState = this._appService.moveForSideBarState.get();
+  protected showSideBar = this._appService.showSideBar.get();
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
@@ -110,7 +109,7 @@ export class NavComponent {
       }
     }
 
-    this._appService.showSideBar$.next(value);
+    this._appService.showSideBar.set(value);
   }
 
   setShowNavMenuOptions($event: KeyboardEvent | MouseEvent, value: boolean) {
@@ -125,6 +124,6 @@ export class NavComponent {
       }
     }
 
-    this._appService.showNavMenuOptions$.next(value);
+    this._appService.showNavMenuOptions.set(value);
   }
 }

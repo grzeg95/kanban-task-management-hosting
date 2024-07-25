@@ -36,7 +36,7 @@ export class AddNewBoardComponent {
 
   protected readonly isDone = signal(false);
   protected readonly isRequesting = signal(false);
-  protected readonly userSig = this._boardService.userSig;
+  protected readonly user = this._boardService.user;
 
   protected readonly form = new FormGroup({
     name: new FormControl('', [Validators.required]),
@@ -50,7 +50,7 @@ export class AddNewBoardComponent {
 
     effect(() => {
 
-      const user = this.userSig();
+      const user = this.user();
 
       if (!user) {
         this.close();
