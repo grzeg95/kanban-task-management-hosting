@@ -24,6 +24,29 @@ export class LayoutService {
     private _breakpointObserver: BreakpointObserver
   ) {
 
+    effect(() => {
+
+      const isOnPhone = this.isOnPhone.get()();
+      const isOnTablet = this.isOnTablet.get()();
+      const isOnDesktop = this.isOnDesktop.get()();
+
+      let height = 0;
+
+      if (isOnPhone) {
+        height = 64;
+      }
+
+      if (isOnTablet) {
+        height = 80;
+      }
+
+      if (isOnDesktop) {
+        height = 97;
+      }
+
+      this.heightNav.set(height);
+    });
+
     this._breakpointObserver.observe([
       Breakpoints.phone.selector,
       Breakpoints.tablet.selector,
@@ -54,29 +77,6 @@ export class LayoutService {
           }
         }
       }
-
-      effect(() => {
-
-        const isOnPhone = this.isOnPhone.get()();
-        const isOnTablet = this.isOnTablet.get()();
-        const isOnDesktop = this.isOnDesktop.get()();
-
-        let height = 0;
-
-        if (isOnPhone) {
-          height = 64;
-        }
-
-        if (isOnTablet) {
-          height = 80;
-        }
-
-        if (isOnDesktop) {
-          height = 97;
-        }
-
-        this.heightNav.set(height);
-      });
     });
   }
 }
