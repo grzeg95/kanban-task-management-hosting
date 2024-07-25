@@ -28,6 +28,7 @@ export class AuthService {
     return !!this.firebaseUser();
   });
 
+  readonly userIsLoaded = new Sig<boolean>(false);
   readonly user = new Sig<User | null>();
   userSub: Subscription | undefined;
 
@@ -50,6 +51,8 @@ export class AuthService {
 
       const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
 
+      this.userIsLoaded.set(false);
+
       this.userSub = docSnapshots(userRef).pipe(
         map(User.firestoreData),
         catchError((error) => {
@@ -57,7 +60,11 @@ export class AuthService {
           return of(null);
         })
       ).subscribe((user) => {
-        this.user.set(user);
+
+        if (user?.configLoaded) {
+          this.user.set(user);
+          this.userIsLoaded.set(true);
+        }
       });
 
     });

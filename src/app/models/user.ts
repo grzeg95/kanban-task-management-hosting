@@ -17,7 +17,8 @@ export interface UserDoc extends DocumentData {
     readonly maxBoardStatuses: number,
     readonly maxBoardTasks: number,
     readonly maxBoardTaskSubtasks: number
-  }
+  };
+  readonly configLoaded: boolean
 }
 
 export class User implements UserDoc {
@@ -32,7 +33,8 @@ export class User implements UserDoc {
       readonly maxBoardStatuses: number,
       readonly maxBoardTasks: number,
       readonly maxBoardTaskSubtasks: number
-    }
+    },
+    public readonly configLoaded: boolean
   ) {
   }
 
@@ -81,12 +83,17 @@ export class User implements UserDoc {
     data?.['config']?.['maxBoardTasks'] && typeof data['config']['maxBoardTasks'] === 'number' && data['config']['maxBoardTasks'] > 0 && (config.maxBoardTasks = data['config']['maxBoardTasks']);
     data?.['config']?.['maxBoardTaskSubtasks'] && typeof data['config']['maxBoardTaskSubtasks'] === 'number' && data['config']['maxBoardTaskSubtasks'] > 0 && (config.maxBoardTaskSubtasks = data['config']['maxBoardTaskSubtasks']);
 
+    let configLoaded = false;
+
+    data?.['configLoaded'] && (typeof data['configLoaded'] === 'boolean' || data['configLoaded'] === null) && (configLoaded = data['configLoaded']);
+
     return new User(
       snap.id,
       disabled,
       boardsIds,
       darkMode,
-      config
+      config,
+      configLoaded
     );
   }
 }
