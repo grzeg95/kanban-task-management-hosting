@@ -1,10 +1,9 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {Dialog} from '@angular/cdk/dialog';
-import {AsyncPipe, NgStyle} from '@angular/common';
-import {Component, computed, effect, ViewEncapsulation} from '@angular/core';
+import {NgStyle} from '@angular/common';
+import {Component, computed, ViewEncapsulation} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {Router, RouterOutlet} from '@angular/router';
-import {take} from 'rxjs';
 import {ButtonComponent} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
@@ -20,7 +19,7 @@ import {SvgDirective} from './directives/svg.directive';
 import {UserBoard} from './models/user-board';
 import {AppService} from './services/app.service';
 import {AuthService} from './services/auth/auth.service';
-import {BoardService} from './services/board/board.service';
+import {BoardService} from './services/board.service';
 import {LayoutService} from './services/layout.service';
 import {handleTabIndex} from './utils/handle-tabindex';
 
@@ -35,8 +34,7 @@ import {handleTabIndex} from './utils/handle-tabindex';
     NgStyle,
     ButtonComponent,
     PopMenuItemComponent,
-    SvgDirective,
-    AsyncPipe
+    SvgDirective
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -76,21 +74,21 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
-  protected user = this._boardService.user;
-  protected userBoards = this._boardService.userBoards;
-  protected loadingUserBoards = this._boardService.loadingUserBoards;
-  protected board = this._boardService.board;
-  protected boardId = this._boardService.boardId;
+  protected userSig = this._boardService.userSig;
+  protected userBoards = this._boardService.getUserBoards();
+  protected loadingUserBoards = this._boardService.getLoadingUserBoards();
+  protected board = this._boardService.getBoard();
+  protected boardId = this._boardService.getBoardId();
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
   protected moveRouterOutletForSideBar = toSignal(this._appService.moveForSideBarState$);
   protected heightNav = toSignal(this._layoutService.heightNav$);
   protected showSideBar = toSignal(this._appService.showSideBar$);
-  protected loadingBoard = this._boardService.loadingBoard;
+  protected loadingBoard = this._boardService.getLoadingBoard();
   protected isLoggedIn = toSignal(this._authService.isLoggedIn$);
 
   protected userBoardsSorted = computed(() => {
 
-    const user = this.user();
+    const user = this.userSig();
     const userBoards = this.userBoards();
 
     if (!user || !userBoards) {

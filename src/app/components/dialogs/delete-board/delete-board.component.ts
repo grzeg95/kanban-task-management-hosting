@@ -3,7 +3,7 @@ import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
@@ -35,7 +35,7 @@ export class DeleteBoardComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = this._boardService.board;
+  protected board = this._boardService.getBoard();
 
   constructor(
     private readonly _dialogRef: DialogRef<DeleteBoardComponent>,
@@ -75,7 +75,7 @@ export class DeleteBoardComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    }, {allowSignalWrites: true});
+    });
   }
 
   close() {

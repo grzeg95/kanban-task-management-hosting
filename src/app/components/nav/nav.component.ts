@@ -7,7 +7,6 @@ import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AppService} from '../../services/app.service';
 import {AuthService} from '../../services/auth/auth.service';
-import {BoardService} from '../../services/board/board.service';
 import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';

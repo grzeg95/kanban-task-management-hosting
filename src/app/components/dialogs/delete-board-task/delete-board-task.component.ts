@@ -3,7 +3,7 @@ import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
@@ -34,9 +34,8 @@ import {LoaderComponent} from '../../loader/loader.component';
 export class DeleteBoardTaskComponent {
 
   protected isRequesting = signal(false);
-  protected board = this._boardService.board;
-  protected boardStatuses = this._boardService.boardStatuses;
-  protected boardTask = this._boardService.boardTask;
+  protected board = this._boardService.getBoard();
+  protected boardTask = this._boardService.getBoardTask();
 
   constructor(
     private readonly _boardService: BoardService,

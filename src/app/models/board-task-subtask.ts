@@ -5,10 +5,10 @@ import {
   DocumentReference as firestoreDocumentReference,
   DocumentSnapshot as firestoreDocumentSnapshot,
   FirestoreDataConverter
-} from '@angular/fire/firestore';
+} from 'firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
-import {BoardTask} from './board-task';
+import {BoardTask, BoardTaskDoc} from './board-task';
 
 export interface BoardTaskSubtaskDoc extends DocumentData {
   readonly title: string;
@@ -29,19 +29,19 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     fromFirestore: BoardTaskSubtask._snapToThis
   } as FirestoreDataConverter<BoardTaskSubtask, BoardTaskSubtaskDoc>;
 
-  static firestoreRef(ref: firestoreDocumentReference<BoardTask>, id: string) {
+  static firestoreRef(ref: firestoreDocumentReference<BoardTask, BoardTaskDoc>, id: string) {
     return firestoreDoc(ref, Collections.boardTaskSubtasks, id).withConverter(BoardTaskSubtask._converter);
   }
 
-  static firestoreRefs(ref: firestoreDocumentReference<BoardTask>) {
+  static firestoreRefs(ref: firestoreDocumentReference<BoardTask, BoardTaskDoc>) {
     return firestoreCollection(ref, Collections.boardTaskSubtasks).withConverter(BoardTaskSubtask._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardTaskSubtask>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<BoardTaskSubtask, BoardTaskSubtaskDoc>) {
     return BoardTaskSubtask._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTaskSubtask>) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardTaskSubtask, BoardTaskSubtaskDoc>) {
 
     const data = snap.data();
 

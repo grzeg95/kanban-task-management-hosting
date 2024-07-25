@@ -4,7 +4,7 @@ import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Val
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskUpdateData} from '../../../models/board-task';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {CheckboxComponent} from '../../form/checkbox/checkbox.component';
@@ -43,14 +43,14 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class EditBoardTaskComponent {
 
-  protected isDone = signal(false);
-  protected isRequesting = signal(false);
-  protected board = this._boardService.board;
-  protected boardStatuses = this._boardService.boardStatuses;
-  protected boardTask = this._boardService.boardTask;
-  protected boardTaskSubtasks = this._boardService.boardTaskSubtasks;
+  protected readonly isDone = signal(false);
+  protected readonly isRequesting = signal(false);
+  protected readonly board = this._boardService.getBoard();
+  protected readonly boardStatuses = this._boardService.getBoardStatuses();
+  protected readonly boardTask = this._boardService.getBoardTask();
+  protected readonly boardTaskSubtasks = this._boardService.getBoardTaskSubtasks();
 
-  protected boardStatusId = computed(() => {
+  protected readonly boardStatusId = computed(() => {
 
     const board = this.board();
     const boardStatuses = this.boardStatuses();
@@ -79,7 +79,7 @@ export class EditBoardTaskComponent {
     return boardTask.boardStatusId;
   });
 
-  protected boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
+  protected readonly boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
 
     const board = this.board();
     const boardStatuses = this.boardStatuses();
@@ -120,7 +120,7 @@ export class EditBoardTaskComponent {
 
   });
 
-  protected form = new FormGroup({
+  protected readonly form = new FormGroup({
     id: new FormControl<string | null>(null, Validators.required),
     boardId: new FormControl<string | null>(null, Validators.required),
     boardStatusId: new FormControl<string | null>(null, Validators.required),

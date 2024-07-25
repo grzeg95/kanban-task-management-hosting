@@ -4,14 +4,20 @@ import {
   DocumentSnapshot as firestoreDocumentSnapshot,
   Firestore,
   FirestoreDataConverter
-} from '@angular/fire/firestore';
+} from 'firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 
 export interface UserDoc extends DocumentData {
   readonly disabled: boolean,
   readonly boardsIds: string[],
-  readonly darkMode: boolean | null
+  readonly darkMode: boolean | null,
+  readonly config: {
+    readonly maxUserBoards: number,
+    readonly maxBoardStatuses: number,
+    readonly maxBoardTasks: number,
+    readonly maxBoardTaskSubtasks: number
+  }
 }
 
 export class User implements UserDoc {
@@ -20,7 +26,13 @@ export class User implements UserDoc {
     public readonly id: string,
     public readonly disabled: boolean,
     public readonly boardsIds: string[],
-    public readonly darkMode: boolean | null
+    public readonly darkMode: boolean | null,
+    public readonly config: {
+      readonly maxUserBoards: number,
+      readonly maxBoardStatuses: number,
+      readonly maxBoardTasks: number,
+      readonly maxBoardTaskSubtasks: number
+    }
   ) {
   }
 
@@ -33,11 +45,11 @@ export class User implements UserDoc {
     return firestoreDoc(firestore, Collections.users, id).withConverter(User._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<User>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<User, UserDoc>) {
     return User._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<User>) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<User, UserDoc>) {
 
     const data = snap.data();
 
@@ -57,11 +69,24 @@ export class User implements UserDoc {
 
     data?.['darkMode'] && (typeof data['darkMode'] === 'boolean' || data['darkMode'] === null) && (darkMode = data['darkMode']);
 
+    const config = {
+      maxUserBoards: 5,
+      maxBoardStatuses: 5,
+      maxBoardTasks: 20,
+      maxBoardTaskSubtasks: 10
+    };
+
+    data?.['config']?.['maxUserBoards'] && (typeof data['config']['maxUserBoards'] === 'number') && (data['config']['maxUserBoards'] > 0) && (config.maxUserBoards = data['config']['maxUserBoards']);
+    data?.['config']?.['maxBoardStatuses'] && typeof data['config']['maxBoardStatuses'] === 'number' && data['config']['maxBoardStatuses'] > 0 && (config.maxBoardStatuses = data['config']['maxBoardStatuses']);
+    data?.['config']?.['maxBoardTasks'] && typeof data['config']['maxBoardTasks'] === 'number' && data['config']['maxBoardTasks'] > 0 && (config.maxBoardTasks = data['config']['maxBoardTasks']);
+    data?.['config']?.['maxBoardTaskSubtasks'] && typeof data['config']['maxBoardTaskSubtasks'] === 'number' && data['config']['maxBoardTaskSubtasks'] > 0 && (config.maxBoardTaskSubtasks = data['config']['maxBoardTaskSubtasks']);
+
     return new User(
       snap.id,
       disabled,
       boardsIds,
-      darkMode
+      darkMode,
+      config
     );
   }
 }

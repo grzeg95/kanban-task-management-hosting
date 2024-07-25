@@ -4,7 +4,7 @@ import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardUpdateData} from '../../../models/board';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
@@ -37,8 +37,8 @@ export class EditBoardComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = this._boardService.board;
-  protected boardStatuses = this._boardService.boardStatuses;
+  protected board = this._boardService.getBoard();
+  protected boardStatusesSig = this._boardService.getBoardStatuses();
   protected initialBoardName = '';
   protected initialBoardStatuses = new Map<string, string>();
 
@@ -57,7 +57,7 @@ export class EditBoardComponent {
     effect(() => {
 
       const board = this.board();
-      const boardStatuses = this.boardStatuses();
+      const boardStatuses = this.boardStatusesSig();
 
       if (
         (!board && board !== undefined) ||
@@ -72,7 +72,6 @@ export class EditBoardComponent {
         return;
       }
 
-      console.log('now');
       this.form.controls.boardId.setValue(board.id);
 
       if (!this.form.controls.boardName.dirty) {
@@ -145,7 +144,7 @@ export class EditBoardComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    }, {allowSignalWrites: true});
+    });
   }
 
   addNewStatusName(id: null | string = null, name = '') {

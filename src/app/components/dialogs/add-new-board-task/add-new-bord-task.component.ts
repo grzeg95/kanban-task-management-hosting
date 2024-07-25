@@ -4,7 +4,7 @@ import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskCreateData} from '../../../models/board-task';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
@@ -40,12 +40,12 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class AddNewBordTaskComponent {
 
-  protected isDone = signal(false);
-  protected isRequesting = signal(false);
-  protected board = this._boardService.board;
-  protected boardStatuses = this._boardService.boardStatuses;
+  protected readonly isDone = signal(false);
+  protected readonly isRequesting = signal(false);
+  protected readonly board = this._boardService.getBoard();
+  protected readonly boardStatuses = this._boardService.getBoardStatuses();
 
-  protected boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
+  protected readonly boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
 
     const board = this.board();
     const boardStatuses = this.boardStatuses();
@@ -69,7 +69,7 @@ export class AddNewBordTaskComponent {
     });
   });
 
-  protected form = new FormGroup({
+  protected readonly form = new FormGroup({
     boardId: new FormControl(''),
     boardStatusId: new FormControl(''),
     title: new FormControl('', [Validators.required]),
@@ -164,7 +164,7 @@ export class AddNewBordTaskComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    }, {allowSignalWrites: true});
+    });
 
     this.addNewSubtask();
   }

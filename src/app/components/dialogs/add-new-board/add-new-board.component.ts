@@ -1,11 +1,10 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardCreateData} from '../../../models/board';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
@@ -35,11 +34,11 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class AddNewBoardComponent {
 
-  protected isDone = signal(false);
-  protected isRequesting = signal(false);
-  protected user = this._boardService.user;
+  protected readonly isDone = signal(false);
+  protected readonly isRequesting = signal(false);
+  protected readonly userSig = this._boardService.userSig;
 
-  protected form = new FormGroup({
+  protected readonly form = new FormGroup({
     name: new FormControl('', [Validators.required]),
     boardStatusesNames: new FormArray<FormControl<string | null>>([])
   });
@@ -51,7 +50,7 @@ export class AddNewBoardComponent {
 
     effect(() => {
 
-      const user = this.user();
+      const user = this.userSig();
 
       if (!user) {
         this.close();
@@ -101,7 +100,7 @@ export class AddNewBoardComponent {
         this.isDone.set(true);
         this.isRequesting.set(false);
       });
-    }, {allowSignalWrites: true});
+    });
 
     this.addNewBoardStatusName();
   }

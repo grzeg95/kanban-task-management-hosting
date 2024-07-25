@@ -1,5 +1,5 @@
 import {Dialog} from '@angular/cdk/dialog';
-import {JsonPipe, NgStyle} from '@angular/common';
+import {NgStyle} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -15,7 +15,7 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {AppService} from '../../services/app.service';
-import {BoardService} from '../../services/board/board.service';
+import {BoardService} from '../../services/board.service';
 import {LayoutService} from '../../services/layout.service';
 import {Color} from '../../utils/color';
 import {handleTabIndex} from '../../utils/handle-tabindex';
@@ -28,8 +28,7 @@ import {ViewBoardTaskComponent} from '../dialogs/view-board-task/view-board-task
   standalone: true,
   imports: [
     NgStyle,
-    ButtonComponent,
-    JsonPipe
+    ButtonComponent
   ],
   templateUrl: './board.component.html',
   styleUrl: './board.component.scss',
@@ -52,14 +51,14 @@ export class BoardComponent implements OnDestroy {
   protected heightNav = toSignal(this._layoutService.heightNav$);
   protected isOnPhone = toSignal(this._layoutService.isOnPhone$);
 
-  protected board = this._boardService.board;
-  protected boardStatuses = this._boardService.boardStatuses;
-  protected boardTasks = this._boardService.boardTasks;
+  protected board = this._boardService.getBoard();
+  protected boardStatuses = this._boardService.getBoardStatuses();
+  protected boardTasks = this._boardService.getBoardTasks();
 
-  protected loadingBoard = this._boardService.firstLoadingBoard;
-  protected firstLoadingBoard = this._boardService.firstLoadingBoard;
-  protected firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatuses;
-  protected firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasks;
+  protected loadingBoard = this._boardService.getFirstLoadingBoard();
+  protected firstLoadingBoard = this._boardService.getFirstLoadingBoard();
+  protected firstLoadingBoardStatuses = this._boardService.getFirstLoadingBoardStatuses();
+  protected firstLoadingBoardTasks = this._boardService.getFirstLoadingBoardTasks();
 
   protected tabIndex = computed(() => {
 
@@ -109,7 +108,7 @@ export class BoardComponent implements OnDestroy {
     this._activatedRoute.params.pipe(
       map((params) => params['id'])
     ).subscribe((id) => {
-      this._boardService.boardId.set(id);
+      this._boardService.boardId = id;
     });
 
     effect(() => {
@@ -133,7 +132,7 @@ export class BoardComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._boardService.boardTaskId.set(boardTaskId);
+    this._boardService.boardTaskId = boardTaskId;
     this._dialog.open(ViewBoardTaskComponent);
   }
 
@@ -151,6 +150,6 @@ export class BoardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this._boardService.boardId.set(undefined);
+    this._boardService.boardId = undefined;
   }
 }

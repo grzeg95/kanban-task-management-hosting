@@ -1,11 +1,12 @@
 import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
+import {JsonPipe} from '@angular/common';
 import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskUpdateData} from '../../../models/board-task';
-import {BoardService} from '../../../services/board/board.service';
+import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
 import {ButtonComponent} from '../../button/button.component';
@@ -40,7 +41,8 @@ import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.compone
     CdkConnectedOverlay,
     PopMenuComponent,
     PopMenuItemComponent,
-    CdkOverlayOrigin
+    CdkOverlayOrigin,
+    JsonPipe
   ],
   templateUrl: './view-board-task.component.html',
   styleUrl: './view-board-task.component.scss',
@@ -52,41 +54,20 @@ import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.compone
 export class ViewBoardTaskComponent {
 
   protected isRequesting = signal(false);
-  protected board = this._boardService.board;
-  protected boardStatuses = this._boardService.boardStatuses;
+  protected board = this._boardService.getBoard();
+  protected boardStatuses = this._boardService.getBoardStatuses();
   protected showMenuOptions = signal(false);
-  protected boardTask = this._boardService.boardTask;
-  protected boardTaskSubtasks = this._boardService.boardTaskSubtasks;
+  protected boardTask = this._boardService.getBoardTask();
+  protected boardTaskSubtasks = this._boardService.getBoardTaskSubtasks();
 
   protected boardStatusesPopMenuItems = computed(() => {
 
     const board = this.board();
     const boardStatuses = this.boardStatuses();
-
-    if (
-      (!board && board !== undefined) ||
-      (!boardStatuses && boardStatuses !== undefined)
-    ) {
-      return [];
-    }
-
-    if (board === undefined || boardStatuses === undefined) {
-      return [];
-    }
-
     const boardTask = this.boardTask();
-
-    if (!boardTask && boardTask !== undefined) {
-      return [];
-    }
-
-    if (boardTask === undefined) {
-      return [];
-    }
-
     const boardTaskSubtasks = this.boardTaskSubtasks();
 
-    if (!boardTaskSubtasks) {
+    if (!board || !boardStatuses || !boardTask || !boardTaskSubtasks) {
       return [];
     }
 
@@ -102,36 +83,15 @@ export class ViewBoardTaskComponent {
 
     const board = this.board();
     const boardStatuses = this.boardStatuses();
-
-    if (
-      (!board && board !== undefined) ||
-      (!boardStatuses && boardStatuses !== undefined)
-    ) {
-      return '';
-    }
-
-    if (board === undefined || boardStatuses === undefined) {
-      return '';
-    }
-
     const boardTask = this.boardTask();
-
-    if (!boardTask && boardTask !== undefined) {
-      return '';
-    }
-
-    if (boardTask === undefined) {
-      return '';
-    }
-
     const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
 
-    if (!boardStatusesPopMenuItems || boardStatusesPopMenuItems.length === 0) {
+    if (!board || !boardStatuses || !boardTask || !boardStatusesPopMenuItems) {
       return '';
     }
 
     if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
-      return boardStatusesPopMenuItems[0].value;
+      return boardStatusesPopMenuItems[0]?.value || '';
     }
 
     return boardTask.boardStatusId;
@@ -158,7 +118,7 @@ export class ViewBoardTaskComponent {
         return;
       }
 
-      if (board === undefined || boardStatuses === undefined) {
+      if (!board || !boardStatuses) {
         return;
       }
 
@@ -250,7 +210,7 @@ export class ViewBoardTaskComponent {
     const boardTask = this.boardTask();
 
     if (boardTask) {
-      this._boardService.boardTaskId.set(boardTask.id);
+      this._boardService.boardTaskId = boardTask.id;
       this._dialog.open(EditBoardTaskComponent);
 
       this.close();
@@ -265,7 +225,7 @@ export class ViewBoardTaskComponent {
     const boardTask = this.boardTask();
 
     if (boardTask) {
-      this._boardService.boardTaskId.set(boardTask.id);
+      this._boardService.boardTaskId = boardTask.id;
       this._dialog.open(DeleteBoardTaskComponent);
 
       this.close();

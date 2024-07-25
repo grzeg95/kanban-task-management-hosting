@@ -4,7 +4,7 @@ import {
   DocumentSnapshot as firestoreDocumentSnapshot,
   Firestore,
   FirestoreDataConverter
-} from '@angular/fire/firestore';
+} from 'firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 
@@ -33,11 +33,11 @@ export class Board implements BoardDoc {
     return firestoreDoc(firestore, Collections.boards, id).withConverter(Board._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<Board>) {
+  static firestoreData(snap: firestoreDocumentSnapshot<Board, BoardDoc>) {
     return Board._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<Board>) {
+  private static _snapToThis(snap: firestoreDocumentSnapshot<Board, BoardDoc>) {
 
     const data = snap.data();
 
