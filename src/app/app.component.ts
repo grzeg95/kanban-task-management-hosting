@@ -85,6 +85,7 @@ export class AppComponent {
   protected heightNav = this._layoutService.heightNav.get();
   protected showSideBar = this._appService.showSideBar.get();
   protected loadingBoard = this._boardService.loadingBoard.get();
+  protected loadingBoardTasks = this._boardService.loadingBoardTasks.get();
   protected isLoggedIn = this._authService.isLoggedIn;
 
   protected userBoardsSorted = computed(() => {
@@ -111,8 +112,13 @@ export class AppComponent {
 
     const loadingUserBoards = this.loadingUserBoards();
     const loadingBoard = this.loadingBoard();
+    const loadingBoardTasks = this.loadingBoardTasks();
 
-    return [loadingUserBoards, loadingBoard].some((val) => val);
+    return [
+      loadingUserBoards,
+      loadingBoard,
+      loadingBoardTasks
+    ].some((val) => val);
   });
 
   protected navTitle = computed(() => {
