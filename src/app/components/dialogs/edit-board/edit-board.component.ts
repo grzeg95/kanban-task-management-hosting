@@ -37,8 +37,8 @@ export class EditBoardComponent {
 
   protected isDone = signal(false);
   protected isRequesting = signal(false);
-  protected board = this._boardService.board.get();
-  protected boardStatusesSig = this._boardService.boardStatuses.get();
+  protected board = this._boardService.boardSig.get();
+  protected boardStatusesSig = this._boardService.boardStatusesSig.get();
   protected initialBoardName = '';
   protected initialBoardStatuses = new Map<string, string>();
 

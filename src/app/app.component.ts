@@ -76,16 +76,16 @@ import {handleTabIndex} from './utils/handle-tabindex';
 export class AppComponent {
 
   protected user = this._boardService.user;
-  protected userBoards = this._boardService.userBoards.get();
-  protected loadingUserBoards = this._boardService.loadingUserBoards.get();
-  protected board = this._boardService.board.get();
-  protected boardId = this._boardService.boardId.get();
-  protected isOnPhone = this._layoutService.isOnPhone.get();
-  protected moveRouterOutletForSideBar = this._appService.moveForSideBarState.get();
-  protected heightNav = this._layoutService.heightNav.get();
-  protected showSideBar = this._appService.showSideBar.get();
-  protected loadingBoard = this._boardService.loadingBoard.get();
-  protected loadingBoardTasks = this._boardService.loadingBoardTasks.get();
+  protected userBoards = this._boardService.userBoardsSig.get();
+  protected loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
+  protected board = this._boardService.boardSig.get();
+  protected boardId = this._boardService.boardIdSig.get();
+  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected moveRouterOutletForSideBar = this._appService.moveForSideBarStateSig.get();
+  protected heightNav = this._layoutService.heightNavSig.get();
+  protected showSideBar = this._appService.showSideBarSig.get();
+  protected loadingBoard = this._boardService.loadingBoardSig.get();
+  protected loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
   protected isLoggedIn = this._authService.isLoggedIn;
 
   protected userBoardsSorted = computed(() => {
@@ -225,11 +225,11 @@ export class AppComponent {
       }
     }
 
-    this._appService.showSideBar.set(value);
+    this._appService.showSideBarSig.set(value);
   }
 
   setShowNavMenuOptions(value: boolean) {
-    this._appService.showNavMenuOptions.set(value);
+    this._appService.showNavMenuOptionsSig.set(value);
   }
 
   select(boardId: string) {

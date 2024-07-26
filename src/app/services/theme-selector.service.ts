@@ -13,8 +13,8 @@ import {updateDoc} from './firebase/firestore';
 export class ThemeSelectorService {
 
   private readonly _renderer: Renderer2;
-  readonly isDark = new Sig<boolean | undefined>(undefined);
-  private readonly _user = this._authService.user.get();
+  readonly isDarkSig = new Sig<boolean | undefined>(undefined);
+  private readonly user = this._authService.userSig.get();
 
   constructor(
     private readonly _rendererFactory: RendererFactory2,
@@ -28,7 +28,7 @@ export class ThemeSelectorService {
     let userDarkMode: boolean | null;
     effect(() => {
 
-      const user = this._authService.user.get()();
+      const user = this.user();
 
       if (!user) {
         return;
@@ -58,9 +58,9 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'light');
     }
 
-    this.isDark.set(false);
+    this.isDarkSig.set(false);
 
-    const user = this._user();
+    const user = this.user();
 
     if (user && user.darkMode) {
       const userRef= User.firestoreRef(this._firestore, user.id);
@@ -82,9 +82,9 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'dark');
     }
 
-    this.isDark.set(true);
+    this.isDarkSig.set(true);
 
-    const user = this._user();
+    const user = this.user();
 
     if (user && !user.darkMode) {
       const userRef = User.firestoreRef(this._firestore, user.id);

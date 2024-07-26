@@ -28,11 +28,11 @@ export class AuthService {
     return !!this.firebaseUser();
   });
 
-  readonly userIsLoaded = new Sig<boolean>(false);
-  readonly user = new Sig<User | null>();
+  readonly userIsLoadedSig = new Sig<boolean>(false);
+  readonly userSig = new Sig<User | null>();
   userSub: Subscription | undefined;
 
-  readonly whileLoginIn = new Sig<boolean>(false);
+  readonly whileLoginInSig = new Sig<boolean>(false);
 
   constructor(
     @Inject(AuthInjectionToken) readonly _auth: Auth,
@@ -55,7 +55,7 @@ export class AuthService {
 
       const userRef = User.firestoreRef(this._firestore, firebaseUserUid);
 
-      this.userIsLoaded.set(false);
+      this.userIsLoadedSig.set(false);
 
       this.userSub && !this.userSub.closed && this.userSub.unsubscribe();
       this.userSub = docSnapshots(userRef).pipe(
@@ -67,8 +67,8 @@ export class AuthService {
       ).subscribe((user) => {
 
         if (user?.configLoaded) {
-          this.user.set(user);
-          this.userIsLoaded.set(true);
+          this.userSig.set(user);
+          this.userIsLoadedSig.set(true);
         }
       });
 
@@ -76,9 +76,9 @@ export class AuthService {
   }
 
   signInAnonymously(): Promise<void> {
-    this.whileLoginIn.set(true);
+    this.whileLoginInSig.set(true);
     return signInAnonymously(this._auth).then(() => {
-      this.whileLoginIn.set(false);
+      this.whileLoginInSig.set(false);
     });
   }
 

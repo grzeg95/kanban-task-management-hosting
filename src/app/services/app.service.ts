@@ -7,9 +7,13 @@ import {LayoutService} from './layout.service';
 })
 export class AppService {
 
-  showNavMenuOptions = new Sig(false);
-  showSideBar = new Sig(true);
-  moveForSideBarState = new Sig('hidden');
+  showNavMenuOptionsSig = new Sig(false);
+  showSideBarSig = new Sig(true);
+  showSideBar = this.showSideBarSig.get();
+  moveForSideBarStateSig = new Sig('hidden');
+
+  isOnDesktop = this._layoutService.isOnDesktopSig.get();
+  isOnTablet = this._layoutService.isOnTabletSig.get();
 
   constructor(
     private readonly _layoutService: LayoutService
@@ -17,9 +21,9 @@ export class AppService {
 
     effect(() => {
 
-      const showSideBar = this.showSideBar.get()();
-      const isOnDesktop = this._layoutService.isOnDesktop.get()();
-      const isOnTablet = this._layoutService.isOnTablet.get()();
+      const showSideBar = this.showSideBar();
+      const isOnDesktop = this.isOnDesktop();
+      const isOnTablet = this.isOnTablet();
 
       let state = 'hidden';
 
@@ -31,7 +35,7 @@ export class AppService {
         }
       }
 
-      this.moveForSideBarState.set(state);
+      this.moveForSideBarStateSig.set(state);
     });
   }
 }

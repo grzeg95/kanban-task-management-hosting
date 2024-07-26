@@ -15,10 +15,16 @@ export class LayoutService {
     [Breakpoints.desktop.selector, BreakpointsDevices.desktop]
   ]);
 
-  readonly isOnPhone = new Sig(false);
-  readonly isOnTablet = new Sig(false);
-  readonly isOnDesktop = new Sig(false);
-  readonly heightNav = new Sig(0);
+  readonly isOnPhoneSig = new Sig(false);
+  readonly isOnPhone = this.isOnPhoneSig.get();
+
+  readonly isOnTabletSig = new Sig(false);
+  readonly isOnTablet = this.isOnTabletSig.get();
+
+  readonly isOnDesktopSig = new Sig(false);
+  readonly isOnDesktop = this.isOnDesktopSig.get();
+
+  readonly heightNavSig = new Sig(0);
 
   constructor(
     private _breakpointObserver: BreakpointObserver
@@ -26,9 +32,9 @@ export class LayoutService {
 
     effect(() => {
 
-      const isOnPhone = this.isOnPhone.get()();
-      const isOnTablet = this.isOnTablet.get()();
-      const isOnDesktop = this.isOnDesktop.get()();
+      const isOnPhone = this.isOnPhone();
+      const isOnTablet = this.isOnTablet();
+      const isOnDesktop = this.isOnDesktop();
 
       let height = 0;
 
@@ -44,7 +50,7 @@ export class LayoutService {
         height = 97;
       }
 
-      this.heightNav.set(height);
+      this.heightNavSig.set(height);
     });
 
     this._breakpointObserver.observe([
@@ -60,20 +66,20 @@ export class LayoutService {
 
           const breakpointsDevice = this._displayNameMap.get(query);
 
-          this.isOnPhone.set(false);
-          this.isOnTablet.set(false);
-          this.isOnDesktop.set(false);
+          this.isOnPhoneSig.set(false);
+          this.isOnTabletSig.set(false);
+          this.isOnDesktopSig.set(false);
 
           if (breakpointsDevice === BreakpointsDevices.phone) {
-            this.isOnPhone.set(true);
+            this.isOnPhoneSig.set(true);
           }
 
           if (breakpointsDevice === BreakpointsDevices.tablet) {
-            this.isOnTablet.set(true);
+            this.isOnTabletSig.set(true);
           }
 
           if (breakpointsDevice === BreakpointsDevices.desktop) {
-            this.isOnDesktop.set(true);
+            this.isOnDesktopSig.set(true);
           }
         }
       }

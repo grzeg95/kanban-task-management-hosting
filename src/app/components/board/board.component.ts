@@ -47,19 +47,19 @@ export class BoardComponent implements OnDestroy {
   protected statusesColorStart = Color.hexStringColorToColor('#285be0');
   protected statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
 
-  protected showSideBar = this._appService.showSideBar.get();
+  protected showSideBar = this._appService.showSideBarSig.get();
 
-  protected heightNav = this._layoutService.heightNav.get();
-  protected isOnPhone = this._layoutService.isOnPhone.get();
+  protected heightNav = this._layoutService.heightNavSig.get();
+  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
 
-  protected board = this._boardService.board.get();
-  protected boardStatuses = this._boardService.boardStatuses.get();
-  protected boardTasks = this._boardService.boardTasks.get();
+  protected board = this._boardService.boardSig.get();
+  protected boardStatuses = this._boardService.boardStatusesSig.get();
+  protected boardTasks = this._boardService.boardTasksSig.get();
 
-  protected loadingBoard = this._boardService.firstLoadingBoard.get();
-  protected firstLoadingBoard = this._boardService.firstLoadingBoard.get();
-  protected firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatuses.get();
-  protected firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasks.get();
+  protected loadingBoard = this._boardService.firstLoadingBoardSig.get();
+  protected firstLoadingBoard = this._boardService.firstLoadingBoardSig.get();
+  protected firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatusesSig.get();
+  protected firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasksSig.get();
 
   protected tabIndex = computed(() => {
 
@@ -109,7 +109,7 @@ export class BoardComponent implements OnDestroy {
     this._activatedRoute.params.pipe(
       map((params) => params['id'])
     ).subscribe((id) => {
-      this._boardService.boardId.set(id);
+      this._boardService.boardIdSig.set(id);
     });
 
     effect(() => {
@@ -133,7 +133,7 @@ export class BoardComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._boardService.boardTaskId.set(boardTaskId);
+    this._boardService.boardTaskIdSig.set(boardTaskId);
     this._dialog.open(ViewBoardTaskComponent);
   }
 
@@ -151,6 +151,6 @@ export class BoardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this._boardService.boardId.set(undefined);
+    this._boardService.boardIdSig.set(undefined);
   }
 }

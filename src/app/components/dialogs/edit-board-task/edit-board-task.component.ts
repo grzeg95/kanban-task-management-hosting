@@ -45,10 +45,10 @@ export class EditBoardTaskComponent {
 
   protected readonly isDone = signal(false);
   protected readonly isRequesting = signal(false);
-  protected readonly board = this._boardService.board.get();
-  protected readonly boardStatuses = this._boardService.boardStatuses.get();
-  protected readonly boardTask = this._boardService.boardTask.get();
-  protected readonly boardTaskSubtasks = this._boardService.boardTaskSubtasks.get();
+  protected readonly board = this._boardService.boardSig.get();
+  protected readonly boardStatuses = this._boardService.boardStatusesSig.get();
+  protected readonly boardTask = this._boardService.boardTaskSig.get();
+  protected readonly boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
 
   protected readonly boardStatusId = computed(() => {
 

@@ -108,15 +108,15 @@ export class SideBarComponent {
   @Input() appSideBarItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected showSideBar = this._appService.showSideBar;
+  protected showSideBar = this._appService.showSideBarSig.get();
 
-  protected isOnPhone = this._layoutService.isOnPhone.get();
-  protected isOnTablet = this._layoutService.isOnTablet.get();
-  protected isOnDesktop = this._layoutService.isOnDesktop.get();
+  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected isOnTablet = this._layoutService.isOnTabletSig.get();
+  protected isOnDesktop = this._layoutService.isOnDesktopSig.get();
 
   protected moveForSideBarState = computed(() => {
 
-    const showSideBar = this.showSideBar.get()();
+    const showSideBar = this.showSideBar();
 
     if (!showSideBar) {
 
@@ -136,7 +136,7 @@ export class SideBarComponent {
 
   protected moveShowSideBarButtonForSideBarState = computed(() => {
 
-    const showSideBar = this.showSideBar.get()();
+    const showSideBar = this.showSideBar();
 
     if (!showSideBar) {
 
@@ -163,13 +163,13 @@ export class SideBarComponent {
     }
   });
 
-  protected isDark = this._themeSelectorService.isDark.get();
+  protected isDark = this._themeSelectorService.isDarkSig.get();
   protected logo = computed(() => this.isDark() ? 'logo-light' : 'logo-dark');
 
   protected tabIndex = computed(() => {
 
     const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar.get()();
+    const showSideBar = this.showSideBar();
 
     if (isOnPhone && showSideBar || !showSideBar) {
       return -1;
@@ -181,7 +181,7 @@ export class SideBarComponent {
   protected tabIndexShowSidebar = computed(() => {
 
     const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar.get()();
+    const showSideBar = this.showSideBar();
 
     if (isOnPhone || showSideBar) {
       return -1;
@@ -204,7 +204,7 @@ export class SideBarComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._appService.showSideBar.set(value);
+    this._appService.showSideBarSig.set(value);
 
     switch (this._document.activeElement) {
       case this.hideSideBarButton.nativeElement:

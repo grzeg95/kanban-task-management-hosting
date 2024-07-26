@@ -34,8 +34,8 @@ import {LoaderComponent} from '../../loader/loader.component';
 export class DeleteBoardTaskComponent {
 
   protected isRequesting = signal(false);
-  protected board = this._boardService.board.get();
-  protected boardTask = this._boardService.boardTask.get();
+  protected board = this._boardService.boardSig.get();
+  protected boardTask = this._boardService.boardTaskSig.get();
 
   constructor(
     private readonly _boardService: BoardService,
