@@ -108,25 +108,25 @@ export class SideBarComponent {
   @Input() appSideBarItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showSideBar = this._appService.showSideBarSig.get();
 
-  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected isOnTablet = this._layoutService.isOnTabletSig.get();
-  protected isOnDesktop = this._layoutService.isOnDesktopSig.get();
+  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
+  protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
 
-  protected moveForSideBarState = computed(() => {
+  protected readonly _moveForSideBarState = computed(() => {
 
-    const showSideBar = this.showSideBar();
+    const showSideBar = this._showSideBar();
 
     if (!showSideBar) {
 
-      if (this.isOnDesktop()) {
+      if (this._isOnDesktop()) {
         return states.hiddenDesktop;
       }
 
       return states.hiddenTablet;
     } else {
-      if (this.isOnPhone()) {
+      if (this._isOnPhone()) {
         return states.hiddenTablet;
       }
 
@@ -134,28 +134,28 @@ export class SideBarComponent {
     }
   });
 
-  protected moveShowSideBarButtonForSideBarState = computed(() => {
+  protected readonly _moveShowSideBarButtonForSideBarState = computed(() => {
 
-    const showSideBar = this.showSideBar();
+    const showSideBar = this._showSideBar();
 
     if (!showSideBar) {
 
-      if (this.isOnDesktop()) {
+      if (this._isOnDesktop()) {
         return states.visible;
       }
 
-      if (this.isOnTablet()) {
+      if (this._isOnTablet()) {
         return states.visible;
       }
 
       return states.hidden;
     } else {
 
-      if (this.isOnDesktop()) {
+      if (this._isOnDesktop()) {
         return states.hiddenDesktop;
       }
 
-      if (this.isOnTablet()) {
+      if (this._isOnTablet()) {
         return states.hiddenTablet;
       }
 
@@ -163,13 +163,13 @@ export class SideBarComponent {
     }
   });
 
-  protected isDark = this._themeSelectorService.isDarkSig.get();
-  protected logo = computed(() => this.isDark() ? 'logo-light' : 'logo-dark');
+  protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
+  protected readonly _logo = computed(() => this._isDark() ? 'logo-light' : 'logo-dark');
 
-  protected tabIndex = computed(() => {
+  protected readonly _tabIndex = computed(() => {
 
-    const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar();
+    const isOnPhone = this._isOnPhone();
+    const showSideBar = this._showSideBar();
 
     if (isOnPhone && showSideBar || !showSideBar) {
       return -1;
@@ -178,10 +178,10 @@ export class SideBarComponent {
     return 0;
   });
 
-  protected tabIndexShowSidebar = computed(() => {
+  protected readonly _tabIndexShowSidebar = computed(() => {
 
-    const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar();
+    const isOnPhone = this._isOnPhone();
+    const showSideBar = this._showSideBar();
 
     if (isOnPhone || showSideBar) {
       return -1;
@@ -217,7 +217,7 @@ export class SideBarComponent {
   }
 
   toggleDarkMode() {
-    if (this.isDark()) {
+    if (this._isDark()) {
       this._themeSelectorService.setLight();
     } else {
       this._themeSelectorService.setDark();

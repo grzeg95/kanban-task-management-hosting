@@ -30,7 +30,7 @@ export class AuthService {
 
   readonly userIsLoadedSig = new Sig<boolean>(false);
   readonly userSig = new Sig<User | null>();
-  userSub: Subscription | undefined;
+  private _userSub: Subscription | undefined;
 
   readonly whileLoginInSig = new Sig<boolean>(false);
 
@@ -57,8 +57,8 @@ export class AuthService {
 
       this.userIsLoadedSig.set(false);
 
-      this.userSub && !this.userSub.closed && this.userSub.unsubscribe();
-      this.userSub = docSnapshots(userRef).pipe(
+      this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
+      this._userSub = docSnapshots(userRef).pipe(
         map(User.firestoreData),
         catchError((error) => {
           console.error(error);

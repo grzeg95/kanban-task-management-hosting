@@ -33,9 +33,9 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class DeleteBoardTaskComponent {
 
-  protected isRequesting = signal(false);
-  protected board = this._boardService.boardSig.get();
-  protected boardTask = this._boardService.boardTaskSig.get();
+  protected readonly _isRequesting = signal(false);
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardTask = this._boardService.boardTaskSig.get();
 
   constructor(
     private readonly _boardService: BoardService,
@@ -44,8 +44,8 @@ export class DeleteBoardTaskComponent {
 
     effect(() => {
 
-      const board = this.board();
-      const boardTask = this.boardTask();
+      const board = this._board();
+      const boardTask = this._boardTask();
 
       if (!board && board !== undefined) {
         this.close();
@@ -63,9 +63,9 @@ export class DeleteBoardTaskComponent {
 
     effect(() => {
 
-      const isRequesting = this.isRequesting();
-      const board = this.board();
-      const boardTask = this.boardTask();
+      const isRequesting = this._isRequesting();
+      const board = this._board();
+      const boardTask = this._boardTask();
 
       if (!board || !boardTask || !isRequesting) {
         return;
@@ -76,11 +76,11 @@ export class DeleteBoardTaskComponent {
         boardId: board.id
       }).pipe(
         catchError(() => {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.isRequesting.set(false);
+        this._isRequesting.set(false);
       });
     });
   }

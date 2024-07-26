@@ -38,30 +38,30 @@ export class BoardService {
   readonly user = this._authService.userSig.get();
 
   readonly boardIdSig = new Sig<string | null | undefined>(null);
-  readonly boardId = this.boardIdSig.get();
+  private readonly _boardId = this.boardIdSig.get();
 
   readonly boardTaskIdSig = new Sig<string | null>(null);
-  readonly boardTaskId = this.boardTaskIdSig.get();
+  private readonly _boardTaskId = this.boardTaskIdSig.get();
 
   readonly userBoardsSig = new Sig<UserBoard[] | null | undefined>(undefined);
-  userBoardsSub: Subscription | undefined;
+  private _userBoardsSub: Subscription | undefined;
 
   readonly boardSig = new Sig<Board | null | undefined>(undefined);
-  readonly board = this.boardSig.get();
-  boardSub: Subscription | undefined;
+  private readonly _board = this.boardSig.get();
+  private _boardSub: Subscription | undefined;
 
   readonly boardStatusesSig = new Sig<Map<string, BoardStatus> | null | undefined>(undefined);
-  boardStatusesSub: Subscription | undefined;
+  private _boardStatusesSub: Subscription | undefined;
 
   readonly boardTasksSig = new Sig<Map<string, BoardTask> | null | undefined>(undefined);
-  readonly boardTasks = this.boardTasksSig.get();
-  boardTasksSub: Subscription | undefined;
+  private readonly _boardTasks = this.boardTasksSig.get();
+  private _boardTasksSub: Subscription | undefined;
 
   readonly boardTaskSig = new Sig<BoardTask | null | undefined>(undefined);
-  readonly boardTask = this.boardTaskSig.get()
+  private readonly _boardTask = this.boardTaskSig.get()
 
   readonly boardTaskSubtasksSig = new Sig<Map<string, BoardTaskSubtask> | null | undefined>(undefined);
-  boardTaskSubtasksSub: Subscription | undefined;
+  private _boardTaskSubtasksSub: Subscription | undefined;
 
   readonly loadingUserBoardsSig = new Sig(false);
   readonly firstLoadingUserBoardsSig = new Sig(true);
@@ -106,8 +106,8 @@ export class BoardService {
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, userBoards_userId));
 
       this.loadingUserBoardsSig.set(true);
-      this.userBoardsSub && !this.userBoardsSub.closed && this.userBoardsSub.unsubscribe();
-      this.userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
+      this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
+      this._userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -131,7 +131,7 @@ export class BoardService {
       });
 
       onCleanup(() => {
-        this.userBoardsSub && !this.userBoardsSub.closed && this.userBoardsSub.unsubscribe();
+        this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
       });
     });
 
@@ -139,7 +139,7 @@ export class BoardService {
     let board_boardId: string | undefined;
     effect((onCleanup) => {
 
-      const boardId = this.boardId();
+      const boardId = this._boardId();
 
       if (!boardId) {
         this.boardSig.set(undefined);
@@ -154,8 +154,8 @@ export class BoardService {
       const boardRef = Board.firestoreRef(this._firestore, board_boardId);
 
       this.loadingBoardSig.set(true);
-      this.boardSub && !this.boardSub.closed && this.boardSub.unsubscribe();
-      this.boardSub = docSnapshots(boardRef).pipe(
+      this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
+      this._boardSub = docSnapshots(boardRef).pipe(
         map((docSnap) => Board.firestoreData(docSnap)),
         catchError((error) => {
           console.error(error);
@@ -175,7 +175,7 @@ export class BoardService {
       });
 
       onCleanup(() => {
-        this.boardSub && !this.boardSub.closed && this.boardSub.unsubscribe();
+        this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
       });
     });
 
@@ -184,7 +184,7 @@ export class BoardService {
     let boardStatuses_userConfigMaxBoardStatuses: number | undefined;
     effect((onCleanup) => {
 
-      const board = this.board();
+      const board = this._board();
       const user = this.user();
 
       if (!board || !user) {
@@ -206,8 +206,8 @@ export class BoardService {
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
 
       this.loadingBoardStatusesSig.set(true);
-      this.boardStatusesSub && !this.boardStatusesSub.closed && this.boardStatusesSub.unsubscribe();
-      this.boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(boardStatuses_userConfigMaxBoardStatuses)).pipe(
+      this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
+      this._boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(boardStatuses_userConfigMaxBoardStatuses)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -232,7 +232,7 @@ export class BoardService {
       });
 
       onCleanup(() => {
-        this.boardStatusesSub && !this.boardStatusesSub.closed && this.boardStatusesSub.unsubscribe();
+        this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
       });
     });
 
@@ -241,7 +241,7 @@ export class BoardService {
     let boardStatuses_userConfigMaxBoardTasks: number | undefined;
     effect((onCleanup) => {
 
-      const board = this.board();
+      const board = this._board();
       const user = this.user();
 
       if (!board || !user) {
@@ -263,8 +263,8 @@ export class BoardService {
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
 
       this.loadingBoardTasksSig.set(true);
-      this.boardTasksSub && !this.boardTasksSub.closed && this.boardTasksSub.unsubscribe();
-      this.boardTasksSub = collectionSnapshots(boardTasksRef, limit(boardStatuses_userConfigMaxBoardTasks)).pipe(
+      this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
+      this._boardTasksSub = collectionSnapshots(boardTasksRef, limit(boardStatuses_userConfigMaxBoardTasks)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -289,15 +289,15 @@ export class BoardService {
       });
 
       onCleanup(() => {
-        this.boardTasksSub && !this.boardTasksSub.closed && this.boardTasksSub.unsubscribe();
+        this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
       });
     });
 
     // boardTask
     effect(() => {
 
-      const boardTasks = this.boardTasks();
-      const boardTaskId = this.boardTaskId();
+      const boardTasks = this._boardTasks();
+      const boardTaskId = this._boardTaskId();
 
       if (!boardTasks || !boardTaskId) {
         this.boardTaskSig.set(undefined);
@@ -312,8 +312,8 @@ export class BoardService {
     let boardTaskSubtasks_boardTaskId: string | undefined;
     effect((onCleanup) => {
 
-      const board = this.board();
-      const boardTask = this.boardTask();
+      const board = this._board();
+      const boardTask = this._boardTask();
       const user = this.user();
 
       if (!board || !boardTask || !user) {
@@ -336,8 +336,8 @@ export class BoardService {
       const boardTaskSubtasksRef = BoardTaskSubtask.firestoreRefs(boardTaskRef);
 
       this.loadingBoardTaskSubtasksSig.set(true);
-      this.boardTaskSubtasksSub && !this.boardTaskSubtasksSub.closed && this.boardTaskSubtasksSub.unsubscribe();
-      this.boardTaskSubtasksSub = collectionSnapshots(boardTaskSubtasksRef, limit(user.config.maxBoardTaskSubtasks)).pipe(
+      this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
+      this._boardTaskSubtasksSub = collectionSnapshots(boardTaskSubtasksRef, limit(user.config.maxBoardTaskSubtasks)).pipe(
         catchError((error) => {
           console.error(error);
           return of(null);
@@ -362,7 +362,7 @@ export class BoardService {
       });
 
       onCleanup(() => {
-        this.boardTaskSubtasksSub && !this.boardTaskSubtasksSub.closed && this.boardTaskSubtasksSub.unsubscribe();
+        this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
       });
     });
   }
@@ -401,7 +401,7 @@ export class BoardService {
 
   boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
-    if (this.boardId()) {
+    if (this._boardId()) {
       if (boardNameWasChanged) {
         this.loadingBoardSig.set(true);
         this.loadingUserBoardsSig.set(true);
@@ -422,7 +422,7 @@ export class BoardService {
       }),
       catchError((error) => {
 
-        if (this.boardId()) {
+        if (this._boardId()) {
           if (boardNameWasChanged) {
             this.loadingBoardSig.set(false);
             this.loadingUserBoardsSig.set(false);
@@ -444,7 +444,7 @@ export class BoardService {
 
   boardTaskCreate(data: BoardTaskCreateData) {
 
-    if (this.boardId()) {
+    if (this._boardId()) {
       this.loadingBoardTasksSig.set(true);
       this.loadingBoardStatusesSig.set(true);
     }
@@ -455,7 +455,7 @@ export class BoardService {
       }),
       catchError((error) => {
 
-        if (this.boardId()) {
+        if (this._boardId()) {
           this.loadingBoardTasksSig.set(false);
           this.loadingBoardStatusesSig.set(false);
         }
@@ -467,7 +467,7 @@ export class BoardService {
 
   boardTaskDelete(data: BoardTaskDeleteData) {
 
-    if (this.boardId()) {
+    if (this._boardId()) {
       this.loadingBoardTasksSig.set(true);
       this.loadingBoardStatusesSig.set(true);
     }
@@ -478,7 +478,7 @@ export class BoardService {
       }),
       catchError((error) => {
 
-        if (this.boardId()) {
+        if (this._boardId()) {
           this.loadingBoardTasksSig.set(false);
           this.loadingBoardStatusesSig.set(false);
         }
@@ -490,7 +490,7 @@ export class BoardService {
 
   boardTaskUpdate(data: BoardTaskUpdateData) {
 
-    if (this.boardId()) {
+    if (this._boardId()) {
       this.loadingBoardTasksSig.set(true);
       this.loadingBoardStatusesSig.set(true);
     }
@@ -501,7 +501,7 @@ export class BoardService {
       }),
       catchError((error) => {
 
-        if (this.boardId()) {
+        if (this._boardId()) {
           this.loadingBoardTasksSig.set(false);
           this.loadingBoardStatusesSig.set(false);
         }

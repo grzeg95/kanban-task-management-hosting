@@ -1,4 +1,4 @@
-@if (boardTask(); as boardTask) {
+@if (_boardTask(); as boardTask) {
 
   <div class="app-view-board-task__header">
     <div class="app-view-board-task__header__title">{{ boardTask.title }}</div>
@@ -6,8 +6,8 @@
     <div
       tabindex="0"
       class="app-view-board-task__header__menu__trigger"
-      (click)="setShowMenuOptions($event, !showMenuOptions())"
-      (keydown)="setShowMenuOptions($event, !showMenuOptions())"
+      (click)="setShowMenuOptions($event, !_showMenuOptions())"
+      (keydown)="setShowMenuOptions($event, !_showMenuOptions())"
     >
       <svg
         appSvg="icon-vertical-ellipsis"
@@ -20,7 +20,7 @@
       cdkConnectedOverlay
       #cdkConnectedOverlay="cdkConnectedOverlay"
       [cdkConnectedOverlayOrigin]="trigger"
-      [cdkConnectedOverlayOpen]="showMenuOptions()"
+      [cdkConnectedOverlayOpen]="_showMenuOptions()"
       [cdkConnectedOverlayDisposeOnNavigation]="true"
       [cdkConnectedOverlayPositions]="[{
         originX: 'start',
@@ -28,11 +28,11 @@
         overlayX: 'end',
         overlayY: 'top'
       }]"
-      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); showMenuOptions.set(false);"
+      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); _showMenuOptions.set(false);"
     >
       <app-pop-menu [style.min-width.px]="192">
-        <app-pop-menu-item (click)="showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
-        <app-pop-menu-item [danger]="true" (click)="showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
+        <app-pop-menu-item (click)="_showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
+        <app-pop-menu-item [danger]="true" (click)="_showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
       </app-pop-menu>
     </ng-template>
 
@@ -48,7 +48,7 @@
 
     @for (boardTaskSubtaskId of boardTask.boardTaskSubtasksIds; track boardTaskSubtaskId) {
 
-      @if (boardTaskSubtasks(); as boardTaskSubtasks) {
+      @if (_boardTaskSubtasks(); as boardTaskSubtasks) {
 
         @if (boardTaskSubtasks.get(boardTaskSubtaskId); as boardTaskSubtask) {
           <app-checkbox
@@ -56,7 +56,7 @@
             (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtaskId, appCheckbox.checked)"
             #appCheckbox
             [checked]="boardTaskSubtask.isCompleted"
-            [disabled]="isRequesting()"
+            [disabled]="_isRequesting()"
           >{{ boardTaskSubtask.title }}
           </app-checkbox>
         }
@@ -67,9 +67,9 @@
   <app-form-field>
     <app-label>Current board status</app-label>
     <app-select
-      [ngModel]="boardStatusId()"
-      [items]="boardStatusesPopMenuItems()"
-      [disabled]="isRequesting()"
+      [ngModel]="_boardStatusId()"
+      [items]="_boardStatusesPopMenuItems()"
+      [disabled]="_isRequesting()"
       (ngModelChange)="onBoardTaskStatusIdChange($event)"
     />
   </app-form-field>

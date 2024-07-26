@@ -75,23 +75,23 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
-  protected user = this._boardService.user;
-  protected userBoards = this._boardService.userBoardsSig.get();
-  protected loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
-  protected board = this._boardService.boardSig.get();
-  protected boardId = this._boardService.boardIdSig.get();
-  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected moveRouterOutletForSideBar = this._appService.moveForSideBarStateSig.get();
-  protected heightNav = this._layoutService.heightNavSig.get();
-  protected showSideBar = this._appService.showSideBarSig.get();
-  protected loadingBoard = this._boardService.loadingBoardSig.get();
-  protected loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
-  protected isLoggedIn = this._authService.isLoggedIn;
+  protected readonly _user = this._boardService.user;
+  protected readonly _userBoards = this._boardService.userBoardsSig.get();
+  protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardId = this._boardService.boardIdSig.get();
+  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected readonly _moveRouterOutletForSideBar = this._appService.moveForSideBarStateSig.get();
+  protected readonly _heightNav = this._layoutService.heightNavSig.get();
+  protected readonly _showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
+  protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
+  protected readonly _isLoggedIn = this._authService.isLoggedIn;
 
-  protected userBoardsSorted = computed(() => {
+  protected readonly _userBoardsSorted = computed(() => {
 
-    const user = this.user();
-    const userBoards = this.userBoards();
+    const user = this._user();
+    const userBoards = this._userBoards();
 
     if (!user || !userBoards) {
       return null;
@@ -108,11 +108,11 @@ export class AppComponent {
       .filter((userBoard) => !!userBoard) as UserBoard[];
   });
 
-  protected navTitleLoading = computed(() => {
+  protected readonly _navTitleLoading = computed(() => {
 
-    const loadingUserBoards = this.loadingUserBoards();
-    const loadingBoard = this.loadingBoard();
-    const loadingBoardTasks = this.loadingBoardTasks();
+    const loadingUserBoards = this._loadingUserBoards();
+    const loadingBoard = this._loadingBoard();
+    const loadingBoardTasks = this._loadingBoardTasks();
 
     return [
       loadingUserBoards,
@@ -121,12 +121,12 @@ export class AppComponent {
     ].some((val) => val);
   });
 
-  protected navTitle = computed(() => {
+  protected readonly _navTitle = computed(() => {
 
-    const isLoggedIn = this.isLoggedIn();
-    const userBoards = this.userBoards();
+    const isLoggedIn = this._isLoggedIn();
+    const userBoards = this._userBoards();
 
-    const board = this.board();
+    const board = this._board();
 
     if (!isLoggedIn) {
       return 'Kanban App';
@@ -143,10 +143,10 @@ export class AppComponent {
     return 'Select Board';
   });
 
-  protected tabIndexSideBar = computed(() => {
+  protected readonly _tabIndexSideBar = computed(() => {
 
-    const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar();
+    const isOnPhone = this._isOnPhone();
+    const showSideBar = this._showSideBar();
 
     if (isOnPhone && showSideBar || !showSideBar) {
       return -1;

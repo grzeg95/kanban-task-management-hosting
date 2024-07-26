@@ -50,9 +50,9 @@ import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
 export class SelectComponent implements ControlValueAccessor, OnChanges, AfterViewInit {
 
   private static _id = 1;
-  protected id = 'app-select-id-' + SelectComponent._id++;
+  protected readonly _id = 'app-select-id-' + SelectComponent._id++;
 
-  @ViewChild('trigger') protected trigger!: CdkOverlayOrigin;
+  @ViewChild('trigger') protected _trigger!: CdkOverlayOrigin;
 
   @Input() placeholder = '';
   @Input() items: PopMenuItem[] = [];
@@ -65,14 +65,14 @@ export class SelectComponent implements ControlValueAccessor, OnChanges, AfterVi
   }
 
   @HostBinding('class.app-select--disabled') @Input() disabled!: boolean;
-  protected selected: PopMenuItem | undefined;
-  protected itemsOpened = false;
+  protected _selected: PopMenuItem | undefined;
+  protected _itemsOpened = false;
 
-  protected appPopMenuItemWidth = signal(0);
+  protected _appPopMenuItemWidth = signal(0);
 
   @HostListener('window:resize')
   onResize() {
-    this.appPopMenuItemWidth.set(this.trigger.elementRef.nativeElement.getBoundingClientRect().width);
+    this._appPopMenuItemWidth.set(this._trigger.elementRef.nativeElement.getBoundingClientRect().width);
   }
 
   constructor(
@@ -107,7 +107,7 @@ export class SelectComponent implements ControlValueAccessor, OnChanges, AfterVi
 
   setDisabledState(disabled: boolean) {
     this.disabled = disabled;
-    this.itemsOpened = false;
+    this._itemsOpened = false;
     this._cdr.detectChanges();
   }
 
@@ -121,7 +121,7 @@ export class SelectComponent implements ControlValueAccessor, OnChanges, AfterVi
   }
 
   _onChange(value: string) {
-    this.itemsOpened = false;
+    this._itemsOpened = false;
     this.onChange(value);
     this.writeValue(value);
   }
@@ -130,7 +130,7 @@ export class SelectComponent implements ControlValueAccessor, OnChanges, AfterVi
     if (this.items) {
       for (const item of this.items) {
         if (this.value === item.value) {
-          this.selected = item;
+          this._selected = item;
           this._cdr.detectChanges();
           break;
         }

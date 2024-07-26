@@ -33,9 +33,9 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class DeleteBoardComponent {
 
-  protected isDone = signal(false);
-  protected isRequesting = signal(false);
-  protected board = this._boardService.boardSig.get();
+  protected readonly _isDone = signal(false);
+  protected readonly _isRequesting = signal(false);
+  protected readonly _board = this._boardService.boardSig.get();
 
   constructor(
     private readonly _dialogRef: DialogRef<DeleteBoardComponent>,
@@ -44,7 +44,7 @@ export class DeleteBoardComponent {
 
     effect(() => {
 
-      const board = this.board();
+      const board = this._board();
 
       if (!board && board !== undefined) {
         this.close();
@@ -53,27 +53,27 @@ export class DeleteBoardComponent {
 
     effect(() => {
 
-      if (this.isDone()) {
+      if (this._isDone()) {
         this.close();
       }
     });
 
     effect(() => {
 
-      const board = this.board();
+      const board = this._board();
 
-      if (!this.isRequesting() || !board) {
+      if (!this._isRequesting() || !board) {
         return;
       }
 
       this._boardService.boardDelete({id: board.id}).pipe(
         catchError(() => {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.isDone.set(true);
-        this.isRequesting.set(false);
+        this._isDone.set(true);
+        this._isRequesting.set(false);
       });
     });
   }

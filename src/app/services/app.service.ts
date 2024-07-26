@@ -7,13 +7,13 @@ import {LayoutService} from './layout.service';
 })
 export class AppService {
 
-  showNavMenuOptionsSig = new Sig(false);
-  showSideBarSig = new Sig(true);
-  showSideBar = this.showSideBarSig.get();
-  moveForSideBarStateSig = new Sig('hidden');
+  readonly showNavMenuOptionsSig = new Sig(false);
+  readonly showSideBarSig = new Sig(true);
+  private readonly _showSideBar = this.showSideBarSig.get();
+  readonly moveForSideBarStateSig = new Sig('hidden');
 
-  isOnDesktop = this._layoutService.isOnDesktopSig.get();
-  isOnTablet = this._layoutService.isOnTabletSig.get();
+  private readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
+  private readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
 
   constructor(
     private readonly _layoutService: LayoutService
@@ -21,9 +21,9 @@ export class AppService {
 
     effect(() => {
 
-      const showSideBar = this.showSideBar();
-      const isOnDesktop = this.isOnDesktop();
-      const isOnTablet = this.isOnTablet();
+      const showSideBar = this._showSideBar();
+      const isOnDesktop = this._isOnDesktop();
+      const isOnTablet = this._isOnTablet();
 
       let state = 'hidden';
 

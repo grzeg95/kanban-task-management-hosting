@@ -10,7 +10,7 @@ export class SvgHoverDirective implements OnChanges {
 
   @Input({required: true}) appSvgHover!: string;
 
-  private _elementsFill: Map<Element, string | undefined> = new Map();
+  private readonly _elementsFill: Map<Element, string | undefined> = new Map();
 
   @HostListener('mouseenter')
   handleOnMouseEnter() {
@@ -38,7 +38,7 @@ export class SvgHoverDirective implements OnChanges {
 
   ngOnChanges(): void {
 
-    this._elementsFill = new Map();
+    this._elementsFill.clear();
     const elements = this._elementRef.nativeElement.getElementsByTagName('*') as HTMLCollection;
 
     for (let i = 0; i < elements.length; ++i) {

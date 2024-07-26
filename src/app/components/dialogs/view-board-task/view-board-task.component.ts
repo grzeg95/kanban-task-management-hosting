@@ -53,19 +53,19 @@ import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.compone
 })
 export class ViewBoardTaskComponent {
 
-  protected isRequesting = signal(false);
-  protected board = this._boardService.boardSig.get();
-  protected boardStatuses = this._boardService.boardStatusesSig.get();
-  protected showMenuOptions = signal(false);
-  protected boardTask = this._boardService.boardTaskSig.get();
-  protected boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
+  protected readonly _isRequesting = signal(false);
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
+  protected readonly _showMenuOptions = signal(false);
+  protected readonly _boardTask = this._boardService.boardTaskSig.get();
+  protected readonly _boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
 
-  protected boardStatusesPopMenuItems = computed(() => {
+  protected readonly _boardStatusesPopMenuItems = computed(() => {
 
-    const board = this.board();
-    const boardStatuses = this.boardStatuses();
-    const boardTask = this.boardTask();
-    const boardTaskSubtasks = this.boardTaskSubtasks();
+    const board = this._board();
+    const boardStatuses = this._boardStatuses();
+    const boardTask = this._boardTask();
+    const boardTaskSubtasks = this._boardTaskSubtasks();
 
     if (!board || !boardStatuses || !boardTask || !boardTaskSubtasks) {
       return [];
@@ -79,12 +79,12 @@ export class ViewBoardTaskComponent {
     });
   });
 
-  protected boardStatusId = computed(() => {
+  protected readonly _boardStatusId = computed(() => {
 
-    const board = this.board();
-    const boardStatuses = this.boardStatuses();
-    const boardTask = this.boardTask();
-    const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
+    const board = this._board();
+    const boardStatuses = this._boardStatuses();
+    const boardTask = this._boardTask();
+    const boardStatusesPopMenuItems = this._boardStatusesPopMenuItems();
 
     if (!board || !boardStatuses || !boardTask || !boardStatusesPopMenuItems) {
       return '';
@@ -106,8 +106,8 @@ export class ViewBoardTaskComponent {
 
     effect(() => {
 
-      const board = this.board();
-      const boardStatuses = this.boardStatuses();
+      const board = this._board();
+      const boardStatuses = this._boardStatuses();
 
       if (
         (!board && board !== undefined) ||
@@ -122,7 +122,7 @@ export class ViewBoardTaskComponent {
         return;
       }
 
-      const boardTask = this.boardTask();
+      const boardTask = this._boardTask();
 
       if (!boardTask && boardTask !== undefined) {
         this._snackBarService.open(`This board task want's found`, 3000);
@@ -137,8 +137,8 @@ export class ViewBoardTaskComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    const board = this.board();
-    const boardTask = this.boardTask();
+    const board = this._board();
+    const boardTask = this._boardTask();
 
     if (!board || !boardTask) {
       return
@@ -149,17 +149,17 @@ export class ViewBoardTaskComponent {
 
   onBoardTaskStatusIdChange(newBoardStatusId: string) {
 
-    const board = this.board();
-    const boardTask = this.boardTask();
-    const boardTaskSubtasks = this.boardTaskSubtasks();
+    const board = this._board();
+    const boardTask = this._boardTask();
+    const boardTaskSubtasks = this._boardTaskSubtasks();
 
     if (!board || !boardTask || !boardTaskSubtasks) {
       return;
     }
 
-    const currentBoardStatusId = this.boardStatusId();
+    const currentBoardStatusId = this._boardStatusId();
 
-    if (this.boardStatusId() === newBoardStatusId) {
+    if (this._boardStatusId() === newBoardStatusId) {
       return;
     }
 
@@ -178,13 +178,13 @@ export class ViewBoardTaskComponent {
       }))
     };
 
-    this.isRequesting.set(true);
+    this._isRequesting.set(true);
 
     this._boardService.boardTaskUpdate(updateTaskData).pipe(
       catchError(() => {
 
         try {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
         } catch {
           /* empty */
         }
@@ -194,7 +194,7 @@ export class ViewBoardTaskComponent {
     ).subscribe(() => {
 
       try {
-        this.isRequesting.set(false);
+        this._isRequesting.set(false);
       } catch {
         /* empty */
       }
@@ -207,7 +207,7 @@ export class ViewBoardTaskComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    const boardTask = this.boardTask();
+    const boardTask = this._boardTask();
 
     if (boardTask) {
       this._boardService.boardTaskIdSig.set(boardTask.id);
@@ -222,7 +222,7 @@ export class ViewBoardTaskComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    const boardTask = this.boardTask();
+    const boardTask = this._boardTask();
 
     if (boardTask) {
       this._boardService.boardTaskIdSig.set(boardTask.id);
@@ -244,7 +244,7 @@ export class ViewBoardTaskComponent {
       }
     }
 
-    this.showMenuOptions.set(showMenuOptions);
+    this._showMenuOptions.set(showMenuOptions);
   }
 
   close() {

@@ -1,5 +1,5 @@
-@if (!firstLoadingBoard() && board(); as board) {
-  @if (!firstLoadingBoardStatuses() && boardStatuses(); as boardStatuses) {
+@if (!_firstLoadingBoard() && _board(); as board) {
+  @if (!_firstLoadingBoardStatuses() && _boardStatuses(); as boardStatuses) {
 
     @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
       @if (boardStatuses.get(boardStatusId); as boardStatus) {
@@ -10,12 +10,12 @@
             <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
           </div>
 
-          @if (!firstLoadingBoardTasks() && boardTasks(); as boardTasks) {
+          @if (!_firstLoadingBoardTasks() && _boardTasks(); as boardTasks) {
 
             @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
               @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
 
-                <div class="app-board__task" tabindex="{{tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
+                <div class="app-board__task" tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
                   <div class="app-board__task__title-wrapper">
                     <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
                   </div>
@@ -42,10 +42,10 @@
   @if (board.boardStatusesIds.length > 0) {
     <div
       class="app-board__status-new"
-      tabindex="{{tabIndex()}}"
+      tabindex="{{_tabIndex()}}"
       (click)="openEditBoardDialog($event)"
       (keydown)="openEditBoardDialog($event)"
-      [ngStyle]="{height: 'calc(100vh - ' + (48 +  (heightNav() || 0)) + 'px)'}"
+      [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
     >
       + New Column
     </div>

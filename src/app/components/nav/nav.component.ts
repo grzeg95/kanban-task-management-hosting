@@ -68,15 +68,15 @@ export class NavComponent {
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavSelectedLabelTemplateRef: TemplateRef<any> | undefined;
 
-  protected showNavMenuOptions = this._appService.showNavMenuOptionsSig.get();
-  protected isDark = this._themeSelectorService.isDarkSig.get();
-  protected isLoggedIn = this._authService.isLoggedIn;
-  protected authStateReady = this._authService.authStateReady;
-  protected isOnDesktop = this._layoutService.isOnDesktopSig.get();
-  protected isOnTablet = this._layoutService.isOnTabletSig.get();
-  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected moveBrandingForSideBarState = this._appService.moveForSideBarStateSig.get();
-  protected showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showNavMenuOptions = this._appService.showNavMenuOptionsSig.get();
+  protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
+  protected readonly _isLoggedIn = this._authService.isLoggedIn;
+  protected readonly _authStateReady = this._authService.authStateReady;
+  protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
+  protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
+  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected readonly _moveBrandingForSideBarState = this._appService.moveForSideBarStateSig.get();
+  protected readonly _showSideBar = this._appService.showSideBarSig.get();
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,

@@ -36,7 +36,7 @@ import {SvgDirective} from '../../../directives/svg.directive';
 export class CheckboxComponent {
 
   private static _id = 1;
-  protected readonly id = 'app-checkbox-id-' + CheckboxComponent._id++;
+  protected readonly _id = 'app-checkbox-id-' + CheckboxComponent._id++;
   @Input() @HostBinding('class.app-checkbox--checked') checked!: boolean;
   @HostBinding('class.app-checkbox--disabled') @Input() disabled!: boolean;
 

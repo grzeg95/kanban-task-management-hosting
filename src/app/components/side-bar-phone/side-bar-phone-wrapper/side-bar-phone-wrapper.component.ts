@@ -10,7 +10,7 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
     SideBarPhoneComponent
   ],
   template: `
-    @if (isOnPhone() && showSideBar()) {
+    @if (_isOnPhone() && _showSideBar()) {
       <app-side-bar-phone
         [appSideBarPhoneItemsTitleTemplateRef]="appSideBarPhoneItemsTitleTemplateRef"
         [appSideBarPhoneItemsContainerTemplateRef]="appSideBarPhoneItemsContainerTemplateRef"
@@ -20,8 +20,8 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
 })
 export class SideBarPhoneWrapperComponent {
 
-  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected readonly _showSideBar = this._appService.showSideBarSig.get();
 
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;

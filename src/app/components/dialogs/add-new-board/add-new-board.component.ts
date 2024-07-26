@@ -34,11 +34,11 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class AddNewBoardComponent {
 
-  protected readonly isDone = signal(false);
-  protected readonly isRequesting = signal(false);
-  protected readonly user = this._boardService.user;
+  protected readonly _isDone = signal(false);
+  protected readonly _isRequesting = signal(false);
+  protected readonly _user = this._boardService.user;
 
-  protected readonly form = new FormGroup({
+  protected readonly _form = new FormGroup({
     name: new FormControl('', [Validators.required]),
     boardStatusesNames: new FormArray<FormControl<string | null>>([])
   });
@@ -50,7 +50,7 @@ export class AddNewBoardComponent {
 
     effect(() => {
 
-      const user = this.user();
+      const user = this._user();
 
       if (!user) {
         this.close();
@@ -59,46 +59,46 @@ export class AddNewBoardComponent {
 
     effect(() => {
 
-      if (this.isDone()) {
+      if (this._isDone()) {
         this.close();
       }
     });
 
     effect(() => {
 
-      if (this.isRequesting()) {
-        this.form.disable();
+      if (this._isRequesting()) {
+        this._form.disable();
       } else {
-        this.form.enable();
+        this._form.enable();
       }
     });
 
     effect(() => {
 
-      if (!this.isRequesting()) {
+      if (!this._isRequesting()) {
         return;
       }
 
-      this.form.updateValueAndValidity();
-      this.form.markAllAsTouched();
+      this._form.updateValueAndValidity();
+      this._form.markAllAsTouched();
 
-      if (this.form.invalid) {
+      if (this._form.invalid) {
         return;
       }
 
       const createBoardData = {
-        name: this.form.value.name,
-        boardStatusesNames: this.form.value.boardStatusesNames,
+        name: this._form.value.name,
+        boardStatusesNames: this._form.value.boardStatusesNames,
       } as BoardCreateData;
 
       this._boardService.boardCreate(createBoardData).pipe(
         catchError(() => {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.isDone.set(true);
-        this.isRequesting.set(false);
+        this._isDone.set(true);
+        this._isRequesting.set(false);
       });
     });
 
@@ -106,7 +106,7 @@ export class AddNewBoardComponent {
   }
 
   addNewBoardStatusName() {
-    this.form.controls.boardStatusesNames.push(new FormControl('', [Validators.required]));
+    this._form.controls.boardStatusesNames.push(new FormControl('', [Validators.required]));
   }
 
   close() {

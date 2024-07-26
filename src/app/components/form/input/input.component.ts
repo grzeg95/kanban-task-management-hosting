@@ -40,7 +40,7 @@ export class InputComponent implements ControlValueAccessor {
   @ViewChild('removeIcon') protected removeIcon: ElementRef | undefined;
 
   private static _id = 1;
-  protected id = 'app-input-id-' + InputComponent._id++;
+  protected readonly _id = 'app-input-id-' + InputComponent._id++;
 
   @Input({required: true}) placeholder!: string;
   @Input() removeAble = false;

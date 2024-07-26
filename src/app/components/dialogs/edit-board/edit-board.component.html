@@ -1,29 +1,29 @@
 <div class="app-edit-board__title">Edit Board</div>
 
-<form [formGroup]="form">
+<form [formGroup]="_form">
 
   <app-form-field>
     <app-label>Board Name</app-label>
     <app-input
       placeholder="e.g. Web Design"
       [withHint]="true"
-      [formControl]="form.controls.boardName"
+      [formControl]="_form.controls.boardName"
     />
-    @if (!form.controls.boardName.valid && form.controls.boardName.touched && form.controls.boardName.errors?.['required']) {
+    @if (!_form.controls.boardName.valid && !_form.controls.boardName.untouched && _form.controls.boardName.errors?.['required']) {
       <app-error>Can’t be empty</app-error>
     }
   </app-form-field>
 
   <app-label>Board columns</app-label>
 
-  @for (column of form.controls.boardStatuses.controls; track column; let i = $index) {
+  @for (column of _form.controls.boardStatuses.controls; track column; let i = $index) {
 
     <app-form-field>
       <app-input
         [formControl]="column.controls.name"
         placeholder="e.g. Web Design"
         [removeAble]="true"
-        (remove)="form.controls.boardStatuses.removeAt(i)"
+        (remove)="_form.controls.boardStatuses.removeAt(i)"
       />
     </app-form-field>
   }
@@ -33,18 +33,18 @@
     app-button
     appearance="secondary"
     (click)="addNewStatusName()"
-    [disabled]="isRequesting()"
+    [disabled]="_isRequesting()"
   >+ Add New Column</button>
 
   <button
     class="app-edit-board__update-board-button"
     app-button
     appearance="primary"
-    (click)="isRequesting.set(true)"
-    [disabled]="isRequesting()"
+    (click)="_isRequesting.set(true)"
+    [disabled]="_isRequesting()"
   >
     Save Changes
-    @if (isRequesting()) {
+    @if (_isRequesting()) {
       <app-loader/>
     }
   </button>

@@ -12,13 +12,13 @@ export class SvgDirective implements OnChanges {
   @Input({required: true}) appSvg!: string;
   @Input() @HostBinding('attr.aria-label') arialLabel!: string;
 
-  private _onChanges = new Subject<SVGElement | undefined>();
+  private readonly _onChanges = new Subject<SVGElement | undefined>();
 
   constructor(
-    private _el: ElementRef,
-    private _cdr: ChangeDetectorRef,
-    private _renderer: Renderer2,
-    private _svgService: SvgService
+    private readonly _el: ElementRef,
+    private readonly _cdr: ChangeDetectorRef,
+    private readonly _renderer: Renderer2,
+    private readonly _svgService: SvgService
   ) {
     this._onChanges.pipe(
       filter((svg): svg is SVGElement => !!svg),

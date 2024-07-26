@@ -1,10 +1,10 @@
 <div class="app-nav__left">
   <div class="app-nav__left__branding">
-    <div class="app-nav__left__branding__logo" [@move-branding-for-side-bar]="moveBrandingForSideBarState()">
+    <div class="app-nav__left__branding__logo" [@move-branding-for-side-bar]="_moveBrandingForSideBarState()">
       <svg appSvg="logo" class="app-nav__left__branding__logo__logo"/>
 
-      @if (isOnTablet() || isOnDesktop()) {
-        <svg [appSvg]="isDark() ? 'logo-text-dark' : 'logo-text-light'" class="app-nav__branding__logo__text"/>
+      @if (_isOnTablet() || _isOnDesktop()) {
+        <svg [appSvg]="_isDark() ? 'logo-text-dark' : 'logo-text-light'" class="app-nav__branding__logo__text"/>
       }
     </div>
   </div>
@@ -13,18 +13,18 @@
     @if (appNavSelectedLabelTemplateRef; as appNavSelectedLabelTemplateRef) {
       <ng-container [ngTemplateOutlet]="appNavSelectedLabelTemplateRef"/>
     } @else {
-      @if (isOnPhone()) {
+      @if (_isOnPhone()) {
         <span
           class="app-nav__left__selected-label"
           tabindex="0"
-          (keydown)="setShowSideBar($event, !showSideBar())"
-          (click)="setShowSideBar($event, !showSideBar())"
+          (keydown)="setShowSideBar($event, !_showSideBar())"
+          (click)="setShowSideBar($event, !_showSideBar())"
         >
-      <svg [appSvg]="showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
-          {{ authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}
+      <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+          {{ _authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}
     </span>
       } @else {
-        <span>{{ authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}</span>
+        <span>{{ _authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}</span>
       }
     }
   </div>
@@ -33,7 +33,7 @@
 <div
   class="app-nav__menu"
 >
-  @if (isLoggedIn() === false) {
+  @if (!_isLoggedIn()) {
     <button
       app-button
       appearance="primary"
@@ -43,7 +43,7 @@
     >
       <svg appSvg="incognito"/>
 
-      @if (!isOnPhone()) {
+      @if (!_isOnPhone()) {
         Try It
       }
     </button>
@@ -58,8 +58,8 @@
     #trigger="cdkOverlayOrigin"
     tabindex="0"
     class="app-nav__menu__trigger"
-    (click)="setShowNavMenuOptions($event, !showNavMenuOptions())"
-    (keydown)="setShowNavMenuOptions($event, !showNavMenuOptions())"
+    (click)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
+    (keydown)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
   >
     <svg appSvg="icon-vertical-ellipsis"/>
   </div>
@@ -68,7 +68,7 @@
     cdkConnectedOverlay
     #cdkConnectedOverlay="cdkConnectedOverlay"
     [cdkConnectedOverlayOrigin]="trigger"
-    [cdkConnectedOverlayOpen]="!!showNavMenuOptions()"
+    [cdkConnectedOverlayOpen]="!!_showNavMenuOptions()"
     [cdkConnectedOverlayDisposeOnNavigation]="true"
     (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); setShowNavMenuOptions($event,false);"
   >
@@ -78,7 +78,7 @@
         <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
       }
 
-      @if (isLoggedIn()) {
+      @if (_isLoggedIn()) {
         <app-pop-menu-item [danger]="true" (click)="setShowNavMenuOptions($event,false); signOut();">Sign Out</app-pop-menu-item>
       }
     </app-pop-menu>

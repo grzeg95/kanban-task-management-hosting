@@ -35,14 +35,14 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class EditBoardComponent {
 
-  protected isDone = signal(false);
-  protected isRequesting = signal(false);
-  protected board = this._boardService.boardSig.get();
-  protected boardStatusesSig = this._boardService.boardStatusesSig.get();
-  protected initialBoardName = '';
-  protected initialBoardStatuses = new Map<string, string>();
+  protected readonly _isDone = signal(false);
+  protected readonly _isRequesting = signal(false);
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardStatusesSig = this._boardService.boardStatusesSig.get();
+  private _initialBoardName = '';
+  private readonly _initialBoardStatuses = new Map<string, string>();
 
-  protected form = new FormGroup({
+  protected readonly _form = new FormGroup({
     boardId: new FormControl('', [Validators.required]),
     boardName: new FormControl('', [Validators.required]),
     boardStatuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
@@ -56,8 +56,8 @@ export class EditBoardComponent {
 
     effect(() => {
 
-      const board = this.board();
-      const boardStatuses = this.boardStatusesSig();
+      const board = this._board();
+      const boardStatuses = this._boardStatusesSig();
 
       if (
         (!board && board !== undefined) ||
@@ -72,56 +72,56 @@ export class EditBoardComponent {
         return;
       }
 
-      this.form.controls.boardId.setValue(board.id);
+      this._form.controls.boardId.setValue(board.id);
 
-      if (!this.form.controls.boardName.dirty) {
-        this.form.controls.boardName.setValue(board.name);
-        this.initialBoardName = board.name;
+      if (!this._form.controls.boardName.dirty) {
+        this._form.controls.boardName.setValue(board.name);
+        this._initialBoardName = board.name;
       }
 
-      if (!this.form.controls.boardStatuses.dirty) {
-        this.form.controls.boardStatuses.reset();
+      if (!this._form.controls.boardStatuses.dirty) {
+        this._form.controls.boardStatuses.reset();
 
         board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((boardStatus) => !!boardStatus).forEach((boardStatus) => {
           this.addNewStatusName(boardStatus!.id, boardStatus!.name);
-          this.initialBoardStatuses.set(boardStatus!.id, boardStatus!.name);
+          this._initialBoardStatuses.set(boardStatus!.id, boardStatus!.name);
         });
       }
     });
 
     effect(() => {
 
-      if (this.isDone()) {
+      if (this._isDone()) {
         this.close();
       }
     });
 
     effect(() => {
 
-      if (this.isRequesting()) {
-        this.form.disable();
+      if (this._isRequesting()) {
+        this._form.disable();
       } else {
-        this.form.enable();
+        this._form.enable();
       }
     });
 
     effect(() => {
 
-      if (!this.isRequesting()) {
+      if (!this._isRequesting()) {
         return;
       }
 
-      this.form.updateValueAndValidity();
-      this.form.markAllAsTouched();
+      this._form.updateValueAndValidity();
+      this._form.markAllAsTouched();
 
-      if (this.form.invalid) {
+      if (this._form.invalid) {
         return;
       }
 
       const updateBoardData = {
-        id: this.form.value.boardId,
-        name: this.form.value.boardName,
-        boardStatuses: this.form.value.boardStatuses?.map((boardStatus) => {
+        id: this._form.value.boardId,
+        name: this._form.value.boardName,
+        boardStatuses: this._form.value.boardStatuses?.map((boardStatus) => {
 
           if (!boardStatus.id) {
             delete boardStatus.id;
@@ -131,24 +131,24 @@ export class EditBoardComponent {
         }),
       } as BoardUpdateData;
 
-      const boardNameWasChanged = this.initialBoardName !== updateBoardData.name;
-      const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this.initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
-      const boardStatusAddedOrDeleted = this.initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
+      const boardNameWasChanged = this._initialBoardName !== updateBoardData.name;
+      const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this._initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
+      const boardStatusAddedOrDeleted = this._initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
 
       this._boardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
         catchError(() => {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.isDone.set(true);
-        this.isRequesting.set(false);
+        this._isDone.set(true);
+        this._isRequesting.set(false);
       });
     });
   }
 
   addNewStatusName(id: null | string = null, name = '') {
-    this.form.controls.boardStatuses.push(
+    this._form.controls.boardStatuses.push(
       new FormGroup({
         id: new FormControl(id),
         name: new FormControl(name, [Validators.required])

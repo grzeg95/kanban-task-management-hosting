@@ -39,7 +39,7 @@ export class ButtonComponent implements AfterViewChecked {
   private _appearance: Appearance;
   private _size: Size;
 
-  protected innerText = '';
+  protected _innerText = '';
 
   @HostListener('click', ['$event'])
   handleOnClick($event: MouseEvent) {
@@ -94,7 +94,7 @@ export class ButtonComponent implements AfterViewChecked {
   }
 
   ngAfterViewChecked(): void {
-    this.innerText = this._elementRef.nativeElement.innerText;
+    this._innerText = this._elementRef.nativeElement.innerText;
     this._cdr.detectChanges();
   }
 }

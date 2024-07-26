@@ -40,15 +40,15 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class AddNewBordTaskComponent {
 
-  protected readonly isDone = signal(false);
-  protected readonly isRequesting = signal(false);
-  protected readonly board = this._boardService.boardSig.get();
-  protected readonly boardStatuses = this._boardService.boardStatusesSig.get();
+  protected readonly _isDone = signal(false);
+  protected readonly _isRequesting = signal(false);
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
 
-  protected readonly boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
+  protected readonly _boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
 
-    const board = this.board();
-    const boardStatuses = this.boardStatuses();
+    const board = this._board();
+    const boardStatuses = this._boardStatuses();
 
     if (
       (!board && board !== undefined) ||
@@ -85,8 +85,8 @@ export class AddNewBordTaskComponent {
 
     effect(() => {
 
-      const board = this.board();
-      const boardStatuses = this.boardStatuses();
+      const board = this._board();
+      const boardStatuses = this._boardStatuses();
 
       if (
         (!board && board !== undefined) ||
@@ -106,7 +106,7 @@ export class AddNewBordTaskComponent {
 
     effect(() => {
 
-      const boardStatusesPopMenuItems = this.boardStatusesPopMenuItems();
+      const boardStatusesPopMenuItems = this._boardStatusesPopMenuItems();
 
       setTimeout(() => {
         if (
@@ -120,14 +120,14 @@ export class AddNewBordTaskComponent {
 
     effect(() => {
 
-      if (this.isDone()) {
+      if (this._isDone()) {
         this.close();
       }
     });
 
     effect(() => {
 
-      if (this.isRequesting()) {
+      if (this._isRequesting()) {
         this.form.disable();
       } else {
         this.form.enable();
@@ -136,7 +136,7 @@ export class AddNewBordTaskComponent {
 
     effect(() => {
 
-      if (!this.isRequesting()) {
+      if (!this._isRequesting()) {
         return;
       }
 
@@ -157,12 +157,12 @@ export class AddNewBordTaskComponent {
 
       this._boardService.boardTaskCreate(createTaskData).pipe(
         catchError(() => {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.isDone.set(true);
-        this.isRequesting.set(false);
+        this._isDone.set(true);
+        this._isRequesting.set(false);
       });
     });
 

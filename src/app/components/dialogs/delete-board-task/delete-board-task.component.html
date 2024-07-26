@@ -1,18 +1,18 @@
 <div class="app-delete-board-task__title">Delete this task?</div>
 
 <div class="app-delete-board-task__description">
-  Are you sure you want to delete the '{{ boardTask()?.title || '' }}' task and its subtasks? This action cannot be reversed.
+  Are you sure you want to delete the '{{ _boardTask()?.title || '' }}' task and its subtasks? This action cannot be reversed.
 </div>
 
 <button
   class="app-delete-board-task__delete-task-button"
   app-button
   appearance="warn"
-  (click)="isRequesting.set(true)"
-  [disabled]="isRequesting()"
+  (click)="_isRequesting.set(true)"
+  [disabled]="_isRequesting()"
 >
   Delete
-  @if (isRequesting()) {
+  @if (_isRequesting()) {
     <app-loader/>
   }
 </button>
@@ -22,6 +22,6 @@
   app-button
   appearance="secondary"
   (click)="close()"
-  [disabled]="isRequesting()"
+  [disabled]="_isRequesting()"
 >Cancel
 </button>

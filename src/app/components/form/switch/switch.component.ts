@@ -31,7 +31,7 @@ import {handleTabIndex} from '../../../utils/handle-tabindex';
 export class SwitchComponent implements ControlValueAccessor {
 
   private static _id = 1;
-  protected id = 'app-switch-id-' + SwitchComponent._id++;
+  protected readonly _id = 'app-switch-id-' + SwitchComponent._id++;
 
   protected checked!: boolean;
   @HostBinding('class.app-switch--disabled') @Input() disabled!: boolean;

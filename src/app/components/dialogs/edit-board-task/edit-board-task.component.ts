@@ -43,17 +43,17 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class EditBoardTaskComponent {
 
-  protected readonly isDone = signal(false);
-  protected readonly isRequesting = signal(false);
-  protected readonly board = this._boardService.boardSig.get();
-  protected readonly boardStatuses = this._boardService.boardStatusesSig.get();
-  protected readonly boardTask = this._boardService.boardTaskSig.get();
-  protected readonly boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
+  protected readonly _isDone = signal(false);
+  protected readonly _isRequesting = signal(false);
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
+  protected readonly _boardTask = this._boardService.boardTaskSig.get();
+  protected readonly _boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
 
-  protected readonly boardStatusId = computed(() => {
+  protected readonly _boardStatusId = computed(() => {
 
-    const board = this.board();
-    const boardStatuses = this.boardStatuses();
+    const board = this._board();
+    const boardStatuses = this._boardStatuses();
 
     if (
       (!board && board !== undefined) ||
@@ -66,7 +66,7 @@ export class EditBoardTaskComponent {
       return null;
     }
 
-    const boardTask = this.boardTask();
+    const boardTask = this._boardTask();
 
     if (!boardTask && boardTask !== undefined) {
       return null;
@@ -81,8 +81,8 @@ export class EditBoardTaskComponent {
 
   protected readonly boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
 
-    const board = this.board();
-    const boardStatuses = this.boardStatuses();
+    const board = this._board();
+    const boardStatuses = this._boardStatuses();
 
     if (
       (!board && board !== undefined) ||
@@ -95,7 +95,7 @@ export class EditBoardTaskComponent {
       return [];
     }
 
-    const boardTask = this.boardTask();
+    const boardTask = this._boardTask();
 
     if (!boardTask && boardTask !== undefined) {
       return [];
@@ -105,7 +105,7 @@ export class EditBoardTaskComponent {
       return [];
     }
 
-    const boardTaskSubtasks = this.boardTaskSubtasks();
+    const boardTaskSubtasks = this._boardTaskSubtasks();
 
     if (!boardTaskSubtasks) {
       return [];
@@ -120,7 +120,7 @@ export class EditBoardTaskComponent {
 
   });
 
-  protected readonly form = new FormGroup({
+  protected readonly _form = new FormGroup({
     id: new FormControl<string | null>(null, Validators.required),
     boardId: new FormControl<string | null>(null, Validators.required),
     boardStatusId: new FormControl<string | null>(null, Validators.required),
@@ -137,8 +137,8 @@ export class EditBoardTaskComponent {
 
     effect(() => {
 
-      const board = this.board();
-      const boardStatuses = this.boardStatuses();
+      const board = this._board();
+      const boardStatuses = this._boardStatuses();
 
       if (
         (!board && board !== undefined) ||
@@ -153,7 +153,7 @@ export class EditBoardTaskComponent {
         return;
       }
 
-      const boardTask = this.boardTask();
+      const boardTask = this._boardTask();
 
       if (!boardTask && boardTask !== undefined) {
         this._snackBarService.open(`This board task want's found`, 3000);
@@ -165,26 +165,26 @@ export class EditBoardTaskComponent {
         return;
       }
 
-      const boardTaskSubtasks = this.boardTaskSubtasks();
+      const boardTaskSubtasks = this._boardTaskSubtasks();
 
       if (!boardTaskSubtasks) {
         return;
       }
 
-      this.form.controls.id.setValue(boardTask.id);
-      this.form.controls.boardId.setValue(board.id);
+      this._form.controls.id.setValue(boardTask.id);
+      this._form.controls.boardId.setValue(board.id);
 
-      if (!this.form.controls.title.dirty) {
-        this.form.controls.title.setValue(boardTask.title);
+      if (!this._form.controls.title.dirty) {
+        this._form.controls.title.setValue(boardTask.title);
       }
 
-      if (!this.form.controls.description.dirty) {
-        this.form.controls.description.setValue(boardTask.description);
+      if (!this._form.controls.description.dirty) {
+        this._form.controls.description.setValue(boardTask.description);
       }
 
-      if (!this.form.controls.boardTaskSubtasks.dirty) {
+      if (!this._form.controls.boardTaskSubtasks.dirty) {
 
-        this.form.controls.boardTaskSubtasks.clear();
+        this._form.controls.boardTaskSubtasks.clear();
 
         boardTask.boardTaskSubtasksIds.map((boardTaskSubtaskId) => boardTaskSubtasks.get(boardTaskSubtaskId)).filter((boardTaskSubtask) => !!boardTaskSubtask).forEach((boardTaskSubtask) => {
           this.addNewBoardTaskSubtask(boardTaskSubtask!.id, boardTaskSubtask!.title);
@@ -200,14 +200,14 @@ export class EditBoardTaskComponent {
         return;
       }
 
-      if (!this.form.controls.boardStatusId.dirty) {
+      if (!this._form.controls.boardStatusId.dirty) {
         setTimeout(() => {
-          this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
+          this._form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
         });
       } else {
-        if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this.form.controls.boardStatusId.value === boardStatusesPopMenuItem.value)) {
+        if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => this._form.controls.boardStatusId.value === boardStatusesPopMenuItem.value)) {
           setTimeout(() => {
-            this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
+            this._form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
           });
         }
       }
@@ -215,40 +215,40 @@ export class EditBoardTaskComponent {
 
     effect(() => {
 
-      if (this.isDone()) {
+      if (this._isDone()) {
         this.close();
       }
     });
 
     effect(() => {
 
-      if (this.isRequesting()) {
-        this.form.disable();
+      if (this._isRequesting()) {
+        this._form.disable();
       } else {
-        this.form.enable();
+        this._form.enable();
       }
     });
 
     effect(() => {
 
-      if (!this.isRequesting()) {
+      if (!this._isRequesting()) {
         return;
       }
 
-      this.form.updateValueAndValidity();
-      this.form.markAllAsTouched();
+      this._form.updateValueAndValidity();
+      this._form.markAllAsTouched();
 
-      if (this.form.invalid) {
+      if (this._form.invalid) {
         return;
       }
 
-      const formValue = this.form.value;
+      const formValue = this._form.value;
 
       const boardTaskUpdateData = {
         id: formValue.id,
         boardId: formValue.boardId,
         boardStatus: {
-          id: this.boardStatusId(),
+          id: this._boardStatusId(),
           newId: formValue.boardStatusId
         },
         title: formValue.title,
@@ -269,18 +269,18 @@ export class EditBoardTaskComponent {
 
       this._boardService.boardTaskUpdate(boardTaskUpdateData).pipe(
         catchError(() => {
-          this.isRequesting.set(false);
+          this._isRequesting.set(false);
           return NEVER;
         })
       ).subscribe(() => {
-        this.isDone.set(true);
-        this.isRequesting.set(false);
+        this._isDone.set(true);
+        this._isRequesting.set(false);
       });
     });
   }
 
   addNewBoardTaskSubtask(id: null | string = null, title = '') {
-    this.form.controls.boardTaskSubtasks.push(
+    this._form.controls.boardTaskSubtasks.push(
       new FormGroup({
         id: new FormControl(id),
         title: new FormControl(title, [Validators.required])

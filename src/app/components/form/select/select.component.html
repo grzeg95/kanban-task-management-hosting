@@ -1,14 +1,14 @@
 <button
-  [id]="id"
+  [id]="_id"
   (blur)="_onTouched()"
-  (click)="itemsOpened = !itemsOpened"
+  (click)="_itemsOpened = !_itemsOpened"
   class="app-select__select"
-  [class.app-select__select--active]="itemsOpened"
+  [class.app-select__select--active]="_itemsOpened"
   [disabled]="disabled"
   cdkOverlayOrigin #trigger="cdkOverlayOrigin"
 >
-  @if (selected) {
-    {{ selected.label }}
+  @if (_selected) {
+    {{ _selected.label }}
   }
   <svg class="app-select__chevron" appSvg="icon-chevron-down"/>
 </button>
@@ -17,16 +17,16 @@
   cdkConnectedOverlay
   #cdkConnectedOverlay="cdkConnectedOverlay"
   [cdkConnectedOverlayOrigin]="trigger"
-  [cdkConnectedOverlayOpen]="itemsOpened"
+  [cdkConnectedOverlayOpen]="_itemsOpened"
   [cdkConnectedOverlayDisposeOnNavigation]="true"
-  (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); itemsOpened = false"
+  (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); _itemsOpened = false"
 >
   <app-pop-menu class="app-select__app-pop-menu">
     @for (item of items; track item) {
       <app-pop-menu-item
         [danger]="!!item.danger"
         (click)="_onChange(item.value)"
-        [style.width.px]="appPopMenuItemWidth()"
+        [style.width.px]="_appPopMenuItemWidth()"
       >
         {{ item.label }}
       </app-pop-menu-item>

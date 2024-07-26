@@ -44,27 +44,27 @@ export class BoardComponent implements OnDestroy {
   @HostBinding('style.height') height = '';
   @HostBinding('style.width') width = '';
 
-  protected statusesColorStart = Color.hexStringColorToColor('#285be0');
-  protected statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
+  private readonly _statusesColorStart = Color.hexStringColorToColor('#285be0');
+  private readonly _statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
 
-  protected showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showSideBar = this._appService.showSideBarSig.get();
 
-  protected heightNav = this._layoutService.heightNavSig.get();
-  protected isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected readonly _heightNav = this._layoutService.heightNavSig.get();
+  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
 
-  protected board = this._boardService.boardSig.get();
-  protected boardStatuses = this._boardService.boardStatusesSig.get();
-  protected boardTasks = this._boardService.boardTasksSig.get();
+  protected readonly _board = this._boardService.boardSig.get();
+  protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
+  protected readonly _boardTasks = this._boardService.boardTasksSig.get();
 
-  protected loadingBoard = this._boardService.firstLoadingBoardSig.get();
-  protected firstLoadingBoard = this._boardService.firstLoadingBoardSig.get();
-  protected firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatusesSig.get();
-  protected firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasksSig.get();
+  protected readonly _loadingBoard = this._boardService.firstLoadingBoardSig.get();
+  protected readonly _firstLoadingBoard = this._boardService.firstLoadingBoardSig.get();
+  protected readonly _firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatusesSig.get();
+  protected readonly _firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasksSig.get();
 
-  protected tabIndex = computed(() => {
+  protected readonly _tabIndex = computed(() => {
 
-    const isOnPhone = this.isOnPhone();
-    const showSideBar = this.showSideBar();
+    const isOnPhone = this._isOnPhone();
+    const showSideBar = this._showSideBar();
 
     if (isOnPhone && showSideBar) {
       return -1;
@@ -86,8 +86,8 @@ export class BoardComponent implements OnDestroy {
 
     effect(() => {
 
-      const loadingBoard = this.loadingBoard();
-      const board = this.board();
+      const loadingBoard = this._loadingBoard();
+      const board = this._board();
       let height = '';
       let width = '';
 
@@ -114,8 +114,8 @@ export class BoardComponent implements OnDestroy {
 
     effect(() => {
 
-      const board = this.board();
-      const loadingBoard = this.loadingBoard();
+      const board = this._board();
+      const loadingBoard = this._loadingBoard();
 
       if (board === undefined || loadingBoard === undefined) {
         return;
@@ -147,7 +147,7 @@ export class BoardComponent implements OnDestroy {
   }
 
   colorShift(progress: number): string {
-    return Color.shift(this.statusesColorStart, this.statusesColorEnd, progress || 0).toRgbString();
+    return Color.shift(this._statusesColorStart, this._statusesColorEnd, progress || 0).toRgbString();
   }
 
   ngOnDestroy() {

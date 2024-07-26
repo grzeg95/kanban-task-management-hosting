@@ -10,7 +10,7 @@ import {SnackBarService} from '../snack-bar.service';
 export class FunctionsService {
 
   constructor(
-    @Inject(FunctionsInjectionToken) readonly _functions: Functions,
+    @Inject(FunctionsInjectionToken) private readonly _functions: Functions,
     private readonly _snackBarService: SnackBarService
   ) {
   }

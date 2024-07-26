@@ -14,7 +14,7 @@ export class ThemeSelectorService {
 
   private readonly _renderer: Renderer2;
   readonly isDarkSig = new Sig<boolean | undefined>(undefined);
-  private readonly user = this._authService.userSig.get();
+  private readonly _user = this._authService.userSig.get();
 
   constructor(
     private readonly _rendererFactory: RendererFactory2,
@@ -28,7 +28,7 @@ export class ThemeSelectorService {
     let userDarkMode: boolean | null;
     effect(() => {
 
-      const user = this.user();
+      const user = this._user();
 
       if (!user) {
         return;
@@ -60,7 +60,7 @@ export class ThemeSelectorService {
 
     this.isDarkSig.set(false);
 
-    const user = this.user();
+    const user = this._user();
 
     if (user && user.darkMode) {
       const userRef= User.firestoreRef(this._firestore, user.id);
@@ -84,7 +84,7 @@ export class ThemeSelectorService {
 
     this.isDarkSig.set(true);
 
-    const user = this.user();
+    const user = this._user();
 
     if (user && !user.darkMode) {
       const userRef = User.firestoreRef(this._firestore, user.id);

@@ -1,28 +1,28 @@
 <div class="app-add-new-board__title">Add New Board</div>
 
-<form [formGroup]="form">
+<form [formGroup]="_form">
 
   <app-form-field>
     <app-label>Board Name</app-label>
     <app-input
       placeholder="e.g. Web Design"
       [withHint]="true"
-      [formControl]="form.controls.name"
+      [formControl]="_form.controls.name"
     />
-    @if (!form.controls.name.valid && form.controls.name.touched && form.controls.name.errors?.['required']) {
+    @if (!_form.controls.name.valid && !_form.controls.name.untouched && _form.controls.name.errors?.['required']) {
       <app-error>Can’t be empty</app-error>
     }
   </app-form-field>
 
   <app-label>Board columns</app-label>
 
-  @for (bordName of form.controls.boardStatusesNames.controls; track bordName; let i = $index) {
+  @for (bordName of _form.controls.boardStatusesNames.controls; track bordName; let i = $index) {
     <app-form-field>
       <app-input
         [formControl]="bordName"
         placeholder="e.g. Web Design"
         [removeAble]="true"
-        (remove)="form.controls.boardStatusesNames.removeAt(i)"
+        (remove)="_form.controls.boardStatusesNames.removeAt(i)"
       />
     </app-form-field>
   }
@@ -32,18 +32,18 @@
     app-button
     appearance="secondary"
     (click)="addNewBoardStatusName()"
-    [disabled]="isRequesting()"
+    [disabled]="_isRequesting()"
   >+ Add New Column</button>
 
   <button
     class="app-add-new-board__add-new-board-button"
     app-button
     appearance="primary"
-    (click)="isRequesting.set(true)"
-    [disabled]="isRequesting()"
+    (click)="_isRequesting.set(true)"
+    [disabled]="_isRequesting()"
   >
     Create New Board
-    @if (isRequesting()) {
+    @if (_isRequesting()) {
       <app-loader/>
     }
   </button>

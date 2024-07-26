@@ -1,6 +1,6 @@
-<div class="app-side-bar__content" [@moveForSideBarState]="moveForSideBarState()">
+<div class="app-side-bar__content" [@moveForSideBarState]="_moveForSideBarState()">
   <div class="app-side-bar__content__branding">
-    <svg [appSvg]="logo()"/>
+    <svg [appSvg]="_logo()"/>
   </div>
 
   <div class="app-side-bar__content__items">
@@ -24,14 +24,14 @@
     <div class="app-side-bar__content__bottom-menu__theme-switch-wrapper">
       <div class="app-side-bar__content__bottom-menu__theme-switch-wrapper__theme-switch">
         <svg appSvg="icon-light-theme"/>
-        <app-switch [tabIndex]="tabIndex()" [ngModel]="isDark()" (ngModelChange)="toggleDarkMode()"/>
+        <app-switch [tabIndex]="_tabIndex()" [ngModel]="_isDark()" (ngModelChange)="toggleDarkMode()"/>
         <svg appSvg="icon-dark-theme"/>
       </div>
     </div>
 
     <button
       #hideSideBarButton
-      [tabIndex]="tabIndex()"
+      [tabIndex]="_tabIndex()"
       class="app-side-bar__content__bottom-menu__hide-side-bar-button"
       app-button
       svg="left"
@@ -45,8 +45,8 @@
 
 <button
   #showSideBarButton
-  [@moveShowSideBarButtonForSideBarState]="moveShowSideBarButtonForSideBarState()"
-  [tabIndex]="tabIndexShowSidebar()"
+  [@moveShowSideBarButtonForSideBarState]="_moveShowSideBarButtonForSideBarState()"
+  [tabIndex]="_tabIndexShowSidebar()"
   class="app-side-bar__content__show-side-bar-button"
   app-button
   appearance="primary"

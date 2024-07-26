@@ -16,13 +16,13 @@ export class LayoutService {
   ]);
 
   readonly isOnPhoneSig = new Sig(false);
-  readonly isOnPhone = this.isOnPhoneSig.get();
+  private readonly _isOnPhone = this.isOnPhoneSig.get();
 
   readonly isOnTabletSig = new Sig(false);
-  readonly isOnTablet = this.isOnTabletSig.get();
+  private readonly _isOnTablet = this.isOnTabletSig.get();
 
   readonly isOnDesktopSig = new Sig(false);
-  readonly isOnDesktop = this.isOnDesktopSig.get();
+  private readonly _isOnDesktop = this.isOnDesktopSig.get();
 
   readonly heightNavSig = new Sig(0);
 
@@ -32,9 +32,9 @@ export class LayoutService {
 
     effect(() => {
 
-      const isOnPhone = this.isOnPhone();
-      const isOnTablet = this.isOnTablet();
-      const isOnDesktop = this.isOnDesktop();
+      const isOnPhone = this._isOnPhone();
+      const isOnTablet = this._isOnTablet();
+      const isOnDesktop = this._isOnDesktop();
 
       let height = 0;
 

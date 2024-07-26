@@ -35,7 +35,7 @@ import {SvgDirective} from '../../../directives/svg.directive';
 export class TextareaComponent implements ControlValueAccessor {
 
   private static _id = 1;
-  protected id = 'app-textarea-id-' + TextareaComponent._id++;
+  protected readonly _id = 'app-textarea-id-' + TextareaComponent._id++;
 
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
   @Input({required: true}) placeholder!: string;

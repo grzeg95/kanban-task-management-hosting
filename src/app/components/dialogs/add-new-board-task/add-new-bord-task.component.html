@@ -9,7 +9,7 @@
       [withHint]="true"
       [formControl]="form.controls.title"
     />
-    @if (!form.controls.title.valid && form.controls.title.touched && form.controls.title.errors?.['required']) {
+    @if (!form.controls.title.valid && !form.controls.title.untouched && form.controls.title.errors?.['required']) {
       <app-error>Can’t be empty</app-error>
     }
   </app-form-field>
@@ -41,7 +41,7 @@
     app-button
     appearance="secondary"
     (click)="addNewSubtask()"
-    [disabled]="isRequesting()"
+    [disabled]="_isRequesting()"
   >+ Add New Board Task Subtask
   </button>
 
@@ -50,7 +50,7 @@
     <app-select
       placeholder="e.g. Take coffee break"
       [formControl]="form.controls.boardStatusId"
-      [items]="boardStatusesPopMenuItems()"
+      [items]="_boardStatusesPopMenuItems()"
       [withHint]="true"
     />
   </app-form-field>
@@ -59,11 +59,11 @@
     class="app-view-board-task__create-task-button"
     app-button
     appearance="primary"
-    (click)="isRequesting.set(true)"
-    [disabled]="isRequesting()"
+    (click)="_isRequesting.set(true)"
+    [disabled]="_isRequesting()"
   >
     Create Board Task
-    @if (isRequesting()) {
+    @if (_isRequesting()) {
       <app-loader/>
     }
   </button>

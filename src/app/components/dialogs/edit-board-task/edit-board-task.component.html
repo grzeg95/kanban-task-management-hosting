@@ -1,15 +1,15 @@
 <div class="app-edit-board-task__title">Edit Board Task</div>
 
-<form [formGroup]="form">
+<form [formGroup]="_form">
 
   <app-form-field>
     <app-label>Title</app-label>
     <app-input
       placeholder="e.g. Take coffee break"
       [withHint]="true"
-      [formControl]="form.controls.title"
+      [formControl]="_form.controls.title"
     />
-    @if (!form.controls.title.valid && form.controls.title.touched && form.controls.title.errors?.['required']) {
+    @if (!_form.controls.title.valid && !_form.controls.title.untouched && _form.controls.title.errors?.['required']) {
       <app-error>Can’t be empty</app-error>
     }
   </app-form-field>
@@ -19,19 +19,19 @@
     <app-textarea
       placeholder="e.g. It’s always good to take a break. This 15 minute break will  recharge the batteries a little."
       [withHint]="true"
-      [formControl]="form.controls.description"
+      [formControl]="_form.controls.description"
     />
   </app-form-field>
 
   <app-label>Subtasks</app-label>
 
-  @for (subtask of form.controls.boardTaskSubtasks.controls; track subtask; let i = $index) {
+  @for (subtask of _form.controls.boardTaskSubtasks.controls; track subtask; let i = $index) {
     <app-form-field>
       <app-input
         [formControl]="subtask.controls.title"
         placeholder="e.g. Make coffee"
         [removeAble]="true"
-        (remove)="form.controls.boardTaskSubtasks.removeAt(i)"
+        (remove)="_form.controls.boardTaskSubtasks.removeAt(i)"
       />
     </app-form-field>
   }
@@ -41,7 +41,7 @@
     app-button
     appearance="secondary"
     (click)="addNewBoardTaskSubtask()"
-    [disabled]="isRequesting()"
+    [disabled]="_isRequesting()"
   >+ Add New Board Task Subtask
   </button>
 
@@ -49,7 +49,7 @@
     <app-label>BoardStatus</app-label>
     <app-select
       placeholder="e.g. Take coffee break"
-      [formControl]="form.controls.boardStatusId"
+      [formControl]="_form.controls.boardStatusId"
       [items]="boardStatusesPopMenuItems()"
       [withHint]="true"
     />
@@ -59,10 +59,10 @@
     class="app-edit-board-task__update-task-button"
     app-button
     appearance="primary"
-    (click)="isRequesting.set(true)"
+    (click)="_isRequesting.set(true)"
   >
     Save Changes
-    @if (isRequesting()) {
+    @if (_isRequesting()) {
       <app-loader/>
     }
   </button>
