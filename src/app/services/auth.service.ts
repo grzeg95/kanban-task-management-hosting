@@ -3,10 +3,10 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
 import {catchError, from, map, Observable, of, Subscription} from 'rxjs';
-import {User} from '../../models/user';
-import {AuthInjectionToken, FirestoreInjectionToken} from '../../tokens/firebase';
-import {Sig} from '../../utils/Sig';
-import {docSnapshots} from '../firebase/firestore';
+import {User} from '../models/user';
+import {AuthInjectionToken, FirestoreInjectionToken} from '../tokens/firebase';
+import {Sig} from '../utils/Sig';
+import {docSnapshots} from './firebase/firestore';
 
 @Injectable({
   providedIn: 'root'

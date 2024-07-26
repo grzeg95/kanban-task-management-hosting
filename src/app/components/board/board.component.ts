@@ -13,7 +13,6 @@ import {
 } from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {AppService} from '../../services/app.service';
 import {BoardService} from '../../services/board.service';
 import {LayoutService} from '../../services/layout.service';
 import {Color} from '../../utils/color';
@@ -47,7 +46,7 @@ export class BoardComponent implements OnDestroy {
   private readonly _statusesColorStart = Color.hexStringColorToColor('#285be0');
   private readonly _statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
 
-  protected readonly _showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
 
   protected readonly _heightNav = this._layoutService.heightNavSig.get();
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
@@ -74,7 +73,6 @@ export class BoardComponent implements OnDestroy {
   });
 
   constructor(
-    private readonly _appService: AppService,
     private readonly _boardService: BoardService,
     private readonly _activatedRoute: ActivatedRoute,
     private readonly _router: Router,

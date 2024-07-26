@@ -17,8 +17,7 @@ import {
 import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {SvgDirective} from './directives/svg.directive';
 import {UserBoard} from './models/user-board';
-import {AppService} from './services/app.service';
-import {AuthService} from './services/auth/auth.service';
+import {AuthService} from './services/auth.service';
 import {BoardService} from './services/board.service';
 import {LayoutService} from './services/layout.service';
 import {handleTabIndex} from './utils/handle-tabindex';
@@ -81,9 +80,9 @@ export class AppComponent {
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardId = this._boardService.boardIdSig.get();
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected readonly _moveRouterOutletForSideBar = this._appService.moveForSideBarStateSig.get();
+  protected readonly _moveRouterOutletForSideBar = this._layoutService.moveForSideBarStateSig.get();
   protected readonly _heightNav = this._layoutService.heightNavSig.get();
-  protected readonly _showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
   protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
   protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
@@ -156,7 +155,6 @@ export class AppComponent {
   });
 
   constructor(
-    private readonly _appService: AppService,
     private readonly _authService: AuthService,
     private readonly _boardService: BoardService,
     private readonly _layoutService: LayoutService,
@@ -225,11 +223,11 @@ export class AppComponent {
       }
     }
 
-    this._appService.showSideBarSig.set(value);
+    this._layoutService.showSideBarSig.set(value);
   }
 
   setShowNavMenuOptions(value: boolean) {
-    this._appService.showNavMenuOptionsSig.set(value);
+    this._layoutService.showNavMenuOptionsSig.set(value);
   }
 
   select(boardId: string) {

@@ -1,5 +1,4 @@
 import {Component, Input, TemplateRef} from '@angular/core';
-import {AppService} from '../../../services/app.service';
 import {LayoutService} from '../../../services/layout.service';
 import {SideBarPhoneComponent} from '../side-bar-phone.component';
 
@@ -21,14 +20,13 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
 export class SideBarPhoneWrapperComponent {
 
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected readonly _showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
 
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
   constructor(
-    private readonly _layoutService: LayoutService,
-    private readonly _appService: AppService
+    private readonly _layoutService: LayoutService
   ) {
   }
 }

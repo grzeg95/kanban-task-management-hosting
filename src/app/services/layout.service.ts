@@ -26,6 +26,11 @@ export class LayoutService {
 
   readonly heightNavSig = new Sig(0);
 
+  readonly showNavMenuOptionsSig = new Sig(false);
+  readonly showSideBarSig = new Sig(true);
+  private readonly _showSideBar = this.showSideBarSig.get();
+  readonly moveForSideBarStateSig = new Sig('hidden');
+
   constructor(
     private _breakpointObserver: BreakpointObserver
   ) {
@@ -51,6 +56,25 @@ export class LayoutService {
       }
 
       this.heightNavSig.set(height);
+    });
+
+    effect(() => {
+
+      const showSideBar = this._showSideBar();
+      const isOnDesktop = this._isOnDesktop();
+      const isOnTablet = this._isOnTablet();
+
+      let state = 'hidden';
+
+      if (showSideBar) {
+        if (isOnDesktop) {
+          state = 'desktop';
+        } else if (isOnTablet) {
+          state = 'tablet';
+        }
+      }
+
+      this.moveForSideBarStateSig.set(state);
     });
 
     this._breakpointObserver.observe([

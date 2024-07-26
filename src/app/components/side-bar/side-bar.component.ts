@@ -13,7 +13,6 @@ import {
 } from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
-import {AppService} from '../../services/app.service';
 import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
@@ -108,7 +107,7 @@ export class SideBarComponent {
   @Input() appSideBarItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected readonly _showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
 
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
   protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
@@ -192,7 +191,6 @@ export class SideBarComponent {
 
   constructor(
     @Inject(DOCUMENT) private readonly _document: Document,
-    private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
     private readonly _themeSelectorService: ThemeSelectorService
   ) {
@@ -204,7 +202,7 @@ export class SideBarComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._appService.showSideBarSig.set(value);
+    this._layoutService.showSideBarSig.set(value);
 
     switch (this._document.activeElement) {
       case this.hideSideBarButton.nativeElement:

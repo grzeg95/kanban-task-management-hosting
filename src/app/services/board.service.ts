@@ -25,7 +25,7 @@ import {User} from '../models/user';
 import {UserBoard} from '../models/user-board';
 import {FirestoreInjectionToken} from '../tokens/firebase';
 import {Sig} from '../utils/Sig';
-import {AuthService} from './auth/auth.service';
+import {AuthService} from './auth.service';
 import {collectionSnapshots, docSnapshots} from './firebase/firestore';
 import {FunctionsService} from './firebase/functions.service';
 import {SnackBarService} from './snack-bar.service';

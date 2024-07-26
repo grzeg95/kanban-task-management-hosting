@@ -4,8 +4,7 @@ import {NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
-import {AppService} from '../../services/app.service';
-import {AuthService} from '../../services/auth/auth.service';
+import {AuthService} from '../../services/auth.service';
 import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
@@ -68,20 +67,19 @@ export class NavComponent {
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavSelectedLabelTemplateRef: TemplateRef<any> | undefined;
 
-  protected readonly _showNavMenuOptions = this._appService.showNavMenuOptionsSig.get();
+  protected readonly _showNavMenuOptions = this._layoutService.showNavMenuOptionsSig.get();
   protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
   protected readonly _authStateReady = this._authService.authStateReady;
   protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
   protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected readonly _moveBrandingForSideBarState = this._appService.moveForSideBarStateSig.get();
-  protected readonly _showSideBar = this._appService.showSideBarSig.get();
+  protected readonly _moveBrandingForSideBarState = this._layoutService.moveForSideBarStateSig.get();
+  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _authService: AuthService,
-    private readonly _appService: AppService,
     private readonly _layoutService: LayoutService,
     private readonly _router: Router
   ) {
@@ -109,7 +107,7 @@ export class NavComponent {
       }
     }
 
-    this._appService.showSideBarSig.set(value);
+    this._layoutService.showSideBarSig.set(value);
   }
 
   setShowNavMenuOptions($event: KeyboardEvent | MouseEvent, value: boolean) {
@@ -124,6 +122,6 @@ export class NavComponent {
       }
     }
 
-    this._appService.showNavMenuOptionsSig.set(value);
+    this._layoutService.showNavMenuOptionsSig.set(value);
   }
 }

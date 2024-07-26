@@ -3,7 +3,7 @@ import {NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
-import {AppService} from '../../services/app.service';
+import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {ButtonComponent} from '../button/button.component';
 import {SwitchComponent} from '../form/switch/switch.component';
@@ -57,7 +57,7 @@ export class SideBarPhoneComponent {
   protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
 
   constructor(
-    private readonly _appService: AppService,
+    private readonly _layoutService: LayoutService,
     private readonly _themeSelectorService: ThemeSelectorService
   ) {
   }
@@ -71,6 +71,6 @@ export class SideBarPhoneComponent {
   }
 
   setShowSideBar(value: boolean) {
-    this._appService.showSideBarSig.set(value);
+    this._layoutService.showSideBarSig.set(value);
   }
 }

@@ -4,7 +4,7 @@ import {Firestore} from 'firebase/firestore';
 import {User} from '../models/user';
 import {FirestoreInjectionToken} from '../tokens/firebase';
 import {Sig} from '../utils/Sig';
-import {AuthService} from './auth/auth.service';
+import {AuthService} from './auth.service';
 import {updateDoc} from './firebase/firestore';
 
 @Injectable({
@@ -63,7 +63,7 @@ export class ThemeSelectorService {
     const user = this._user();
 
     if (user && user.darkMode) {
-      const userRef= User.firestoreRef(this._firestore, user.id);
+      const userRef = User.firestoreRef(this._firestore, user.id);
 
       updateDoc(userRef, {
         darkMode: false
