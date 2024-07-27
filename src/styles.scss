@@ -61,7 +61,8 @@ body {
     app-side-bar__items__container__button-color: $medium-gray,
     app-side-bar__items__container__button-color--hover: $main-purple,
     app-side-bar__items__container__button-color--active: $white,
-    empty-title-color: $medium-gray
+    empty-title-color: $medium-gray,
+    app-boards__app-intro__title-color: $medium-gray
   ));
 
   @include board.theme((
@@ -260,7 +261,8 @@ body {
     app-side-bar__items__container__button-color: $medium-gray,
     app-side-bar__items__container__button-color--hover: $main-purple,
     app-side-bar__items__container__button-color--active: white,
-    empty-title-color: $medium-gray
+    empty-title-color: $medium-gray,
+    app-boards__app-intro__title-color: $dark-gray
   ));
 
   @include board.theme((

@@ -20,6 +20,7 @@ import {UserBoard} from './models/user-board';
 import {AuthService} from './services/auth.service';
 import {BoardService} from './services/board.service';
 import {LayoutService} from './services/layout.service';
+import {ThemeSelectorService} from './services/theme-selector.service';
 import {handleTabIndex} from './utils/handle-tabindex';
 
 @Component({
@@ -86,6 +87,8 @@ export class AppComponent {
   protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
   protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
+  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
+  protected readonly _whileLoginIn = this._authService.whileLoginInSig.get();
 
   protected readonly _userBoardsSorted = computed(() => {
 
@@ -112,11 +115,13 @@ export class AppComponent {
     const loadingUserBoards = this._loadingUserBoards();
     const loadingBoard = this._loadingBoard();
     const loadingBoardTasks = this._loadingBoardTasks();
+    const whileLoginIn = this._whileLoginIn();
 
     return [
       loadingUserBoards,
       loadingBoard,
-      loadingBoardTasks
+      loadingBoardTasks,
+      whileLoginIn
     ].some((val) => val);
   });
 
@@ -159,7 +164,8 @@ export class AppComponent {
     private readonly _boardService: BoardService,
     private readonly _layoutService: LayoutService,
     private readonly _dialog: Dialog,
-    private readonly _router: Router
+    private readonly _router: Router,
+    private readonly _themeSelectorService: ThemeSelectorService
   ) {
   }
 
@@ -232,5 +238,10 @@ export class AppComponent {
 
   select(boardId: string) {
     this._router.navigate(['/', boardId]);
+  }
+
+  signInAnonymously(): Promise<void> {
+    this._router.navigate(['/']);
+    return this._authService.signInAnonymously();
   }
 }

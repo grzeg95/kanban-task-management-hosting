@@ -68,7 +68,7 @@ export class NavComponent {
   @Input() appNavSelectedLabelTemplateRef: TemplateRef<any> | undefined;
 
   protected readonly _showNavMenuOptions = this._layoutService.showNavMenuOptionsSig.get();
-  protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
+  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
   protected readonly _authStateReady = this._authService.authStateReady;
   protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();

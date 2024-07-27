@@ -13,7 +13,7 @@ import {updateDoc} from './firebase/firestore';
 export class ThemeSelectorService {
 
   private readonly _renderer: Renderer2;
-  readonly isDarkSig = new Sig<boolean | undefined>(undefined);
+  readonly darkModeSig = new Sig<boolean | undefined>(undefined);
   private readonly _user = this._authService.userSig.get();
 
   constructor(
@@ -58,7 +58,7 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'light');
     }
 
-    this.isDarkSig.set(false);
+    this.darkModeSig.set(false);
 
     const user = this._user();
 
@@ -82,7 +82,7 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'dark');
     }
 
-    this.isDarkSig.set(true);
+    this.darkModeSig.set(true);
 
     const user = this._user();
 

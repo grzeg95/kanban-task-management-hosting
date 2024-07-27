@@ -54,7 +54,7 @@ export class SideBarPhoneComponent {
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
+  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
 
   constructor(
     private readonly _layoutService: LayoutService,
@@ -63,7 +63,7 @@ export class SideBarPhoneComponent {
   }
 
   toggleDarkMode() {
-    if (this._isDark()) {
+    if (this._darkMode()) {
       this._themeSelectorService.setLight();
     } else {
       this._themeSelectorService.setDark();

@@ -162,8 +162,8 @@ export class SideBarComponent {
     }
   });
 
-  protected readonly _isDark = this._themeSelectorService.isDarkSig.get();
-  protected readonly _logo = computed(() => this._isDark() ? 'logo-light' : 'logo-dark');
+  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
+  protected readonly _logo = computed(() => this._darkMode() ? 'logo-light' : 'logo-dark');
 
   protected readonly _tabIndex = computed(() => {
 
@@ -215,7 +215,7 @@ export class SideBarComponent {
   }
 
   toggleDarkMode() {
-    if (this._isDark()) {
+    if (this._darkMode()) {
       this._themeSelectorService.setLight();
     } else {
       this._themeSelectorService.setDark();

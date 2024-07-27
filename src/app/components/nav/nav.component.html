@@ -4,7 +4,7 @@
       <svg appSvg="logo" class="app-nav__left__branding__logo__logo"/>
 
       @if (_isOnTablet() || _isOnDesktop()) {
-        <svg [appSvg]="_isDark() ? 'logo-text-dark' : 'logo-text-light'" class="app-nav__branding__logo__text"/>
+        <svg [appSvg]="_darkMode() ? 'logo-text-dark' : 'logo-text-light'" class="app-nav__branding__logo__text"/>
       }
     </div>
   </div>
