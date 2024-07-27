@@ -40,11 +40,14 @@ export class AuthService {
   ) {
 
     let firebaseUserUid: string | undefined;
-    effect(() => {
+    effect((onCleanup) => {
 
       const firebaseUser = this.firebaseUser();
 
       if (!firebaseUser) {
+        this.userSig.set(undefined);
+        this.userIsLoadedSig.set(true);
+        this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
         return;
       }
 
@@ -70,6 +73,9 @@ export class AuthService {
         }
       });
 
+      onCleanup(() => {
+        this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
+      });
     });
   }
 

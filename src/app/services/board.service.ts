@@ -90,6 +90,9 @@ export class BoardService {
 
       if (!user) {
         this.userBoardsSig.set(undefined);
+        this.loadingUserBoardsSig.set(false);
+        this.firstLoadingUserBoardsSig.set(false);
+        this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
         return;
       }
 
@@ -141,6 +144,9 @@ export class BoardService {
 
       if (!boardId) {
         this.boardSig.set(undefined);
+        this.loadingBoardSig.set(false);
+        this.firstLoadingBoardSig.set(false);
+        this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
         return;
       }
 
@@ -163,7 +169,7 @@ export class BoardService {
         this.firstLoadingBoardSig.set(false);
 
         if (!board) {
-          this.boardSig.set(null);
+          this.boardSig.set(undefined);
           return;
         }
 
@@ -185,6 +191,9 @@ export class BoardService {
 
       if (!board || !user) {
         this.boardStatusesSig.set(undefined);
+        this.loadingBoardStatusesSig.set(false);
+        this.firstLoadingBoardStatusesSig.set(false);
+        this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
         return;
       }
 
@@ -212,7 +221,7 @@ export class BoardService {
         this.firstLoadingBoardStatusesSig.set(false);
 
         if (!querySnapBoardStatuses) {
-          this.boardStatusesSig.set(null);
+          this.boardStatusesSig.set(undefined);
           return;
         }
 
@@ -240,6 +249,9 @@ export class BoardService {
 
       if (!board || !user) {
         this.boardTasksSig.set(undefined);
+        this.loadingBoardTasksSig.set(false);
+        this.firstLoadingBoardTasksSig.set(false);
+        this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
         return;
       }
 
@@ -267,7 +279,7 @@ export class BoardService {
         this.firstLoadingBoardTasksSig.set(false);
 
         if (!querySnapBoardTasks) {
-          this.boardTasksSig.set(null);
+          this.boardTasksSig.set(undefined);
           return;
         }
 
@@ -296,7 +308,7 @@ export class BoardService {
         return;
       }
 
-      this.boardTaskSig.set(boardTasks.get(boardTaskId) || null);
+      this.boardTaskSig.set(boardTasks.get(boardTaskId));
     });
 
     // boardTaskSubtasks
@@ -310,6 +322,9 @@ export class BoardService {
 
       if (!board || !boardTask || !user) {
         this.boardTaskSubtasksSig.set(undefined);
+        this.loadingBoardTaskSubtasksSig.set(false);
+        this.firstLoadingBoardTaskSubtasksSig.set(false);
+        this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
         return;
       }
 
@@ -338,7 +353,7 @@ export class BoardService {
         this.firstLoadingBoardTaskSubtasksSig.set(false);
 
         if (!querySnapBoardTaskSubtasks) {
-          this.boardTaskSubtasksSig.set(null);
+          this.boardTaskSubtasksSig.set(undefined);
           return;
         }
 
