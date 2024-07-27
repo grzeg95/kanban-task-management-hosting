@@ -2,7 +2,7 @@ import {computed, effect, Inject, Injectable} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
-import {catchError, from, map, Observable, of, Subscription} from 'rxjs';
+import {catchError, from, map, Observable, of, Subscription, takeWhile} from 'rxjs';
 import {User} from '../models/user';
 import {AuthInjectionToken, FirestoreInjectionToken} from '../tokens/firebase';
 import {Sig} from '../utils/Sig';
@@ -59,6 +59,7 @@ export class AuthService {
 
       this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
       this._userSub = docSnapshots(userRef).pipe(
+        takeWhile(() => !!this.firebaseUser()),
         map(User.firestoreData),
         catchError((error) => {
           console.error(error);
