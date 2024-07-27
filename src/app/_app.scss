@@ -26,8 +26,14 @@
       background: $app-side-bar__items__container__button-background;
       color: $app-side-bar__items__container__button-color;
 
-      svg path {
-        fill: $app-side-bar__items__container__button-color;
+      svg {
+        path {
+          fill: $app-side-bar__items__container__button-color;
+          stroke: $app-side-bar__items__container__button-color;
+        }
+        circle {
+          stroke: $app-side-bar__items__container__button-color;
+        }
       }
 
       &:hover {
@@ -35,8 +41,14 @@
         background: $app-side-bar__items__container__button-background--hover;
         color: $app-side-bar__items__container__button-color--hover;
 
-        svg path {
-          fill: $app-side-bar__items__container__button-color--hover;
+        svg {
+          path {
+            fill: $app-side-bar__items__container__button-color--hover;
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
+          circle {
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
         }
       }
 
@@ -74,8 +86,14 @@
       background: $app-side-bar__items__container__button-background;
       color: $app-side-bar__items__container__button-color;
 
-      svg path {
-        fill: $app-side-bar__items__container__button-color;
+      svg {
+        path {
+          fill: $app-side-bar__items__container__button-color;
+          stroke: $app-side-bar__items__container__button-color;
+        }
+        circle {
+          stroke: $app-side-bar__items__container__button-color;
+        }
       }
 
       &:hover {
@@ -83,8 +101,14 @@
         background: $app-side-bar__items__container__button-background--hover;
         color: $app-side-bar__items__container__button-color--hover;
 
-        svg path {
-          fill: $app-side-bar__items__container__button-color--hover;
+        svg {
+          path {
+            fill: $app-side-bar__items__container__button-color--hover;
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
+          circle {
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
         }
       }
 
