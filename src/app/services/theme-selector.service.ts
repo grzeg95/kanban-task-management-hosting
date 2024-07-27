@@ -39,6 +39,10 @@ export class ThemeSelectorService {
       }
       userDarkMode = user.darkMode;
 
+      if (userDarkMode === null) {
+        return;
+      }
+
       if (!userDarkMode) {
         this.setLight();
       } else {
@@ -62,7 +66,7 @@ export class ThemeSelectorService {
 
     const user = this._user();
 
-    if (user && user.darkMode) {
+    if (user && user.darkMode !== null && user.darkMode) {
       const userRef = User.firestoreRef(this._firestore, user.id);
 
       updateDoc(userRef, {
