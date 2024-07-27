@@ -108,11 +108,8 @@ export class BoardService {
       this.loadingUserBoardsSig.set(true);
       this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
       this._userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
-        takeWhile(() => !!this.user()),
-        catchError((error) => {
-          console.error(error);
-          return of(null);
-        })
+        catchError(() => of(null)),
+        takeWhile(() => !!this.user())
       ).subscribe((querySnapUserBoards) => {
 
         this.loadingUserBoardsSig.set(false);
@@ -157,12 +154,9 @@ export class BoardService {
       this.loadingBoardSig.set(true);
       this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
       this._boardSub = docSnapshots(boardRef).pipe(
-        takeWhile(() => !!this._boardId()),
         map((docSnap) => Board.firestoreData(docSnap)),
-        catchError((error) => {
-          console.error(error);
-          return of(null);
-        }),
+        catchError(() => of(null)),
+        takeWhile(() => !!this._boardId()),
       ).subscribe((board) => {
 
         this.loadingBoardSig.set(false);
@@ -210,11 +204,8 @@ export class BoardService {
       this.loadingBoardStatusesSig.set(true);
       this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
       this._boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(boardStatuses_userConfigMaxBoardStatuses)).pipe(
-        takeWhile(() => !!this._board() && !!this.user()),
-        catchError((error) => {
-          console.error(error);
-          return of(null);
-        })
+        catchError(() => of(null)),
+        takeWhile(() => !!this._board() && !!this.user())
       ).subscribe((querySnapBoardStatuses) => {
 
         this.loadingBoardStatusesSig.set(false);
@@ -268,11 +259,8 @@ export class BoardService {
       this.loadingBoardTasksSig.set(true);
       this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
       this._boardTasksSub = collectionSnapshots(boardTasksRef, limit(boardStatuses_userConfigMaxBoardTasks)).pipe(
-        takeWhile(() => !!this._board() && !!this.user()),
-        catchError((error) => {
-          console.error(error);
-          return of(null);
-        })
+        catchError(() => of(null)),
+        takeWhile(() => !!this._board() && !!this.user())
       ).subscribe((querySnapBoardTasks) => {
 
         this.loadingBoardTasksSig.set(false);
@@ -342,11 +330,8 @@ export class BoardService {
       this.loadingBoardTaskSubtasksSig.set(true);
       this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
       this._boardTaskSubtasksSub = collectionSnapshots(boardTaskSubtasksRef, limit(user.config.maxBoardTaskSubtasks)).pipe(
-        takeWhile(() => !!this._board() && !!this._boardTask() && !!this.user()),
-        catchError((error) => {
-          console.error(error);
-          return of(null);
-        })
+        catchError(() => of(null)),
+        takeWhile(() => !!this._board() && !!this._boardTask() && !!this.user())
       ).subscribe((querySnapBoardTaskSubtasks) => {
 
         this.loadingBoardTaskSubtasksSig.set(false);

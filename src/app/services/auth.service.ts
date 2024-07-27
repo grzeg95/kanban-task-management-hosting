@@ -61,10 +61,7 @@ export class AuthService {
       this._userSub = docSnapshots(userRef).pipe(
         takeWhile(() => !!this.firebaseUser()),
         map(User.firestoreData),
-        catchError((error) => {
-          console.error(error);
-          return of(null);
-        })
+        catchError(() => of(null))
       ).subscribe((user) => {
 
         if (user?.configLoaded) {
