@@ -406,19 +406,12 @@ export class BoardService {
 
   boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
-    if (this._boardId()) {
-      if (boardNameWasChanged) {
-        this.loadingBoardSig.set(true);
-        this.loadingUserBoardsSig.set(true);
-      }
+    if (boardNameWasChanged) {
+      this.loadingBoardSig.set(true);
+    }
 
-      if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-        this.loadingBoardStatusesSig.set(true);
-      }
-
-      if (boardStatusAddedOrDeleted) {
-        this.loadingBoardTasksSig.set(true);
-      }
+    if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
+      this.loadingBoardStatusesSig.set(true);
     }
 
     return this._functionsService.httpsCallable<BoardUpdateData, BoardUpdateResult>('board-update', data).pipe(
@@ -427,20 +420,8 @@ export class BoardService {
       }),
       catchError((error) => {
 
-        if (this._boardId()) {
-          if (boardNameWasChanged) {
-            this.loadingBoardSig.set(false);
-            this.loadingUserBoardsSig.set(false);
-          }
-
-          if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-            this.loadingBoardStatusesSig.set(false);
-          }
-
-          if (boardStatusAddedOrDeleted) {
-            this.loadingBoardTasksSig.set(false);
-          }
-        }
+        this.loadingBoardSig.set(false);
+        this.loadingBoardStatusesSig.set(true);
 
         throw error;
       })
