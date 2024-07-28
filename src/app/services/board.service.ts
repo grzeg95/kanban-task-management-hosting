@@ -1,5 +1,6 @@
 import {effect, Inject, Injectable} from '@angular/core';
 import {Firestore, limit, updateDoc} from 'firebase/firestore';
+import isEqual from 'lodash/isEqual';
 import {catchError, defer, map, of, Subscription, takeWhile, tap} from 'rxjs';
 import {
   Board,
@@ -83,27 +84,31 @@ export class BoardService {
 
     // userBoards
     let userBoards_userId: string | undefined;
+    let userBoards_userBoardsIds: string[] | undefined;
     let userBoards_userConfigMaxUserBoards: number | undefined;
     effect((onCleanup) => {
 
       const user = this.user();
 
       if (!user) {
-        this.userBoardsSig.set(undefined);
+        this.userBoardsSig.set(null);
         this.loadingUserBoardsSig.set(false);
         this.firstLoadingUserBoardsSig.set(false);
         this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
         return;
       }
 
-      if (userBoards_userId === user.id) {
+      if (
+        userBoards_userId === user.id &&
+        isEqual(userBoards_userBoardsIds, user.boardsIds) &&
+        userBoards_userConfigMaxUserBoards === user.config.maxUserBoards &&
+        this._userBoardsSub && !this._userBoardsSub.closed
+      ) {
         return;
       }
-      userBoards_userId = user.id;
 
-      if (userBoards_userConfigMaxUserBoards === user.config.maxUserBoards) {
-        return;
-      }
+      userBoards_userId = user.id;
+      userBoards_userBoardsIds = user.boardsIds;
       userBoards_userConfigMaxUserBoards = user.config.maxUserBoards;
 
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, userBoards_userId));
@@ -111,7 +116,10 @@ export class BoardService {
       this.loadingUserBoardsSig.set(true);
       this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
       this._userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
-        catchError(() => of(null)),
+        catchError((error) => {
+          console.error(error);
+          return of(null);
+        }),
         takeWhile(() => !!this.user())
       ).subscribe((querySnapUserBoards) => {
 
@@ -143,14 +151,17 @@ export class BoardService {
       const boardId = this._boardId();
 
       if (!boardId) {
-        this.boardSig.set(undefined);
+        this.boardSig.set(null);
         this.loadingBoardSig.set(false);
         this.firstLoadingBoardSig.set(false);
         this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
         return;
       }
 
-      if (board_boardId === boardId) {
+      if (
+        board_boardId === boardId &&
+        this._boardSub && !this._boardSub.closed
+      ) {
         return;
       }
       board_boardId = boardId;
@@ -182,30 +193,33 @@ export class BoardService {
     });
 
     // boardStatuses
-    let boardStatuses_boardId: string | undefined;
+    let boardStatuses_userId: string | undefined;
     let boardStatuses_userConfigMaxBoardStatuses: number | undefined;
+    let boardStatuses_boardId: string | undefined;
     effect((onCleanup) => {
 
-      const board = this._board();
       const user = this.user();
+      const board = this._board();
 
-      if (!board || !user) {
-        this.boardStatusesSig.set(undefined);
+      if (!user || !board) {
+        this.boardStatusesSig.set(null);
         this.loadingBoardStatusesSig.set(false);
         this.firstLoadingBoardStatusesSig.set(false);
         this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
         return;
       }
 
-      if (boardStatuses_boardId === board.id) {
+      if (
+        boardStatuses_userId === user.id &&
+        boardStatuses_userConfigMaxBoardStatuses === user.config.maxBoardStatuses &&
+        boardStatuses_boardId === board.id
+      ) {
         return;
       }
-      boardStatuses_boardId = board.id;
 
-      if (boardStatuses_userConfigMaxBoardStatuses === user.config.maxBoardStatuses) {
-        return;
-      }
+      boardStatuses_userId = user.id;
       boardStatuses_userConfigMaxBoardStatuses = user.config.maxBoardStatuses;
+      boardStatuses_boardId = board.id;
 
       const boardRef = Board.firestoreRef(this._firestore, boardStatuses_boardId);
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
@@ -240,30 +254,32 @@ export class BoardService {
     });
 
     // boardTasks
-    let boardTasks_boardId: string | undefined;
+    let boardTasks_userId: string | undefined;
     let boardStatuses_userConfigMaxBoardTasks: number | undefined;
     effect((onCleanup) => {
 
-      const board = this._board();
       const user = this.user();
+      const board = this._board();
 
-      if (!board || !user) {
-        this.boardTasksSig.set(undefined);
+      if (!user || !board) {
+        this.boardTasksSig.set(null);
         this.loadingBoardTasksSig.set(false);
         this.firstLoadingBoardTasksSig.set(false);
         this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
         return;
       }
 
-      if (boardTasks_boardId === board.id) {
+      if (
+        boardTasks_userId === user.id &&
+        boardStatuses_userConfigMaxBoardTasks === user.config.maxBoardTasks &&
+        boardTasks_boardId === board.id
+      ) {
         return;
       }
-      boardTasks_boardId = board.id;
 
-      if (boardStatuses_userConfigMaxBoardTasks === user.config.maxBoardTasks) {
-        return;
-      }
+      boardTasks_userId = user.id;
       boardStatuses_userConfigMaxBoardTasks = user.config.maxBoardTasks;
+      boardTasks_boardId = board.id;
 
       const boardRef = Board.firestoreRef(this._firestore, boardTasks_boardId);
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
@@ -296,6 +312,7 @@ export class BoardService {
         this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
       });
     });
+    let boardTasks_boardId: string | undefined;
 
     // boardTask
     effect(() => {
@@ -304,7 +321,7 @@ export class BoardService {
       const boardTaskId = this._boardTaskId();
 
       if (!boardTasks || !boardTaskId) {
-        this.boardTaskSig.set(undefined);
+        this.boardTaskSig.set(null);
         return;
       }
 
@@ -312,6 +329,7 @@ export class BoardService {
     });
 
     // boardTaskSubtasks
+    let boardTaskSubtasks_userId: string | undefined;
     let boardTaskSubtasks_boardId: string | undefined;
     let boardTaskSubtasks_boardTaskId: string | undefined;
     effect((onCleanup) => {
@@ -328,14 +346,16 @@ export class BoardService {
         return;
       }
 
-      if (boardTaskSubtasks_boardId === board.id) {
+      if (
+        boardTaskSubtasks_userId === user.id &&
+        boardTaskSubtasks_boardId === board.id &&
+        boardTaskSubtasks_boardTaskId === boardTask.id
+      ) {
         return;
       }
-      boardTaskSubtasks_boardId = board.id;
 
-      if (boardTaskSubtasks_boardTaskId === boardTask.id) {
-        return;
-      }
+      boardTaskSubtasks_userId = user.id;
+      boardTaskSubtasks_boardId = board.id;
       boardTaskSubtasks_boardTaskId = boardTask.id;
 
       const boardRef = Board.firestoreRef(this._firestore, boardTaskSubtasks_boardId);

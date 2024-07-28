@@ -45,7 +45,7 @@ export class AuthService {
       const firebaseUser = this.firebaseUser();
 
       if (!firebaseUser) {
-        this.userSig.set(undefined);
+        this.userSig.set(null);
         this.userIsLoadedSig.set(true);
         this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
         return;
