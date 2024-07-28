@@ -198,7 +198,7 @@
 
   @if (_isLoggedIn()) {
 
-    @if (_userBoards()?.length === 0 || !_userBoards()) {
+    @if (_userBoards()?.length === 0 || !_userBoards() && _userBoards() !== undefined) {
       <div class="app-root__boards__empty">
         <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
         <button
