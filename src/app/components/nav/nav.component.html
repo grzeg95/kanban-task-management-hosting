@@ -56,12 +56,16 @@
   <div
     cdkOverlayOrigin
     #trigger="cdkOverlayOrigin"
-    tabindex="0"
-    class="app-nav__menu__trigger"
+    [tabindex]="-1"
     (click)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
     (keydown)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
   >
-    <svg appSvg="icon-vertical-ellipsis"/>
+    <svg
+      [tabindex]="_isLoggedIn() ? 0 : -1"
+      class="app-nav__menu__trigger"
+      [class.app-nav__menu__trigger--inactive]="!_isLoggedIn()"
+      appSvg="icon-vertical-ellipsis"
+    />
   </div>
 
   <ng-template
