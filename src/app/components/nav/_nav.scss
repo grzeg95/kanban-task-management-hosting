@@ -15,14 +15,12 @@
 
       &__branding {
 
-        &__logo {
-          @include layout.from-tablet() {
-            border-right: solid 1px $border-color;
-          }
+        @include layout.from-tablet() {
+          border-right: solid 1px $border-color;
+        }
 
-          @include layout.from-desktop() {
-            border-right: solid 1px $border-color;
-          }
+        @include layout.from-desktop() {
+          border-right: solid 1px $border-color;
         }
       }
 

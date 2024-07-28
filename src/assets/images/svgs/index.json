@@ -54,13 +54,5 @@
   {
     "name": "logo-light",
     "src": "logo-light.svg"
-  },
-  {
-    "name": "logo-text-dark",
-    "src": "logo-text-dark.svg"
-  },
-  {
-    "name": "logo-text-light",
-    "src": "logo-text-light.svg"
   }
 ]

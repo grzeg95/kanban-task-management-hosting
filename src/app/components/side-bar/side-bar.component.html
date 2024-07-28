@@ -1,6 +1,10 @@
 <div class="app-side-bar__content" [@moveForSideBarState]="_moveForSideBarState()">
   <div class="app-side-bar__content__branding">
     <svg [appSvg]="_logo()"/>
+
+    @if (_appLoading()) {
+      <app-loading class="app-side-bar__content__branding__loading"/>
+    }
   </div>
 
   <div class="app-side-bar__content__items">

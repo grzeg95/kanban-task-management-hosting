@@ -65,6 +65,10 @@
       @include layout.from-desktop() {
         margin-left: 34px;
       }
+
+      &__loading {
+        width: 153px;
+      }
     }
 
     &__bottom-menu {

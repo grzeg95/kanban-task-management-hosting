@@ -8,7 +8,6 @@ import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/a
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
 import {DeleteBoardComponent} from './components/dialogs/delete-board/delete-board.component';
 import {EditBoardComponent} from './components/dialogs/edit-board/edit-board.component';
-import {LoadingComponent} from './components/loading/loading.component';
 import {NavComponent} from './components/nav/nav.component';
 import {PopMenuItemComponent} from './components/pop-menu/pop-menu-item/pop-menu-item.component';
 import {
@@ -34,8 +33,7 @@ import {handleTabIndex} from './utils/handle-tabindex';
     NgStyle,
     ButtonComponent,
     PopMenuItemComponent,
-    SvgDirective,
-    LoadingComponent
+    SvgDirective
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -77,18 +75,14 @@ export class AppComponent {
 
   protected readonly _user = this._boardService.user;
   protected readonly _userBoards = this._boardService.userBoardsSig.get();
-  protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardId = this._boardService.boardIdSig.get();
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
   protected readonly _moveRouterOutletForSideBar = this._layoutService.moveForSideBarStateSig.get();
   protected readonly _heightNav = this._layoutService.heightNavSig.get();
   protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
-  protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
-  protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
   protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
-  protected readonly _whileLoginIn = this._authService.whileLoginInSig.get();
 
   protected readonly _userBoardsSorted = computed(() => {
 
@@ -110,21 +104,6 @@ export class AppComponent {
       .filter((userBoard) => !!userBoard) as UserBoard[];
   });
 
-  protected readonly _navTitleLoading = computed(() => {
-
-    const loadingUserBoards = this._loadingUserBoards();
-    const loadingBoard = this._loadingBoard();
-    const loadingBoardTasks = this._loadingBoardTasks();
-    const whileLoginIn = this._whileLoginIn();
-
-    return [
-      loadingUserBoards,
-      loadingBoard,
-      loadingBoardTasks,
-      whileLoginIn
-    ].some((val) => val);
-  });
-
   protected readonly _navTitle = computed(() => {
 
     const isLoggedIn = this._isLoggedIn();
@@ -133,7 +112,7 @@ export class AppComponent {
     const board = this._board();
 
     if (!isLoggedIn) {
-      return 'Kanban App';
+      return 'App';
     }
 
     if (userBoards === null || userBoards?.length === 0) {

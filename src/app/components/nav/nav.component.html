@@ -1,12 +1,10 @@
 <div class="app-nav__left">
-  <div class="app-nav__left__branding">
-    <div class="app-nav__left__branding__logo" [@move-branding-for-side-bar]="_moveBrandingForSideBarState()">
-      <svg appSvg="logo" class="app-nav__left__branding__logo__logo"/>
+  <div class="app-nav__left__branding" [@move-branding-for-side-bar]="_moveBrandingForSideBarState()">
+    <svg [appSvg]="_logo()"/>
 
-      @if (_isOnTablet() || _isOnDesktop()) {
-        <svg [appSvg]="_darkMode() ? 'logo-text-dark' : 'logo-text-light'" class="app-nav__branding__logo__text"/>
-      }
-    </div>
+    @if (_appLoading()) {
+      <app-loading class="app-nav__left__branding__loading"/>
+    }
   </div>
 
   <div class="app-nav__left__selected-label">
@@ -21,10 +19,10 @@
           (click)="setShowSideBar($event, !_showSideBar())"
         >
       <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
-          {{ _authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}
+          {{ _authStateReady() === undefined ? 'Loading ...' : 'App' }}
     </span>
       } @else {
-        <span>{{ _authStateReady() === undefined ? 'Loading ...' : 'Kanban App' }}</span>
+        <span>{{ _authStateReady() === undefined ? 'Loading ...' : 'App' }}</span>
       }
     }
   </div>

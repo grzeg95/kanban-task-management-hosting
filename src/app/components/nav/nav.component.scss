@@ -20,52 +20,40 @@
   &__left {
 
     display: flex;
-    height: 100%;
     min-width: 0;
+    height: 100%;
 
     &__branding {
 
+      position: relative;
+      padding-right: 16px;
+      margin-left: 16px;
+      height: 100%;
       display: flex;
       align-items: center;
-      height: 100%;
 
-      &__logo {
+      @include layout.from-tablet() {
+        border-right: solid 1px black;
+        padding-right: 24px;
+        margin-left: 24px;
+      }
 
-        height: 100%;
-        display: flex;
-        align-items: center;
-        min-width: 56px;
+      @include layout.from-desktop() {
+        padding-right: 33px;
+      }
+
+      &__loading {
+
+        top: 48px;
+        width: 25px !important;
 
         @include layout.from-tablet() {
-          min-width: 210px;
-          border-right: solid 1px black;
+          top: 57px;
+          width: 153px !important;
         }
 
         @include layout.from-desktop() {
-          min-width: 219px;
-          border-right: solid 1px black;
-        }
-
-        &__logo {
-
-          margin-right: 16px;
-          margin-left: 16px;
-
-          @include layout.from-tablet() {
-            margin-right: 24px;
-            margin-left: 24px;
-          }
-        }
-
-        &__text {
-
-          @include layout.from-tablet() {
-            margin-right: 24px;
-          }
-
-          @include layout.from-desktop() {
-            margin-right: 33px;
-          }
+          top: 65px !important;
         }
       }
     }

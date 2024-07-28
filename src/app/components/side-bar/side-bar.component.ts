@@ -14,10 +14,12 @@ import {
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
 import {LayoutService} from '../../services/layout.service';
+import {LoadingService} from '../../services/loading.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
 import {ButtonComponent} from '../button/button.component';
 import {SwitchComponent} from '../form/switch/switch.component';
+import {LoadingComponent} from '../loading/loading.component';
 
 enum states {
   hidden = 'hidden',
@@ -34,7 +36,8 @@ enum states {
     NgTemplateOutlet,
     SwitchComponent,
     FormsModule,
-    ButtonComponent
+    ButtonComponent,
+    LoadingComponent
   ],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
@@ -112,6 +115,8 @@ export class SideBarComponent {
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
   protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
   protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
+
+  protected readonly _appLoading = this._loadingService.appLoading;
 
   protected readonly _moveForSideBarState = computed(() => {
 
@@ -192,7 +197,8 @@ export class SideBarComponent {
   constructor(
     @Inject(DOCUMENT) private readonly _document: Document,
     private readonly _layoutService: LayoutService,
-    private readonly _themeSelectorService: ThemeSelectorService
+    private readonly _themeSelectorService: ThemeSelectorService,
+    private readonly _loadingService: LoadingService
   ) {
   }
 

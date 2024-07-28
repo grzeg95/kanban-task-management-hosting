@@ -1,16 +1,33 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  Input,
+  signal,
+  TemplateRef,
+  ViewEncapsulation
+} from '@angular/core';
 import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AuthService} from '../../services/auth.service';
 import {LayoutService} from '../../services/layout.service';
+import {LoadingService} from '../../services/loading.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
 import {ButtonComponent} from '../button/button.component';
+import {LoadingComponent} from '../loading/loading.component';
 import {PopMenuItemComponent} from '../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuComponent} from '../pop-menu/pop-menu.component';
+
+enum states {
+  hidden = 'hidden',
+  hiddenPhone = 'hidden-phone',
+  tablet = 'tablet',
+  desktop = 'desktop'
+}
 
 @Component({
   selector: 'app-nav',
@@ -22,7 +39,8 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
     CdkConnectedOverlay,
     PopMenuComponent,
     PopMenuItemComponent,
-    SvgDirective
+    SvgDirective,
+    LoadingComponent
   ],
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.scss',
@@ -36,25 +54,31 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
       'move-branding-for-side-bar',
       [
         state(
-          'hidden',
+          states.hiddenPhone,
           style({
-            width: 0
+            width: 41
           })
         ),
         state(
-          'tablet',
+          states.hidden,
           style({
-            width: 261
+            width: 187
           })
         ),
         state(
-          'desktop',
+          states.tablet,
           style({
-            width: 300
+            width: 237
+          })
+        ),
+        state(
+          states.desktop,
+          style({
+            width: 276
           })
         ),
         transition(
-          '* => hidden, hidden => phone, hidden => tablet, hidden => desktop',
+          `${states.tablet} <=> ${states.hidden}, ${states.desktop} <=> ${states.hidden}`,
           animate('0.333s ease-in-out')
         )
       ]
@@ -74,13 +98,50 @@ export class NavComponent {
   protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
   protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected readonly _moveBrandingForSideBarState = this._layoutService.moveForSideBarStateSig.get();
+
+  protected readonly _moveBrandingForSideBarState = computed(() => {
+
+    const showSideBar = this._showSideBar();
+    const isOnDesktop = this._isOnDesktop();
+    const isOnTablet = this._isOnTablet();
+    const isOnPhone = this._isOnPhone();
+
+    if (isOnPhone) {
+      return states.hiddenPhone;
+    }
+
+    if (showSideBar) {
+      if (isOnDesktop) {
+        return 'desktop';
+      } else if (isOnTablet) {
+        return 'tablet';
+      }
+    }
+
+    return 'hidden';
+  });
+
   protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
+
+  protected readonly _appLoading = this._loadingService.appLoading;
+
+  protected readonly _logo = computed(() => {
+
+    if (this._isOnTablet() || this._isOnDesktop()) {
+      if (this._darkMode()) {
+        return 'logo-light';
+      }
+      return 'logo-dark';
+    }
+
+    return 'logo';
+  });
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _authService: AuthService,
     private readonly _layoutService: LayoutService,
+    private readonly _loadingService: LoadingService,
     private readonly _router: Router
   ) {
   }

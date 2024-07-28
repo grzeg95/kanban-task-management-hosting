@@ -9,17 +9,11 @@
     >
       <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
       {{ _navTitle() }}
-      @if (_navTitleLoading()) {
-        <app-loading/>
-      }
     </span>
 
   } @else {
     <span>
       {{ _navTitle() }}
-      @if (_navTitleLoading()) {
-        <app-loading/>
-      }
     </span>
   }
 </ng-template>
