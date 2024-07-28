@@ -115,7 +115,7 @@ export class BoardComponent implements OnDestroy {
       const board = this._board();
       const loadingBoard = this._loadingBoard();
 
-      if (board === undefined || loadingBoard === undefined) {
+      if (board === null || loadingBoard === null) {
         return;
       }
 

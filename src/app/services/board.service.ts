@@ -94,6 +94,9 @@ export class BoardService {
         this.userBoardsSig.set(null);
         this.loadingUserBoardsSig.set(false);
         this.firstLoadingUserBoardsSig.set(false);
+        userBoards_userId = undefined;
+        userBoards_userBoardsIds = undefined;
+        userBoards_userConfigMaxUserBoards = undefined;
         this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
         return;
       }
@@ -145,25 +148,31 @@ export class BoardService {
     });
 
     // board
+    let board_userId: string | undefined;
     let board_boardId: string | undefined;
     effect((onCleanup) => {
 
+      const user = this.user();
       const boardId = this._boardId();
 
-      if (!boardId) {
+      if (!user || !boardId) {
         this.boardSig.set(null);
         this.loadingBoardSig.set(false);
         this.firstLoadingBoardSig.set(false);
+        board_userId = undefined;
+        board_boardId = undefined;
         this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
         return;
       }
 
       if (
-        board_boardId === boardId &&
-        this._boardSub && !this._boardSub.closed
+        board_userId === user.id &&
+        board_boardId === boardId
       ) {
         return;
       }
+
+      board_userId = user.id;
       board_boardId = boardId;
 
       const boardRef = Board.firestoreRef(this._firestore, board_boardId);
@@ -205,6 +214,9 @@ export class BoardService {
         this.boardStatusesSig.set(null);
         this.loadingBoardStatusesSig.set(false);
         this.firstLoadingBoardStatusesSig.set(false);
+        boardStatuses_userId = undefined;
+        boardStatuses_userConfigMaxBoardStatuses = undefined;
+        boardStatuses_boardId = undefined;
         this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
         return;
       }
@@ -265,6 +277,8 @@ export class BoardService {
         this.boardTasksSig.set(null);
         this.loadingBoardTasksSig.set(false);
         this.firstLoadingBoardTasksSig.set(false);
+        boardTasks_userId = undefined;
+        boardStatuses_userConfigMaxBoardTasks = undefined;
         this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
         return;
       }
@@ -342,6 +356,9 @@ export class BoardService {
         this.boardTaskSubtasksSig.set(undefined);
         this.loadingBoardTaskSubtasksSig.set(false);
         this.firstLoadingBoardTaskSubtasksSig.set(false);
+        boardTaskSubtasks_userId = undefined;
+        boardTaskSubtasks_boardId = undefined;
+        boardTaskSubtasks_boardTaskId = undefined;
         this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
         return;
       }
