@@ -10,6 +10,7 @@ export class LoadingService {
   protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
   protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
   protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
+  protected readonly _authStateReady = this._authService.authStateReady;
   protected readonly _whileLoginIn = this._authService.whileLoginInSig.get();
 
   readonly appLoading = computed(() => {
@@ -18,12 +19,14 @@ export class LoadingService {
     const loadingBoard = this._loadingBoard();
     const loadingBoardTasks = this._loadingBoardTasks();
     const whileLoginIn = this._whileLoginIn();
+    const authStateReady = this._authStateReady();
 
     return [
       loadingUserBoards,
       loadingBoard,
       loadingBoardTasks,
-      whileLoginIn
+      whileLoginIn,
+      !authStateReady
     ].some((val) => val);
   });
 

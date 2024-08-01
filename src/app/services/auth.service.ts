@@ -13,7 +13,9 @@ import {docSnapshots} from './firebase/firestore';
 })
 export class AuthService {
 
-  readonly authStateReady = toSignal(from(this._auth.authStateReady()));
+  readonly authStateReady = toSignal(from(this._auth.authStateReady()).pipe(
+    map(() => true)
+  ));
 
   readonly firebaseUser = toSignal(new Observable<FirebaseUser | null>((subscriber) => {
     const unsubscribe = onAuthStateChanged(this._auth, {
@@ -25,7 +27,7 @@ export class AuthService {
   }));
 
   readonly isLoggedIn = computed(() => {
-    return !!this.firebaseUser();
+    return !!this.firebaseUser() && this.authStateReady();
   });
 
   readonly userIsLoadedSig = new Sig<boolean>(false);
