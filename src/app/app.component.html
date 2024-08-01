@@ -202,7 +202,7 @@
   @if (_authStateReady()) {
     @if (_isLoggedIn()) {
 
-      @if (!_firstLoadingUserBoardsSig()) {
+      @if (!_loadingUserBoards()) {
 
         @if (_userBoards(); as userBoards) {
           @if (!userBoards || userBoards.length === 0) {
@@ -216,7 +216,7 @@
                   (click)="openAddBoardDialog($event)"
                 >+ Add New Board</button>
               </div>
-            } @placeholder (minimum 900ms) { }
+            } @placeholder (minimum 400ms) { }
           }
 
           @if (userBoards.length > 0 && !_board()) {

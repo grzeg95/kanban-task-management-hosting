@@ -66,15 +66,10 @@ export class BoardService {
   private _boardTaskSubtasksSub: Subscription | undefined;
 
   readonly loadingUserBoardsSig = new Sig(false);
-  readonly firstLoadingUserBoardsSig = new Sig(true);
   readonly loadingBoardSig = new Sig(false);
-  readonly firstLoadingBoardSig = new Sig(true);
   readonly loadingBoardStatusesSig = new Sig(false);
-  readonly firstLoadingBoardStatusesSig = new Sig(true);
   readonly loadingBoardTasksSig = new Sig(false);
-  readonly firstLoadingBoardTasksSig = new Sig(true);
   readonly loadingBoardTaskSubtasksSig = new Sig(false);
-  readonly firstLoadingBoardTaskSubtasksSig = new Sig(true);
 
   constructor(
     private readonly _authService: AuthService,
@@ -98,8 +93,6 @@ export class BoardService {
 
       if (!user) {
         this.userBoardsSig.set(null);
-        this.loadingUserBoardsSig.set(false);
-        this.firstLoadingUserBoardsSig.set(false);
         userBoards_userId = undefined;
         userBoards_userBoardsIds = undefined;
         userBoards_userConfigMaxUserBoards = undefined;
@@ -133,7 +126,6 @@ export class BoardService {
       ).subscribe((querySnapUserBoards) => {
 
         this.loadingUserBoardsSig.set(false);
-        this.firstLoadingUserBoardsSig.set(false);
 
         if (!querySnapUserBoards) {
           return;
@@ -163,8 +155,6 @@ export class BoardService {
 
       if (!user || !boardId) {
         this.boardSig.set(null);
-        this.loadingBoardSig.set(false);
-        this.firstLoadingBoardSig.set(false);
         board_userId = undefined;
         board_boardId = undefined;
         this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
@@ -192,7 +182,6 @@ export class BoardService {
       ).subscribe((board) => {
 
         this.loadingBoardSig.set(false);
-        this.firstLoadingBoardSig.set(false);
 
         if (!board) {
           this.boardSig.set(undefined);
@@ -218,8 +207,6 @@ export class BoardService {
 
       if (!user || !board) {
         this.boardStatusesSig.set(null);
-        this.loadingBoardStatusesSig.set(false);
-        this.firstLoadingBoardStatusesSig.set(false);
         boardStatuses_userId = undefined;
         boardStatuses_userConfigMaxBoardStatuses = undefined;
         boardStatuses_boardId = undefined;
@@ -250,7 +237,6 @@ export class BoardService {
       ).subscribe((querySnapBoardStatuses) => {
 
         this.loadingBoardStatusesSig.set(false);
-        this.firstLoadingBoardStatusesSig.set(false);
 
         if (!querySnapBoardStatuses) {
           this.boardStatusesSig.set(undefined);
@@ -281,8 +267,6 @@ export class BoardService {
 
       if (!user || !board) {
         this.boardTasksSig.set(null);
-        this.loadingBoardTasksSig.set(false);
-        this.firstLoadingBoardTasksSig.set(false);
         boardTasks_userId = undefined;
         boardStatuses_userConfigMaxBoardTasks = undefined;
         this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
@@ -312,7 +296,6 @@ export class BoardService {
       ).subscribe((querySnapBoardTasks) => {
 
         this.loadingBoardTasksSig.set(false);
-        this.firstLoadingBoardTasksSig.set(false);
 
         if (!querySnapBoardTasks) {
           this.boardTasksSig.set(undefined);
@@ -360,8 +343,6 @@ export class BoardService {
 
       if (!board || !boardTask || !user) {
         this.boardTaskSubtasksSig.set(undefined);
-        this.loadingBoardTaskSubtasksSig.set(false);
-        this.firstLoadingBoardTaskSubtasksSig.set(false);
         boardTaskSubtasks_userId = undefined;
         boardTaskSubtasks_boardId = undefined;
         boardTaskSubtasks_boardTaskId = undefined;
@@ -393,7 +374,6 @@ export class BoardService {
       ).subscribe((querySnapBoardTaskSubtasks) => {
 
         this.loadingBoardTaskSubtasksSig.set(false);
-        this.firstLoadingBoardTaskSubtasksSig.set(false);
 
         if (!querySnapBoardTaskSubtasks) {
           this.boardTaskSubtasksSig.set(undefined);

@@ -62,10 +62,9 @@ export class BoardComponent implements OnDestroy {
   protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
   protected readonly _boardTasks = this._boardService.boardTasksSig.get();
 
-  protected readonly _loadingBoard = this._boardService.firstLoadingBoardSig.get();
-  protected readonly _firstLoadingBoard = this._boardService.firstLoadingBoardSig.get();
-  protected readonly _firstLoadingBoardStatuses = this._boardService.firstLoadingBoardStatusesSig.get();
-  protected readonly _firstLoadingBoardTasks = this._boardService.firstLoadingBoardTasksSig.get();
+  protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
+  protected readonly _loadingBoardStatuses = this._boardService.loadingBoardStatusesSig.get();
+  protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
 
   protected readonly _tabIndex = computed(() => {
 
@@ -93,16 +92,13 @@ export class BoardComponent implements OnDestroy {
     effect(() => {
 
       const loadingBoard = this._loadingBoard();
-      const board = this._board();
+      const loadingBoardStatuses = this._loadingBoardStatuses();
+      const loadingBoardTasks = this._loadingBoardTasks();
+
       let height = '';
       let width = '';
 
-      if (!loadingBoard && board) {
-        if (board.boardStatusesIds.length === 0) {
-          height = '100%';
-          width = '100%';
-        }
-      } else {
+      if (loadingBoard || loadingBoardStatuses || loadingBoardTasks) {
         height = '100%';
         width = '100%';
       }
@@ -126,29 +122,23 @@ export class BoardComponent implements OnDestroy {
       const authStateReady = this._authStateReady();
       const user = this._user();
 
-      if (loaded || authStateReady && !user) {
+      if (loaded && authStateReady && !user) {
         this._router.navigate(['/']);
         return;
       }
 
       this._boardService.boardIdSig.set(id);
-
-      this._boardService.firstLoadingBoardSig.set(true);
-      this._boardService.firstLoadingBoardStatusesSig.set(true);
-      this._boardService.firstLoadingBoardTasksSig.set(true);
     });
 
     effect(() => {
 
-      const firstLoadingBoard = this._firstLoadingBoard();
-      const firstLoadingBoardStatuses = this._firstLoadingBoardStatuses();
-      const firstLoadingBoardTasks = this._firstLoadingBoardTasks();
+      const loadingBoard = this._loadingBoard();
+      const loadingBoardStatuses = this._loadingBoardStatuses();
+      const loadingBoardTasks = this._loadingBoardTasks();
 
       const board = this._board();
-      const loadingBoard = this._loadingBoard();
 
-      if (!firstLoadingBoard || !firstLoadingBoardStatuses || !firstLoadingBoardTasks) {
-        this.loadedSig.set(false);
+      if (!loadingBoard || !loadingBoardStatuses || !loadingBoardTasks) {
         return;
       }
 

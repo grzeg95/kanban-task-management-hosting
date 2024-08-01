@@ -1,61 +1,66 @@
-@if (_authStateReady() && _user()) {
-  @if (!_firstLoadingBoard() && _board(); as board) {
-    @if (!_firstLoadingBoardStatuses() && _boardStatuses(); as boardStatuses) {
+@if (!_loadingBoard() && !_loadingBoardStatuses() && !_loadingBoardTasks()) {
+  @if (_authStateReady() && _user()) {
+    @if (_board(); as board) {
 
-      @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
-        @if (boardStatuses.get(boardStatusId); as boardStatus) {
+      @defer {
+        @if (_boardStatuses(); as boardStatuses) {
 
-          <div class="app-board__status">
-            <div class="app-board__status__title-wrapper">
-              <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
-              <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
-            </div>
+          @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
+            @if (boardStatuses.get(boardStatusId); as boardStatus) {
 
-            @if (!_firstLoadingBoardTasks() && _boardTasks(); as boardTasks) {
+              <div class="app-board__status">
+                <div class="app-board__status__title-wrapper">
+                  <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
+                  <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
+                </div>
 
-              @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
-                @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
+                @if (_boardTasks(); as boardTasks) {
 
-                  <div class="app-board__task" tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
-                    <div class="app-board__task__title-wrapper">
-                      <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
-                    </div>
+                  @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
+                    @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
 
-                    @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
-                      <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
+                      <div class="app-board__task" tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
+                        <div class="app-board__task__title-wrapper">
+                          <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
+                        </div>
+
+                        @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
+                          <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
+                        }
+                      </div>
                     }
-                  </div>
+                  }
                 }
-              }
+              </div>
             }
+          }
+        }
+
+        @if (board.boardStatusesIds.length === 0) {
+          <div class="app-board__empty">
+            <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
+            <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
           </div>
         }
-      }
-    }
 
-    @if (board.boardStatusesIds.length === 0) {
-      <div class="app-board__empty">
-        <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
-        <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
-      </div>
+        @if (board.boardStatusesIds.length > 0) {
+          <div
+            class="app-board__status-new"
+            tabindex="{{_tabIndex()}}"
+            (click)="openEditBoardDialog($event)"
+            (keydown)="openEditBoardDialog($event)"
+            [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
+          >
+            + New Column
+          </div>
+        }
+      } @placeholder (minimum 100ms) { }
     }
-
-    @if (board.boardStatusesIds.length > 0) {
-      <div
-        class="app-board__status-new"
-        tabindex="{{_tabIndex()}}"
-        (click)="openEditBoardDialog($event)"
-        (keydown)="openEditBoardDialog($event)"
-        [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
-      >
-        + New Column
-      </div>
-    }
-  } @else {
-    @defer {
-      <div class="app-board__empty">
-        <div class="app-board__empty__title">Loading board...</div>
-      </div>
-    } @placeholder (minimum 900ms) { }
   }
+} @else {
+  @defer {
+    <div class="app-board__empty">
+      <div class="app-board__empty__title">Loading board...</div>
+    </div>
+  } @placeholder (minimum 150ms) { }
 }
