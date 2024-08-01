@@ -52,8 +52,10 @@
       </div>
     }
   } @else {
-    <div class="app-board__empty">
-      <div class="app-board__empty__title">Loading board...</div>
-    </div>
+    @defer {
+      <div class="app-board__empty">
+        <div class="app-board__empty__title">Loading board...</div>
+      </div>
+    } @placeholder (minimum 900ms) { }
   }
 }
