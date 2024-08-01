@@ -37,6 +37,7 @@ import {SnackBarService} from './snack-bar.service';
 export class BoardService {
 
   readonly user = this._authService.userSig.get();
+  readonly _authStateReady = this._authService.authStateReady;
 
   readonly boardIdSig = new Sig<string | null | undefined>(null);
   private readonly _boardId = this.boardIdSig.get();
@@ -89,6 +90,11 @@ export class BoardService {
     effect((onCleanup) => {
 
       const user = this.user();
+      const authStateReady = this._authStateReady();
+
+      if (!authStateReady) {
+        return;
+      }
 
       if (!user) {
         this.userBoardsSig.set(null);

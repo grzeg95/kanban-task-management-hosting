@@ -75,6 +75,7 @@ export class AppComponent {
 
   protected readonly _user = this._boardService.user;
   protected readonly _userBoards = this._boardService.userBoardsSig.get();
+  protected readonly _firstLoadingUserBoardsSig = this._boardService.firstLoadingUserBoardsSig.get();
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardId = this._boardService.boardIdSig.get();
   protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();

@@ -202,28 +202,35 @@
   @if (_authStateReady()) {
     @if (_isLoggedIn()) {
 
-      @if (_userBoards()?.length === 0 || !_userBoards() && _userBoards() !== undefined) {
-        <div class="app-root__boards__empty">
-          <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
-          <button
-            app-button
-            appearance="primary"
-            (click)="openAddBoardDialog($event)"
-          >+ Add New Board</button>
-        </div>
-      }
+      @if (!_firstLoadingUserBoardsSig()) {
 
-      @if ((_userBoards()?.length || 0) > 0 && !_board()) {
-        <div class="app-root__boards__empty">
-          <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
-          @if (!_showSideBar()) {
-            <button
-              app-button
-              appearance="primary"
-              (click)="setShowSideBar($event, true)"
-            >Open Sidebar</button>
+        @if (_userBoards(); as userBoards) {
+          @if (!userBoards || userBoards.length === 0) {
+            <div class="app-root__boards__empty">
+              <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
+              <button
+                app-button
+                appearance="primary"
+                (click)="openAddBoardDialog($event)"
+              >+ Add New Board</button>
+            </div>
           }
-        </div>
+
+          @if ((_userBoards()?.length || 0) > 0 && !_board()) {
+            <div class="app-root__boards__empty">
+              <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
+              @if (!_showSideBar()) {
+                <button
+                  app-button
+                  appearance="primary"
+                  (click)="setShowSideBar($event, true)"
+                >Open Sidebar</button>
+              }
+            </div>
+          }
+        }
+
+
       }
     } @else {
 
