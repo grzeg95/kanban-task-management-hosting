@@ -82,6 +82,7 @@ export class AppComponent {
   protected readonly _heightNav = this._layoutService.heightNavSig.get();
   protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
+  protected readonly _authStateReady = this._authService.authStateReady;
   protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
 
   protected readonly _userBoardsSorted = computed(() => {

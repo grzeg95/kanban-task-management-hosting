@@ -27,7 +27,7 @@ export class AuthService {
   }));
 
   readonly isLoggedIn = computed(() => {
-    return !!this.firebaseUser() && this.authStateReady();
+    return !!this.firebaseUser();
   });
 
   readonly userIsLoadedSig = new Sig<boolean>(false);
