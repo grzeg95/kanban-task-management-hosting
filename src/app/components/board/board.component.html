@@ -1,57 +1,59 @@
-@if (!_firstLoadingBoard() && _board(); as board) {
-  @if (!_firstLoadingBoardStatuses() && _boardStatuses(); as boardStatuses) {
+@if (_authStateReady() && _user()) {
+  @if (!_firstLoadingBoard() && _board(); as board) {
+    @if (!_firstLoadingBoardStatuses() && _boardStatuses(); as boardStatuses) {
 
-    @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
-      @if (boardStatuses.get(boardStatusId); as boardStatus) {
+      @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
+        @if (boardStatuses.get(boardStatusId); as boardStatus) {
 
-        <div class="app-board__status">
-          <div class="app-board__status__title-wrapper">
-            <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
-            <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
-          </div>
+          <div class="app-board__status">
+            <div class="app-board__status__title-wrapper">
+              <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
+              <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
+            </div>
 
-          @if (!_firstLoadingBoardTasks() && _boardTasks(); as boardTasks) {
+            @if (!_firstLoadingBoardTasks() && _boardTasks(); as boardTasks) {
 
-            @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
-              @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
+              @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
+                @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
 
-                <div class="app-board__task" tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
-                  <div class="app-board__task__title-wrapper">
-                    <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
+                  <div class="app-board__task" tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
+                    <div class="app-board__task__title-wrapper">
+                      <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
+                    </div>
+
+                    @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
+                      <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
+                    }
                   </div>
-
-                  @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
-                    <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
-                  }
-                </div>
+                }
               }
             }
-          }
-        </div>
+          </div>
+        }
       }
     }
-  }
 
-  @if (board.boardStatusesIds.length === 0) {
+    @if (board.boardStatusesIds.length === 0) {
+      <div class="app-board__empty">
+        <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
+        <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
+      </div>
+    }
+
+    @if (board.boardStatusesIds.length > 0) {
+      <div
+        class="app-board__status-new"
+        tabindex="{{_tabIndex()}}"
+        (click)="openEditBoardDialog($event)"
+        (keydown)="openEditBoardDialog($event)"
+        [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
+      >
+        + New Column
+      </div>
+    }
+  } @else {
     <div class="app-board__empty">
-      <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
-      <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
+      <div class="app-board__empty__title">Loading board...</div>
     </div>
   }
-
-  @if (board.boardStatusesIds.length > 0) {
-    <div
-      class="app-board__status-new"
-      tabindex="{{_tabIndex()}}"
-      (click)="openEditBoardDialog($event)"
-      (keydown)="openEditBoardDialog($event)"
-      [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
-    >
-      + New Column
-    </div>
-  }
-} @else {
-  <div class="app-board__empty">
-    <div class="app-board__empty__title">Loading board...</div>
-  </div>
 }

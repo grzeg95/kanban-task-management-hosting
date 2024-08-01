@@ -18,6 +18,7 @@ import {BoardService} from '../../services/board.service';
 import {LayoutService} from '../../services/layout.service';
 import {Color} from '../../utils/color';
 import {handleTabIndex} from '../../utils/handle-tabindex';
+import {Sig} from '../../utils/Sig';
 import {ButtonComponent} from '../button/button.component';
 import {EditBoardComponent} from '../dialogs/edit-board/edit-board.component';
 import {ViewBoardTaskComponent} from '../dialogs/view-board-task/view-board-task.component';
@@ -48,6 +49,9 @@ export class BoardComponent implements OnDestroy {
   private readonly _statusesColorEnd = Color.hexStringColorToColor('#5bda6b');
 
   protected readonly _user = this._authService.userSig.get();
+  protected readonly _authStateReady = this._authService.authStateReady;
+  readonly authFirstLoadingSig = new Sig(true);
+  protected readonly _authFirstLoading = this.authFirstLoadingSig.get();
 
   protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
 
@@ -112,7 +116,11 @@ export class BoardComponent implements OnDestroy {
       map((params) => params['id'])
     ).subscribe((id) => {
 
-      if (!this._user()) {
+      const _authFirstLoading = this._authFirstLoading();
+      const authStateReady = this._authStateReady();
+      const user = this._user();
+
+      if (!_authFirstLoading || authStateReady && !user) {
         this._router.navigate(['/']);
         return;
       }
@@ -122,10 +130,12 @@ export class BoardComponent implements OnDestroy {
 
     effect(() => {
 
+      const firstLoadingBoard = this._firstLoadingBoard();
       const board = this._board();
       const loadingBoard = this._loadingBoard();
 
-      if (board === null || loadingBoard === null) {
+      if (!firstLoadingBoard) {
+        this.authFirstLoadingSig.set(false);
         return;
       }
 
