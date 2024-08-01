@@ -50,8 +50,8 @@ export class BoardComponent implements OnDestroy {
 
   protected readonly _user = this._authService.userSig.get();
   protected readonly _authStateReady = this._authService.authStateReady;
-  readonly authFirstLoadingSig = new Sig(true);
-  protected readonly _authFirstLoading = this.authFirstLoadingSig.get();
+  readonly loadedSig = new Sig(false);
+  protected readonly _loaded = this.loadedSig.get();
 
   protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
 
@@ -116,30 +116,44 @@ export class BoardComponent implements OnDestroy {
       map((params) => params['id'])
     ).subscribe((id) => {
 
-      const _authFirstLoading = this._authFirstLoading();
+      const loaded = this._loaded();
+
+      if (loaded) {
+        this.loadedSig.set(false);
+        return;
+      }
+
       const authStateReady = this._authStateReady();
       const user = this._user();
 
-      if (!_authFirstLoading || authStateReady && !user) {
+      if (loaded || authStateReady && !user) {
         this._router.navigate(['/']);
         return;
       }
 
       this._boardService.boardIdSig.set(id);
+
+      this._boardService.firstLoadingBoardSig.set(true);
+      this._boardService.firstLoadingBoardStatusesSig.set(true);
+      this._boardService.firstLoadingBoardTasksSig.set(true);
     });
 
     effect(() => {
 
       const firstLoadingBoard = this._firstLoadingBoard();
+      const firstLoadingBoardStatuses = this._firstLoadingBoardStatuses();
+      const firstLoadingBoardTasks = this._firstLoadingBoardTasks();
+
       const board = this._board();
       const loadingBoard = this._loadingBoard();
 
-      if (!firstLoadingBoard) {
-        this.authFirstLoadingSig.set(false);
+      if (!firstLoadingBoard || !firstLoadingBoardStatuses || !firstLoadingBoardTasks) {
+        this.loadedSig.set(false);
         return;
       }
 
       if (!board && !loadingBoard) {
+        this.loadedSig.set(true);
         this._router.navigate(['/']);
       }
     });
