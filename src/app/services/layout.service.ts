@@ -73,15 +73,6 @@ export class LayoutService {
 
       const firstAnimation = this._firstAnimation();
 
-      if (firstAnimation) {
-        this.firstAnimation.set(false);
-      }
-    });
-
-    effect(() => {
-
-      const firstAnimation = this._firstAnimation();
-
       const showSideBar = this._showSideBar();
       const isOnDesktop = this._isOnDesktop();
       const isOnTablet = this._isOnTablet();
@@ -97,6 +88,7 @@ export class LayoutService {
       }
 
       if (firstAnimation) {
+        this.firstAnimation.set(false);
         state = LayoutServiceStates.first;
       }
 
