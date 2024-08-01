@@ -397,125 +397,54 @@ export class BoardService {
 
   boardCreate(data: BoardCreateData) {
 
-    this.loadingUserBoardsSig.set(true);
-
     return this._functionsService.httpsCallable<BoardCreateData, BoardCreateResult>('board-create', data).pipe(
       tap(() => {
         this._snackBarService.open('Board has been created', 3000);
-      }),
-      catchError((error) => {
-
-        this.loadingUserBoardsSig.set(false);
-
-        throw error;
       })
     );
   }
 
   boardDelete(data: BoardDeleteData) {
 
-    this.loadingUserBoardsSig.set(true);
-
     return this._functionsService.httpsCallable<BoardDeleteData, BoardDeleteResult>('board-delete', data).pipe(
       tap(() => {
         this._snackBarService.open('Board has been deleted', 3000);
-      }),
-      catchError((error) => {
-        this.loadingUserBoardsSig.set(false);
-        throw error;
       })
     );
   }
 
   boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
-    if (boardNameWasChanged) {
-      this.loadingBoardSig.set(true);
-    }
-
-    if (boardStatusNameWasChanged || boardStatusAddedOrDeleted) {
-      this.loadingBoardStatusesSig.set(true);
-    }
-
     return this._functionsService.httpsCallable<BoardUpdateData, BoardUpdateResult>('board-update', data).pipe(
       tap(() => {
         this._snackBarService.open('Board has been updated', 3000);
-      }),
-      catchError((error) => {
-
-        this.loadingBoardSig.set(false);
-        this.loadingBoardStatusesSig.set(true);
-
-        throw error;
       })
     );
   }
 
   boardTaskCreate(data: BoardTaskCreateData) {
 
-    if (this._boardId()) {
-      this.loadingBoardTasksSig.set(true);
-      this.loadingBoardStatusesSig.set(true);
-    }
-
     return this._functionsService.httpsCallable<BoardTaskCreateData, BoardTaskCreateResult>('board-task-create', data).pipe(
       tap(() => {
         this._snackBarService.open('Board task has been created', 3000);
-      }),
-      catchError((error) => {
-
-        if (this._boardId()) {
-          this.loadingBoardTasksSig.set(false);
-          this.loadingBoardStatusesSig.set(false);
-        }
-
-        throw error;
       })
     );
   }
 
   boardTaskDelete(data: BoardTaskDeleteData) {
 
-    if (this._boardId()) {
-      this.loadingBoardTasksSig.set(true);
-      this.loadingBoardStatusesSig.set(true);
-    }
-
     return this._functionsService.httpsCallable<BoardTaskDeleteData, BoardTaskDeleteResult>('board-task-delete', data).pipe(
       tap(() => {
         this._snackBarService.open('Board task has been deleted', 3000);
-      }),
-      catchError((error) => {
-
-        if (this._boardId()) {
-          this.loadingBoardTasksSig.set(false);
-          this.loadingBoardStatusesSig.set(false);
-        }
-
-        throw error;
       })
     );
   }
 
   boardTaskUpdate(data: BoardTaskUpdateData) {
 
-    if (this._boardId()) {
-      this.loadingBoardTasksSig.set(true);
-      this.loadingBoardStatusesSig.set(true);
-    }
-
     return this._functionsService.httpsCallable<BoardTaskUpdateData, BoardTaskUpdateResult>('board-task-update', data).pipe(
       tap(() => {
         this._snackBarService.open('Board task has been updated', 3000);
-      }),
-      catchError((error) => {
-
-        if (this._boardId()) {
-          this.loadingBoardTasksSig.set(false);
-          this.loadingBoardStatusesSig.set(false);
-        }
-
-        throw error;
       })
     );
   }

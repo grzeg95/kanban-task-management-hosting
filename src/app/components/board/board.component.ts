@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
+import {fadeZoomInOutTrigger} from '../../animations/fade-zoom-in-out.trigger';
 import {AuthService} from '../../services/auth.service';
 import {BoardService} from '../../services/board.service';
 import {LayoutService} from '../../services/layout.service';
@@ -38,7 +39,10 @@ import {LoadingComponent} from '../loading/loading.component';
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'app-board'
-  }
+  },
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
 export class BoardComponent implements OnDestroy {
 
@@ -170,6 +174,14 @@ export class BoardComponent implements OnDestroy {
 
   colorShift(progress: number): string {
     return Color.shift(this._statusesColorStart, this._statusesColorEnd, progress || 0).toRgbString();
+  }
+
+  getBoardStatus(boardStatusId: string) {
+    return this._boardStatuses()?.get(boardStatusId);
+  }
+
+  getBoardStatusTask(boardStatusTaskId: string) {
+    return this._boardTasks()?.get(boardStatusTaskId);
   }
 
   ngOnDestroy() {

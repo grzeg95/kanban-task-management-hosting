@@ -3,41 +3,36 @@
     @if (_board(); as board) {
 
       @defer {
-        @if (_boardStatuses(); as boardStatuses) {
 
           @for (boardStatusId of board.boardStatusesIds; track boardStatusId; let index = $index; let count = $count) {
-            @if (boardStatuses.get(boardStatusId); as boardStatus) {
+            @if (getBoardStatus(boardStatusId); as boardStatus) {
 
-              <div class="app-board__status">
-                <div class="app-board__status__title-wrapper">
-                  <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
-                  <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
-                </div>
-
-                @if (_boardTasks(); as boardTasks) {
-
-                  @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
-                    @if (boardTasks.get(boardStatusTaskId); as boardStatusTask) {
-
-                      <div class="app-board__task" tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
-                        <div class="app-board__task__title-wrapper">
-                          <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
-                        </div>
-
-                        @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
-                          <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
-                        }
-                      </div>
-                    }
-                  }
-                }
+            <div class="app-board__status" [@fadeZoomInOutTrigger]>
+              <div class="app-board__status__title-wrapper">
+                <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
+                <div class="app-board__status__title-wrapper__title">({{ boardStatus.boardTasksIds.length }}) {{ boardStatus.name }}</div>
               </div>
-            }
+
+              @for (boardStatusTaskId of boardStatus.boardTasksIds; track boardStatusTaskId) {
+                @if (getBoardStatusTask(boardStatusTaskId); as boardStatusTask) {
+
+                  <div class="app-board__task" [@fadeZoomInOutTrigger] tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
+                    <div class="app-board__task__title-wrapper">
+                      <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
+                    </div>
+
+                    @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
+                      <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
+                    }
+                  </div>
+                }
+              }
+            </div>
           }
         }
 
         @if (board.boardStatusesIds.length === 0) {
-          <div class="app-board__empty">
+          <div class="app-board__empty" [@fadeZoomInOutTrigger]>
             <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
             <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
           </div>
@@ -46,6 +41,7 @@
         @if (board.boardStatusesIds.length > 0) {
           <div
             class="app-board__status-new"
+            [@fadeZoomInOutTrigger]
             tabindex="{{_tabIndex()}}"
             (click)="openEditBoardDialog($event)"
             (keydown)="openEditBoardDialog($event)"
@@ -54,12 +50,12 @@
             + New Column
           </div>
         }
-      } @placeholder (minimum 100ms) { }
+      } @placeholder (minimum 75ms) { }
     }
   }
 } @else {
   @defer {
-    <div class="app-board__empty">
+    <div class="app-board__empty" [@fadeZoomInOutTrigger]>
       <div class="app-board__empty__title">Loading board...</div>
     </div>
   } @placeholder (minimum 150ms) { }
