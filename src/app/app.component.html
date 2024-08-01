@@ -216,7 +216,7 @@
             </div>
           }
 
-          @if ((_userBoards()?.length || 0) > 0 && !_board()) {
+          @if (userBoards.length > 0 && !_board()) {
             <div class="app-root__boards__empty">
               <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
               @if (!_showSideBar()) {
