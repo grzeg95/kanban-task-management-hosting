@@ -13,7 +13,7 @@ import {
 import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AuthService} from '../../services/auth.service';
-import {LayoutService} from '../../services/layout.service';
+import {LayoutService, LayoutServiceStates} from '../../services/layout.service';
 import {LoadingService} from '../../services/loading.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
@@ -22,11 +22,8 @@ import {LoadingComponent} from '../loading/loading.component';
 import {PopMenuItemComponent} from '../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuComponent} from '../pop-menu/pop-menu.component';
 
-enum states {
-  hidden = 'hidden',
-  hiddenPhone = 'hidden-phone',
-  tablet = 'tablet',
-  desktop = 'desktop'
+enum NavComponentStates {
+  hiddenPhone = 'hidden-phone'
 }
 
 @Component({
@@ -54,31 +51,31 @@ enum states {
       'move-branding-for-side-bar',
       [
         state(
-          states.hiddenPhone,
+          NavComponentStates.hiddenPhone,
           style({
             width: 41
           })
         ),
         state(
-          states.hidden,
+          LayoutServiceStates.hidden,
           style({
             width: 187
           })
         ),
         state(
-          states.tablet,
+          LayoutServiceStates.tablet,
           style({
             width: 237
           })
         ),
         state(
-          states.desktop,
+          LayoutServiceStates.desktop,
           style({
             width: 276
           })
         ),
         transition(
-          `${states.tablet} <=> ${states.hidden}, ${states.desktop} <=> ${states.hidden}`,
+          `${LayoutServiceStates.tablet} <=> ${LayoutServiceStates.hidden}, ${LayoutServiceStates.desktop} <=> ${LayoutServiceStates.hidden}`,
           animate('0.333s ease-in-out')
         )
       ]
@@ -91,6 +88,8 @@ export class NavComponent {
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavSelectedLabelTemplateRef: TemplateRef<any> | undefined;
 
+  private readonly _firstAnimation = this._layoutService.firstAnimation.get();
+
   protected readonly _showNavMenuOptions = this._layoutService.showNavMenuOptionsSig.get();
   protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
@@ -101,24 +100,32 @@ export class NavComponent {
 
   protected readonly _moveBrandingForSideBarState = computed(() => {
 
+    const firstAnimation = this._firstAnimation();
+
     const showSideBar = this._showSideBar();
     const isOnDesktop = this._isOnDesktop();
     const isOnTablet = this._isOnTablet();
     const isOnPhone = this._isOnPhone();
 
+    let state = 'hidden';
+
     if (isOnPhone) {
-      return states.hiddenPhone;
+      state = NavComponentStates.hiddenPhone;
     }
 
     if (showSideBar) {
       if (isOnDesktop) {
-        return 'desktop';
+        state = LayoutServiceStates.desktop;
       } else if (isOnTablet) {
-        return 'tablet';
+        state = LayoutServiceStates.tablet;
       }
     }
 
-    return 'hidden';
+    if (firstAnimation) {
+      state += '-first';
+    }
+
+    return state;
   });
 
   protected readonly _showSideBar = this._layoutService.showSideBarSig.get();

@@ -4,6 +4,14 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {Breakpoints, BreakpointsDevices} from '../models/breakpoints';
 import {Sig} from '../utils/Sig';
 
+export enum LayoutServiceStates {
+  first = 'first',
+  hidden = 'hidden',
+  phone = 'phone',
+  tablet = 'tablet',
+  desktop = 'desktop'
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,6 +22,9 @@ export class LayoutService {
     [Breakpoints.tablet.selector, BreakpointsDevices.tablet],
     [Breakpoints.desktop.selector, BreakpointsDevices.desktop]
   ]);
+
+  readonly firstAnimation = new Sig(true);
+  private readonly _firstAnimation = this.firstAnimation.get();
 
   readonly isOnPhoneSig = new Sig(false);
   private readonly _isOnPhone = this.isOnPhoneSig.get();
@@ -29,7 +40,7 @@ export class LayoutService {
   readonly showNavMenuOptionsSig = new Sig(false);
   readonly showSideBarSig = new Sig(true);
   private readonly _showSideBar = this.showSideBarSig.get();
-  readonly moveForSideBarStateSig = new Sig('hidden');
+  readonly moveForSideBarStateSig = new Sig('hidden-first');
 
   constructor(
     private _breakpointObserver: BreakpointObserver
@@ -60,18 +71,33 @@ export class LayoutService {
 
     effect(() => {
 
+      const firstAnimation = this._firstAnimation();
+
+      if (firstAnimation) {
+        this.firstAnimation.set(false);
+      }
+    });
+
+    effect(() => {
+
+      const firstAnimation = this._firstAnimation();
+
       const showSideBar = this._showSideBar();
       const isOnDesktop = this._isOnDesktop();
       const isOnTablet = this._isOnTablet();
 
-      let state = 'hidden';
+      let state = LayoutServiceStates.hidden;
 
       if (showSideBar) {
         if (isOnDesktop) {
-          state = 'desktop';
+          state = LayoutServiceStates.desktop;
         } else if (isOnTablet) {
-          state = 'tablet';
+          state = LayoutServiceStates.tablet;
         }
+      }
+
+      if (firstAnimation) {
+        state = LayoutServiceStates.first;
       }
 
       this.moveForSideBarStateSig.set(state);

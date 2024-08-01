@@ -18,7 +18,7 @@ import {SvgDirective} from './directives/svg.directive';
 import {UserBoard} from './models/user-board';
 import {AuthService} from './services/auth.service';
 import {BoardService} from './services/board.service';
-import {LayoutService} from './services/layout.service';
+import {LayoutService, LayoutServiceStates} from './services/layout.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
 import {handleTabIndex} from './utils/handle-tabindex';
 
@@ -64,7 +64,7 @@ import {handleTabIndex} from './utils/handle-tabindex';
           })
         ),
         transition(
-          '* => hidden, hidden => phone, hidden => tablet, hidden => desktop',
+          `${LayoutServiceStates.phone} <=> ${LayoutServiceStates.hidden}, ${LayoutServiceStates.tablet} <=> ${LayoutServiceStates.hidden}, ${LayoutServiceStates.desktop} <=> ${LayoutServiceStates.hidden}`,
           animate('0.333s ease-in-out'),
         )
       ]
