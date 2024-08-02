@@ -54,11 +54,24 @@ import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.compone
 export class ViewBoardTaskComponent {
 
   protected readonly _isRequesting = signal(false);
+
+  protected readonly _boardTaskId = this._boardService.boardTaskIdSig.get();
+
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
   protected readonly _showMenuOptions = signal(false);
   protected readonly _boardTask = this._boardService.boardTaskSig.get();
   protected readonly _boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
+
+  protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
+  protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
+  protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
+  protected readonly _loadingBoardStatuses = this._boardService.loadingBoardStatusesSig.get();
+
+  protected readonly _modificationUserBoards = this._boardService.modificationUserBoardsSig.get();
+  protected readonly _modificationBoard = this._boardService.modificationBoardSig.get();
+  protected readonly _modificationBoardTasks = this._boardService.modificationBoardTasksSig.get();
+  protected readonly _modificationBoardStatuses = this._boardService.modificationBoardStatusesSig.get();
 
   protected readonly _boardStatusesPopMenuItems = computed(() => {
 
@@ -106,8 +119,34 @@ export class ViewBoardTaskComponent {
 
     effect(() => {
 
+      const boardTaskId = this._boardTaskId();
+
       const board = this._board();
       const boardStatuses = this._boardStatuses();
+
+      const loadingUserBoards = this._loadingUserBoards();
+      const loadingBoard = this._loadingBoard();
+      const loadingBoardTask = this._loadingBoardTasks();
+      const loadingBoardStatuses = this._loadingBoardStatuses();
+
+      const modificationUserBoards = this._modificationUserBoards();
+      const modificationBoard = this._modificationBoard();
+      const modificationBoardTask = this._modificationBoardTasks();
+      const modificationBoardStatuses = this._modificationBoardStatuses();
+
+      if (
+        boardTaskId === undefined ||
+        loadingUserBoards ||
+        loadingBoard ||
+        loadingBoardTask ||
+        loadingBoardStatuses ||
+        (modificationUserBoards && modificationUserBoards > 0) ||
+        (modificationBoard && modificationBoard > 0) ||
+        (modificationBoardTask && modificationBoardTask > 0) ||
+        (modificationBoardStatuses && modificationBoardStatuses > 0)
+      ) {
+        return;
+      }
 
       if (
         (!board && board !== undefined) ||

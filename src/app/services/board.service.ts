@@ -329,12 +329,7 @@ export class BoardService {
       const boardTasks = this._boardTasks();
       const boardTaskId = this._boardTaskId();
 
-      if (!boardTasks || !boardTaskId) {
-        this.boardTaskSig.set(null);
-        return;
-      }
-
-      this.boardTaskSig.set(boardTasks.get(boardTaskId));
+      this.boardTaskSig.set(boardTasks?.get(boardTaskId || ''));
     });
 
     // boardTaskSubtasks
