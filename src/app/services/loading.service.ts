@@ -27,7 +27,7 @@ export class LoadingService {
       loadingBoardTasks,
       whileLoginIn,
       !authStateReady
-    ].some((val) => val);
+    ].some((val) => !!val);
   });
 
   constructor(
