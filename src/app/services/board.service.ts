@@ -88,7 +88,7 @@ export class BoardService {
     let userBoards_userId: string | undefined;
     let userBoards_userBoardsIds: string[] | undefined;
     let userBoards_userConfigMaxUserBoards: number | undefined;
-    effect((onCleanup) => {
+    effect(() => {
 
       const user = this.user();
       const authStateReady = this._authStateReady();
@@ -145,16 +145,12 @@ export class BoardService {
 
         this.userBoardsSig.set(userBoards);
       });
-
-      onCleanup(() => {
-        this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
-      });
     });
 
     // board
     let board_userId: string | undefined;
     let board_boardId: string | undefined;
-    effect((onCleanup) => {
+    effect(() => {
 
       const user = this.user();
       const boardId = this._boardId();
@@ -196,22 +192,19 @@ export class BoardService {
 
         this.boardSig.set(board);
       });
-
-      onCleanup(() => {
-        this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
-      });
     });
 
     // boardStatuses
     let boardStatuses_userId: string | undefined;
     let boardStatuses_userConfigMaxBoardStatuses: number | undefined;
     let boardStatuses_boardId: string | undefined;
-    effect((onCleanup) => {
+    effect(() => {
 
       const user = this.user();
       const board = this._board();
 
       if (!user || !board) {
+        console.log('here');
         this.boardStatusesSig.set(null);
         boardStatuses_userId = undefined;
         boardStatuses_userConfigMaxBoardStatuses = undefined;
@@ -257,16 +250,12 @@ export class BoardService {
 
         this.boardStatusesSig.set(querySnapBoardStatusesMap);
       });
-
-      onCleanup(() => {
-        this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
-      });
     });
 
     // boardTasks
     let boardTasks_userId: string | undefined;
     let boardStatuses_userConfigMaxBoardTasks: number | undefined;
-    effect((onCleanup) => {
+    effect(() => {
 
       const user = this.user();
       const board = this._board();
@@ -316,10 +305,6 @@ export class BoardService {
 
         this.boardTasksSig.set(querySnapUserBoardTasksMap);
       });
-
-      onCleanup(() => {
-        this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
-      });
     });
     let boardTasks_boardId: string | undefined;
 
@@ -336,7 +321,7 @@ export class BoardService {
     let boardTaskSubtasks_userId: string | undefined;
     let boardTaskSubtasks_boardId: string | undefined;
     let boardTaskSubtasks_boardTaskId: string | undefined;
-    effect((onCleanup) => {
+    effect(() => {
 
       const board = this._board();
       const boardTask = this._boardTask();
@@ -388,10 +373,6 @@ export class BoardService {
         }
 
         this.boardTaskSubtasksSig.set(querySnapUserBoardTaskSubtasksMap);
-      });
-
-      onCleanup(() => {
-        this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
       });
     });
   }
@@ -451,6 +432,12 @@ export class BoardService {
 
     return this._functionsService.httpsCallable<BoardUpdateData, BoardUpdateResult>('board-update', data).pipe(
       tap(() => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+
         this._snackBarService.open('Board has been updated', 3000);
       }),
       catchError((error) => {
