@@ -1,11 +1,13 @@
 import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {JsonPipe} from '@angular/common';
-import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, OnDestroy, signal, ViewEncapsulation} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {catchError, NEVER} from 'rxjs';
+import {fadeZoomInOutTrigger} from '../../../animations/fade-zoom-in-out.trigger';
 import {SvgDirective} from '../../../directives/svg.directive';
-import {BoardTaskUpdateData} from '../../../models/board-task';
+import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
+import {BoardTaskSubtask} from '../../../models/board-task-subtask';
 import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
@@ -22,6 +24,10 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
 import {DeleteBoardTaskComponent} from '../delete-board-task/delete-board-task.component';
 import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.component';
+
+type BoardTaskView = BoardTask & {
+  boardTaskSubtasks: BoardTaskSubtask[]
+};
 
 @Component({
   selector: 'app-view-board-task',
@@ -47,11 +53,11 @@ import {EditBoardTaskComponent} from '../edit-board-task/edit-board-task.compone
   templateUrl: './view-board-task.component.html',
   styleUrl: './view-board-task.component.scss',
   encapsulation: ViewEncapsulation.None,
-  host: {
-    class: 'app-view-board-task'
-  }
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
-export class ViewBoardTaskComponent {
+export class ViewBoardTaskComponent implements OnDestroy {
 
   protected readonly _isRequesting = signal(false);
 
@@ -67,6 +73,7 @@ export class ViewBoardTaskComponent {
   protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
   protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
   protected readonly _loadingBoardStatuses = this._boardService.loadingBoardStatusesSig.get();
+  protected readonly _loadingBoardTaskSubtasks = this._boardService.loadingBoardTaskSubtasksSig.get();
 
   protected readonly _modificationUserBoards = this._boardService.modificationUserBoardsSig.get();
   protected readonly _modificationBoard = this._boardService.modificationBoardSig.get();
@@ -108,6 +115,35 @@ export class ViewBoardTaskComponent {
     }
 
     return boardTask.boardStatusId;
+  });
+
+  protected readonly _boardTaskView = computed(() => {
+
+    const boardTask = this._boardTask();
+    const boardTaskSubtasks = this._boardTaskSubtasks();
+    const loadingBoardTaskSubtasks = this._loadingBoardTaskSubtasks();
+
+    if (!boardTask || !boardTaskSubtasks || loadingBoardTaskSubtasks) {
+      return null;
+    }
+
+    const boardTaskView: BoardTaskView = {
+      ...boardTask,
+      boardTaskSubtasks: []
+    };
+
+    for (const boardTaskSubtaskId of boardTask.boardTaskSubtasksIds) {
+
+      const boardTaskSubtask = boardTaskSubtasks.get(boardTaskSubtaskId);
+
+      if (!boardTaskSubtask) {
+        continue;
+      }
+
+      boardTaskView.boardTaskSubtasks.push(boardTaskSubtask);
+    }
+
+    return boardTaskView;
   });
 
   constructor(
@@ -292,5 +328,9 @@ export class ViewBoardTaskComponent {
     } catch {
       /* empty */
     }
+  }
+
+  ngOnDestroy(): void {
+    this._boardService.boardTaskIdSig.set(undefined);
   }
 }

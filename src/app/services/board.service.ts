@@ -204,7 +204,6 @@ export class BoardService {
       const board = this._board();
 
       if (!user || !board) {
-        console.log('here');
         this.boardStatusesSig.set(null);
         boardStatuses_userId = undefined;
         boardStatuses_userConfigMaxBoardStatuses = undefined;
@@ -512,9 +511,23 @@ export class BoardService {
 
   boardTaskUpdate(data: BoardTaskUpdateData) {
 
+    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) + 1);
+
     return this._functionsService.httpsCallable<BoardTaskUpdateData, BoardTaskUpdateResult>('board-task-update', data).pipe(
       tap(() => {
+
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+
         this._snackBarService.open('Board task has been updated', 3000);
+      }),
+      catchError((error) => {
+
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+
+        throw error;
       })
     );
   }

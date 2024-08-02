@@ -1,76 +1,73 @@
-@if (_boardTask(); as boardTask) {
+@if (_boardTaskView(); as boardTaskView) {
 
-  <div class="app-view-board-task__header">
-    <div class="app-view-board-task__header__title">{{ boardTask.title }}</div>
+  <div class="app-view-board-task" [@fadeZoomInOutTrigger]>
+    <div class="app-view-board-task__header">
+      <div class="app-view-board-task__header__title">{{ boardTaskView.title }}</div>
 
-    <div
-      tabindex="0"
-      class="app-view-board-task__header__menu__trigger"
-      (click)="setShowMenuOptions($event, !_showMenuOptions())"
-      (keydown)="setShowMenuOptions($event, !_showMenuOptions())"
-    >
-      <svg
-        appSvg="icon-vertical-ellipsis"
-        cdkOverlayOrigin
-        #trigger="cdkOverlayOrigin"
-      />
-    </div>
+      <div
+        tabindex="0"
+        class="app-view-board-task__header__menu__trigger"
+        [@fadeZoomInOutTrigger]
+        (click)="setShowMenuOptions($event, !_showMenuOptions())"
+        (keydown)="setShowMenuOptions($event, !_showMenuOptions())"
+      >
+        <svg
+          appSvg="icon-vertical-ellipsis"
+          cdkOverlayOrigin
+          #trigger="cdkOverlayOrigin"
+        />
+      </div>
 
-    <ng-template
-      cdkConnectedOverlay
-      #cdkConnectedOverlay="cdkConnectedOverlay"
-      [cdkConnectedOverlayOrigin]="trigger"
-      [cdkConnectedOverlayOpen]="_showMenuOptions()"
-      [cdkConnectedOverlayDisposeOnNavigation]="true"
-      [cdkConnectedOverlayPositions]="[{
+      <ng-template
+        cdkConnectedOverlay
+        #cdkConnectedOverlay="cdkConnectedOverlay"
+        [cdkConnectedOverlayOrigin]="trigger"
+        [cdkConnectedOverlayOpen]="_showMenuOptions()"
+        [cdkConnectedOverlayDisposeOnNavigation]="true"
+        [cdkConnectedOverlayPositions]="[{
         originX: 'start',
         originY: 'bottom',
         overlayX: 'end',
         overlayY: 'top'
       }]"
-      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); _showMenuOptions.set(false);"
-    >
-      <app-pop-menu [style.min-width.px]="192">
-        <app-pop-menu-item (click)="_showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
-        <app-pop-menu-item [danger]="true" (click)="_showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
-      </app-pop-menu>
-    </ng-template>
+        (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); _showMenuOptions.set(false);"
+      >
+        <app-pop-menu [style.min-width.px]="192" [@fadeZoomInOutTrigger]>
+          <app-pop-menu-item (click)="_showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
+          <app-pop-menu-item [danger]="true" (click)="_showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
+        </app-pop-menu>
+      </ng-template>
 
-  </div>
+    </div>
 
-  @if (boardTask.description) {
-    <div class="app-view-board-task__description">{{ boardTask.description }}</div>
-  }
+    @if (boardTaskView.description) {
+      <div class="app-view-board-task__description" [@fadeZoomInOutTrigger]>{{ boardTaskView.description }}</div>
+    }
 
-  @if (boardTask.boardTaskSubtasksIds.length) {
+    @if (boardTaskView.boardTaskSubtasksIds.length) {
 
-    <app-label>Subtasks ({{ boardTask.completedBoardTaskSubtasks }} of {{ boardTask.boardTaskSubtasksIds.length}})</app-label>
+      <app-label [@fadeZoomInOutTrigger]>Subtasks ({{ boardTaskView.completedBoardTaskSubtasks }} of {{ boardTaskView.boardTaskSubtasksIds.length}})</app-label>
 
-    @for (boardTaskSubtaskId of boardTask.boardTaskSubtasksIds; track boardTaskSubtaskId) {
-
-      @if (_boardTaskSubtasks(); as boardTaskSubtasks) {
-
-        @if (boardTaskSubtasks.get(boardTaskSubtaskId); as boardTaskSubtask) {
-          <app-checkbox
-            class="app-view-board-task__subtask"
-            (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtaskId, appCheckbox.checked)"
-            #appCheckbox
-            [checked]="boardTaskSubtask.isCompleted"
-            [disabled]="_isRequesting()"
-          >{{ boardTaskSubtask.title }}
-          </app-checkbox>
-        }
+      @for (boardTaskSubtask of boardTaskView.boardTaskSubtasks; track boardTaskSubtask.id) {
+        <app-checkbox
+          class="app-view-board-task__subtask"
+          [@fadeZoomInOutTrigger]
+          (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtask.id, appCheckbox.checked)"
+          #appCheckbox
+          [checked]="boardTaskSubtask.isCompleted"
+          [disabled]="_isRequesting()"
+        >{{ boardTaskSubtask.title }}</app-checkbox>
       }
     }
-  }
 
-  <app-form-field>
-    <app-label>Current board status</app-label>
-    <app-select
-      [ngModel]="_boardStatusId()"
-      [items]="_boardStatusesPopMenuItems()"
-      [disabled]="_isRequesting()"
-      (ngModelChange)="onBoardTaskStatusIdChange($event)"
-    />
-  </app-form-field>
+    <app-form-field [@fadeZoomInOutTrigger]>
+      <app-label>Current board status</app-label>
+      <app-select
+        [ngModel]="_boardStatusId()"
+        [items]="_boardStatusesPopMenuItems()"
+        [disabled]="_isRequesting()"
+        (ngModelChange)="onBoardTaskStatusIdChange($event)"
+      />
+    </app-form-field>
+  </div>
 }
