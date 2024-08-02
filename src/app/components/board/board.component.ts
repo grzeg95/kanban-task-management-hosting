@@ -13,6 +13,8 @@ import {
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {fadeZoomInOutTrigger} from '../../animations/fade-zoom-in-out.trigger';
+import {BoardStatus} from '../../models/board-status';
+import {BoardTask} from '../../models/board-task';
 import {AuthService} from '../../services/auth.service';
 import {BoardService} from '../../services/board.service';
 import {LayoutService} from '../../services/layout.service';
@@ -23,6 +25,10 @@ import {ButtonComponent} from '../button/button.component';
 import {EditBoardComponent} from '../dialogs/edit-board/edit-board.component';
 import {ViewBoardTaskComponent} from '../dialogs/view-board-task/view-board-task.component';
 import {LoadingComponent} from '../loading/loading.component';
+
+type BoardStatusView = BoardStatus & {
+  boardTasks: BoardTask[]
+}
 
 @Component({
   selector: 'app-board',
@@ -64,6 +70,48 @@ export class BoardComponent implements OnDestroy {
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
   protected readonly _boardTasks = this._boardService.boardTasksSig.get();
+
+  protected readonly _boardView = computed(() => {
+
+    const board = this._board();
+    const boardStatuses = this._boardStatuses();
+    const boardTasks = this._boardTasks();
+
+    const _boardView: BoardStatusView[] = [];
+
+    if (!board || !boardStatuses || !boardTasks) {
+      return _boardView;
+    }
+
+    for (const boardStatusId of board.boardStatusesIds) {
+
+      const _boardStatus = boardStatuses.get(boardStatusId);
+
+      if (!_boardStatus) {
+        continue;
+      }
+
+      const boardStatusView: BoardStatusView = {
+        ..._boardStatus,
+        boardTasks: [] as BoardTask[]
+      };
+
+      for (const boardStatusTaskId of boardStatusView.boardTasksIds) {
+
+        const boardStatusTask = boardTasks.get(boardStatusTaskId);
+
+        if (!boardStatusTask) {
+          continue;
+        }
+
+        boardStatusView.boardTasks.push(boardStatusTask);
+      }
+
+      _boardView.push(boardStatusView);
+    }
+
+    return _boardView;
+  });
 
   protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
   protected readonly _loadingBoardStatuses = this._boardService.loadingBoardStatusesSig.get();
@@ -175,14 +223,6 @@ export class BoardComponent implements OnDestroy {
 
   colorShift(progress: number): string {
     return Color.shift(this._statusesColorStart, this._statusesColorEnd, progress || 0).toRgbString();
-  }
-
-  getBoardStatus(boardStatusId: string) {
-    return this._boardStatuses()?.get(boardStatusId);
-  }
-
-  getBoardStatusTask(boardStatusTaskId: string) {
-    return this._boardTasks()?.get(boardStatusTaskId);
   }
 
   ngOnDestroy() {
