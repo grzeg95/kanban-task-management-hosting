@@ -77,10 +77,10 @@ export class BoardComponent implements OnDestroy {
     const boardStatuses = this._boardStatuses();
     const boardTasks = this._boardTasks();
 
-    const _boardView: BoardStatusView[] = [];
+    const boardStatusViews: BoardStatusView[] = [];
 
     if (!board || !boardStatuses || !boardTasks) {
-      return _boardView;
+      return boardStatusViews;
     }
 
     for (const boardStatusId of board.boardStatusesIds) {
@@ -107,10 +107,10 @@ export class BoardComponent implements OnDestroy {
         boardStatusView.boardTasks.push(boardStatusTask);
       }
 
-      _boardView.push(boardStatusView);
+      boardStatusViews.push(boardStatusView);
     }
 
-    return _boardView;
+    return boardStatusViews;
   });
 
   protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
