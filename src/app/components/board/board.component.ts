@@ -2,7 +2,6 @@ import {Dialog} from '@angular/cdk/dialog';
 import {NgStyle} from '@angular/common';
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   computed,
   DestroyRef,
@@ -89,7 +88,6 @@ export class BoardComponent implements OnDestroy {
     private readonly _router: Router,
     private readonly _layoutService: LayoutService,
     private readonly _dialog: Dialog,
-    private readonly _cdr: ChangeDetectorRef,
     _destroyRef: DestroyRef
   ) {
 
@@ -99,17 +97,20 @@ export class BoardComponent implements OnDestroy {
       const loadingBoardStatuses = this._loadingBoardStatuses();
       const loadingBoardTasks = this._loadingBoardTasks();
 
+      const board = this._board();
+
       let height = '';
       let width = '';
 
-      if (loadingBoard || loadingBoardStatuses || loadingBoardTasks) {
+      if (loadingBoard || loadingBoardStatuses || loadingBoardTasks || board?.boardStatusesIds.length === 0) {
         height = '100%';
         width = '100%';
       }
 
-      this.height = height;
-      this.width = width;
-      this._cdr.markForCheck();
+      setTimeout(() => {
+        this.height = height;
+        this.width = width;
+      });
     });
 
     this._activatedRoute.params.pipe(
