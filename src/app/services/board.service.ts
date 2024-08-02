@@ -71,6 +71,12 @@ export class BoardService {
   readonly loadingBoardTasksSig = new Sig(false);
   readonly loadingBoardTaskSubtasksSig = new Sig(false);
 
+  readonly modificationUserBoardsSig = new Sig(0);
+  readonly modificationBoardSig = new Sig(0);
+  readonly modificationBoardStatusesSig = new Sig(0);
+  readonly modificationBoardTasksSig = new Sig(0);
+  readonly modificationBoardTaskSubtasksSig = new Sig(0);
+
   constructor(
     private readonly _authService: AuthService,
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
@@ -397,45 +403,127 @@ export class BoardService {
 
   boardCreate(data: BoardCreateData) {
 
+    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
+
     return this._functionsService.httpsCallable<BoardCreateData, BoardCreateResult>('board-create', data).pipe(
       tap(() => {
         this._snackBarService.open('Board has been created', 3000);
+      }),
+      catchError((error) => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+
+        throw error;
       })
     );
   }
 
   boardDelete(data: BoardDeleteData) {
 
+    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
+    this.modificationBoardSig.update((value) => (value || 0) + 1);
+    this.modificationBoardStatusesSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+
     return this._functionsService.httpsCallable<BoardDeleteData, BoardDeleteResult>('board-delete', data).pipe(
       tap(() => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+
         this._snackBarService.open('Board has been deleted', 3000);
+      }),
+      catchError((error) => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+
+        throw error;
       })
     );
   }
 
   boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
+    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
+    this.modificationBoardSig.update((value) => (value || 0) + 1);
+    this.modificationBoardStatusesSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+
     return this._functionsService.httpsCallable<BoardUpdateData, BoardUpdateResult>('board-update', data).pipe(
       tap(() => {
         this._snackBarService.open('Board has been updated', 3000);
+      }),
+      catchError((error) => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+
+        throw error;
       })
     );
   }
 
   boardTaskCreate(data: BoardTaskCreateData) {
 
+    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
+    this.modificationBoardSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) + 1);
+
     return this._functionsService.httpsCallable<BoardTaskCreateData, BoardTaskCreateResult>('board-task-create', data).pipe(
       tap(() => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+
         this._snackBarService.open('Board task has been created', 3000);
+      }),
+      catchError((error) => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+
+        throw error;
       })
     );
   }
 
   boardTaskDelete(data: BoardTaskDeleteData) {
 
+    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
+    this.modificationBoardSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) + 1);
+
     return this._functionsService.httpsCallable<BoardTaskDeleteData, BoardTaskDeleteResult>('board-task-delete', data).pipe(
       tap(() => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+
         this._snackBarService.open('Board task has been deleted', 3000);
+      }),
+      catchError((error) => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationBoardSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+
+        throw error;
       })
     );
   }

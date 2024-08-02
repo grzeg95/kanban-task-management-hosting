@@ -8,6 +8,10 @@ export class Sig<T> {
     setTimeout(() => this._sig.set(value));
   }
 
+  update(fn: (value: T | undefined) => T | undefined) {
+    setTimeout(() => this._sig.update(fn));
+  }
+
   get() {
     return this._sig.asReadonly();
   }
