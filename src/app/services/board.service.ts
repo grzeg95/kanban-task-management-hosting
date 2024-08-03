@@ -1,4 +1,5 @@
 import {effect, Inject, Injectable} from '@angular/core';
+import {Router} from '@angular/router';
 import {Firestore, limit, updateDoc} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
 import {catchError, defer, map, of, Subscription, takeWhile, tap} from 'rxjs';
@@ -81,7 +82,8 @@ export class BoardService {
     private readonly _authService: AuthService,
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
     private readonly _functionsService: FunctionsService,
-    private readonly _snackBarService: SnackBarService
+    private readonly _snackBarService: SnackBarService,
+    private readonly _router: Router
   ) {
 
     // userBoards
@@ -156,6 +158,7 @@ export class BoardService {
       const boardId = this._boardId();
 
       if (!user || !boardId) {
+        this._router.navigate(['/']);
         this.boardSig.set(null);
         board_userId = undefined;
         board_boardId = undefined;
