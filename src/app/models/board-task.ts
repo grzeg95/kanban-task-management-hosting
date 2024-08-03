@@ -26,7 +26,8 @@ export class BoardTask implements BoardTaskDoc {
     public readonly description: string,
     public readonly boardTaskSubtasksIds: string[],
     public readonly boardStatusId: string,
-    public readonly completedBoardTaskSubtasks: number
+    public readonly completedBoardTaskSubtasks: number,
+    public readonly exists: boolean
   ) {
   }
 
@@ -77,7 +78,8 @@ export class BoardTask implements BoardTaskDoc {
       description,
       boardTaskSubtasksIds,
       boardStatusId,
-      completedBoardTaskSubtasks
+      completedBoardTaskSubtasks,
+      snap.exists()
     );
   }
 }

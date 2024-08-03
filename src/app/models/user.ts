@@ -9,16 +9,16 @@ import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
 
 export interface UserDoc extends DocumentData {
-  readonly disabled: boolean,
-  readonly boardsIds: string[],
-  readonly darkMode: boolean | null,
+  readonly disabled: boolean;
+  readonly boardsIds: string[];
+  readonly darkMode: boolean | null;
   readonly config: {
-    readonly maxUserBoards: number,
-    readonly maxBoardStatuses: number,
-    readonly maxBoardTasks: number,
-    readonly maxBoardTaskSubtasks: number
+    readonly maxUserBoards: number;
+    readonly maxBoardStatuses: number;
+    readonly maxBoardTasks: number;
+    readonly maxBoardTaskSubtasks: number;
   };
-  readonly configLoaded: boolean
+  readonly configLoaded: boolean;
 }
 
 export class User implements UserDoc {
@@ -34,7 +34,8 @@ export class User implements UserDoc {
       readonly maxBoardTasks: number,
       readonly maxBoardTaskSubtasks: number
     },
-    public readonly configLoaded: boolean
+    public readonly configLoaded: boolean,
+    public readonly exists: boolean
   ) {
   }
 
@@ -93,7 +94,8 @@ export class User implements UserDoc {
       boardsIds,
       darkMode,
       config,
-      configLoaded
+      configLoaded,
+      snap.exists()
     );
   }
 }

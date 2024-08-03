@@ -20,7 +20,8 @@ export class BoardStatus implements BoardStatusDoc {
   constructor(
     public readonly id: string,
     public readonly name: string,
-    public readonly boardTasksIds: string[]
+    public readonly boardTasksIds: string[],
+    public readonly exists: boolean
   ) {
   }
 
@@ -61,7 +62,8 @@ export class BoardStatus implements BoardStatusDoc {
     return new BoardStatus(
       snap.id,
       name,
-      boardTasksIds
+      boardTasksIds,
+      snap.exists()
     );
   }
 }

@@ -20,7 +20,8 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
   constructor(
     public readonly id: string,
     public readonly title: string,
-    public readonly isCompleted: boolean
+    public readonly isCompleted: boolean,
+    public readonly exists: boolean
   ) {
   }
 
@@ -54,7 +55,8 @@ export class BoardTaskSubtask implements BoardTaskSubtaskDoc {
     return new BoardTaskSubtask(
       snap.id,
       title,
-      isCompleted
+      isCompleted,
+      snap.exists()
     );
   }
 }

@@ -11,14 +11,15 @@ import {Collections} from '../services/firebase/collections';
 import {User, UserDoc} from './user';
 
 export interface UserBoardDoc extends DocumentData {
-  name: string
+  readonly name: string
 }
 
 export class UserBoard implements UserBoardDoc {
 
   constructor(
     public readonly id: string,
-    public readonly name: string
+    public readonly name: string,
+    public readonly exists: boolean
   ) {
   }
 
@@ -48,7 +49,8 @@ export class UserBoard implements UserBoardDoc {
 
     return new UserBoard(
       snap.id,
-      name
+      name,
+      snap.exists()
     );
   }
 }
