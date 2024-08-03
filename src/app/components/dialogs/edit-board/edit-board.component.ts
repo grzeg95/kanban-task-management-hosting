@@ -1,7 +1,7 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, NEVER} from 'rxjs';
+import {catchError, NEVER, of} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardUpdateData} from '../../../models/board';
 import {BoardService} from '../../../services/board.service';
@@ -35,16 +35,16 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class EditBoardComponent {
 
-  protected readonly _isDone = signal(false);
   protected readonly _isRequesting = signal(false);
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardStatusesSig = this._boardService.boardStatusesSig.get();
+
   private _initialBoardName = '';
   private readonly _initialBoardStatuses = new Map<string, string>();
 
   protected readonly _form = new FormGroup({
-    boardId: new FormControl('', [Validators.required]),
-    boardName: new FormControl('', [Validators.required]),
+    boardId: new FormControl('', Validators.required),
+    boardName: new FormControl('', Validators.required),
     boardStatuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
   });
 
@@ -91,59 +91,57 @@ export class EditBoardComponent {
 
     effect(() => {
 
-      if (this._isDone()) {
-        this.close();
-      }
-    });
-
-    effect(() => {
-
       if (this._isRequesting()) {
         this._form.disable();
       } else {
         this._form.enable();
       }
     });
+  }
 
-    effect(() => {
+  boardUpdate() {
 
-      if (!this._isRequesting()) {
-        return;
-      }
+    if (this._isRequesting()) {
+      return;
+    }
 
-      this._form.updateValueAndValidity();
-      this._form.markAllAsTouched();
+    this._form.updateValueAndValidity();
+    this._form.markAllAsTouched();
 
-      if (this._form.invalid) {
-        return;
-      }
+    if (this._form.invalid) {
+      return;
+    }
 
-      const updateBoardData = {
-        id: this._form.value.boardId,
-        name: this._form.value.boardName,
-        boardStatuses: this._form.value.boardStatuses?.map((boardStatus) => {
+    const updateBoardData = {
+      id: this._form.value.boardId,
+      name: this._form.value.boardName,
+      boardStatuses: this._form.value.boardStatuses?.map((boardStatus) => {
 
-          if (!boardStatus.id) {
-            delete boardStatus.id;
-          }
+        if (!boardStatus.id) {
+          delete boardStatus.id;
+        }
 
-          return boardStatus;
-        }),
-      } as BoardUpdateData;
+        return boardStatus;
+      }),
+    } as BoardUpdateData;
 
-      const boardNameWasChanged = this._initialBoardName !== updateBoardData.name;
-      const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this._initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
-      const boardStatusAddedOrDeleted = this._initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
+    const boardNameWasChanged = this._initialBoardName !== updateBoardData.name;
+    const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this._initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
+    const boardStatusAddedOrDeleted = this._initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
 
-      this._boardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
-        catchError(() => {
-          this._isRequesting.set(false);
-          return NEVER;
-        })
-      ).subscribe(() => {
-        this._isDone.set(true);
+    this._isRequesting.set(true);
+
+    this._boardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
+      catchError(() => {
+
         this._isRequesting.set(false);
-      });
+        return of(null);
+      })
+    ).subscribe((result) => {
+
+      if (result) {
+        this.close();
+      }
     });
   }
 

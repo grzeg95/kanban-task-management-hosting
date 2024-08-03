@@ -3,7 +3,7 @@ import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {JsonPipe} from '@angular/common';
 import {Component, computed, effect, OnDestroy, signal, ViewEncapsulation} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {catchError, NEVER} from 'rxjs';
+import {catchError, NEVER, of} from 'rxjs';
 import {fadeZoomInOutTrigger} from '../../../animations/fade-zoom-in-out.trigger';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
@@ -11,6 +11,7 @@ import {BoardTaskSubtask} from '../../../models/board-task-subtask';
 import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
+import {Sig} from '../../../utils/Sig';
 import {ButtonComponent} from '../../button/button.component';
 import {CheckboxComponent} from '../../form/checkbox/checkbox.component';
 import {ErrorComponent} from '../../form/error/error.component';
@@ -146,6 +147,8 @@ export class ViewBoardTaskComponent implements OnDestroy {
     return boardTaskView;
   });
 
+  protected _newWindowWithTaskRequested = false;
+
   constructor(
     private readonly _boardService: BoardService,
     private readonly _dialogRef: DialogRef<ViewBoardTaskComponent>,
@@ -224,6 +227,10 @@ export class ViewBoardTaskComponent implements OnDestroy {
 
   onBoardTaskStatusIdChange(newBoardStatusId: string) {
 
+    if (this._isRequesting()) {
+      return;
+    }
+
     const board = this._board();
     const boardTask = this._boardTask();
     const boardTaskSubtasks = this._boardTaskSubtasks();
@@ -256,16 +263,7 @@ export class ViewBoardTaskComponent implements OnDestroy {
     this._isRequesting.set(true);
 
     this._boardService.boardTaskUpdate(updateTaskData).pipe(
-      catchError(() => {
-
-        try {
-          this._isRequesting.set(false);
-        } catch {
-          /* empty */
-        }
-
-        return NEVER;
-      })
+      catchError(() => NEVER)
     ).subscribe(() => {
 
       try {
@@ -285,6 +283,7 @@ export class ViewBoardTaskComponent implements OnDestroy {
     const boardTask = this._boardTask();
 
     if (boardTask) {
+      this._newWindowWithTaskRequested = true;
       this._boardService.boardTaskIdSig.set(boardTask.id);
       this._dialog.open(EditBoardTaskComponent);
 
@@ -300,6 +299,7 @@ export class ViewBoardTaskComponent implements OnDestroy {
     const boardTask = this._boardTask();
 
     if (boardTask) {
+      this._newWindowWithTaskRequested = true;
       this._boardService.boardTaskIdSig.set(boardTask.id);
       this._dialog.open(DeleteBoardTaskComponent);
 
@@ -331,6 +331,8 @@ export class ViewBoardTaskComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this._boardService.boardTaskIdSig.set(undefined);
+    if (!this._newWindowWithTaskRequested) {
+      this._boardService.boardTaskIdSig.set(undefined);
+    }
   }
 }

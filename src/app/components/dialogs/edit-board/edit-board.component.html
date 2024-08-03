@@ -40,7 +40,7 @@
     class="app-edit-board__update-board-button"
     app-button
     appearance="primary"
-    (click)="_isRequesting.set(true)"
+    (click)="boardUpdate()"
     [disabled]="_isRequesting()"
   >
     Save Changes

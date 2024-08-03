@@ -1,7 +1,7 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, NEVER} from 'rxjs';
+import {catchError, NEVER, of} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskCreateData} from '../../../models/board-task';
 import {BoardService} from '../../../services/board.service';
@@ -40,7 +40,6 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 })
 export class AddNewBordTaskComponent {
 
-  protected readonly _isDone = signal(false);
   protected readonly _isRequesting = signal(false);
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
@@ -70,9 +69,9 @@ export class AddNewBordTaskComponent {
   });
 
   protected readonly form = new FormGroup({
-    boardId: new FormControl(''),
-    boardStatusId: new FormControl(''),
-    title: new FormControl('', [Validators.required]),
+    boardId: new FormControl('', Validators.required),
+    boardStatusId: new FormControl('', Validators.required),
+    title: new FormControl('', Validators.required),
     description: new FormControl(''),
     boardTaskSubtasksTitles: new FormArray<FormControl<string | null>>([])
   });
@@ -92,7 +91,7 @@ export class AddNewBordTaskComponent {
         (!board && board !== undefined) ||
         (!boardStatuses && boardStatuses !== undefined)
       ) {
-        this._snackBarService.open(`This board want's found`, 3000);
+        this._snackBarService.open(`This board wasn't found`, 3000);
         this.close();
         return;
       }
@@ -120,13 +119,6 @@ export class AddNewBordTaskComponent {
 
     effect(() => {
 
-      if (this._isDone()) {
-        this.close();
-      }
-    });
-
-    effect(() => {
-
       if (this._isRequesting()) {
         this.form.disable();
       } else {
@@ -134,39 +126,44 @@ export class AddNewBordTaskComponent {
       }
     });
 
-    effect(() => {
-
-      if (!this._isRequesting()) {
-        return;
-      }
-
-      this.form.updateValueAndValidity();
-      this.form.markAllAsTouched();
-
-      if (this.form.invalid) {
-        return;
-      }
-
-      const createTaskData = {
-        boardId: this.form.value.boardId,
-        boardStatusId: this.form.value.boardStatusId,
-        title: this.form.value.title,
-        description: this.form.value.description,
-        boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
-      } as BoardTaskCreateData;
-
-      this._boardService.boardTaskCreate(createTaskData).pipe(
-        catchError(() => {
-          this._isRequesting.set(false);
-          return NEVER;
-        })
-      ).subscribe(() => {
-        this._isDone.set(true);
-        this._isRequesting.set(false);
-      });
-    });
-
     this.addNewSubtask();
+  }
+
+  boardTaskCreate() {
+
+    if (this._isRequesting()) {
+      return;
+    }
+
+    this.form.updateValueAndValidity();
+    this.form.markAllAsTouched();
+
+    if (this.form.invalid) {
+      return;
+    }
+
+    const createTaskData = {
+      boardId: this.form.value.boardId,
+      boardStatusId: this.form.value.boardStatusId,
+      title: this.form.value.title,
+      description: this.form.value.description,
+      boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
+    } as BoardTaskCreateData;
+
+    this._isRequesting.set(true);
+
+    this._boardService.boardTaskCreate(createTaskData).pipe(
+      catchError(() => {
+
+        this._isRequesting.set(false);
+        return of(null);
+      })
+    ).subscribe((result) => {
+
+      if (result) {
+        this.close();
+      }
+    });
   }
 
   addNewSubtask() {

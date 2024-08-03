@@ -59,7 +59,7 @@
     class="app-edit-board-task__update-task-button"
     app-button
     appearance="primary"
-    (click)="_isRequesting.set(true)"
+    (click)="boardTaskUpdate()"
   >
     Save Changes
     @if (_isRequesting()) {

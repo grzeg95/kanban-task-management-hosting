@@ -1,7 +1,7 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
-import {catchError, NEVER} from 'rxjs';
+import {catchError, NEVER, of} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardService} from '../../../services/board.service';
 import {ButtonComponent} from '../../button/button.component';
@@ -33,7 +33,6 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class DeleteBoardComponent {
 
-  protected readonly _isDone = signal(false);
   protected readonly _isRequesting = signal(false);
   protected readonly _board = this._boardService.boardSig.get();
 
@@ -47,35 +46,32 @@ export class DeleteBoardComponent {
       const board = this._board();
 
       if (!board && board !== undefined) {
-        this.close();
+         this.close();
       }
     });
+  }
 
-    effect(() => {
+  boardDelete() {
 
-      if (this._isDone()) {
-        this.close();
-      }
-    });
+    const board = this._board();
 
-    effect(() => {
+    if (this._isRequesting() || !board) {
+      return;
+    }
 
-      const board = this._board();
+    this._isRequesting.set(true);
 
-      if (!this._isRequesting() || !board) {
-        return;
-      }
+    this._boardService.boardDelete({id: board.id}).pipe(
+      catchError(() => {
 
-      this._boardService.boardDelete({id: board.id}).pipe(
-        catchError(() => {
-          this._isRequesting.set(false);
-          return NEVER;
-        })
-      ).subscribe(() => {
-        this._isDone.set(true);
         this._isRequesting.set(false);
-        this._boardService.boardIdSig.set(undefined);
-      });
+        return of(null);
+      })
+    ).subscribe((result) => {
+
+      if (result) {
+        this.close();
+      }
     });
   }
 

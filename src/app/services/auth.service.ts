@@ -53,7 +53,10 @@ export class AuthService {
         return;
       }
 
-      if (firebaseUserUid === firebaseUser.uid) {
+      if (
+        firebaseUserUid === firebaseUser.uid &&
+        this._userSub && !this._userSub.closed
+      ) {
         return;
       }
       firebaseUserUid = firebaseUser.uid;
@@ -61,7 +64,6 @@ export class AuthService {
       const userRef = User.firestoreRef(this._firestore, firebaseUserUid);
 
       this.userIsLoadedSig.set(false);
-
       this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
       this._userSub = docSnapshots(userRef).pipe(
         takeWhile(() => !!this.firebaseUser()),
@@ -71,8 +73,11 @@ export class AuthService {
 
         if (user?.configLoaded) {
           this.userSig.set(user);
-          this.userIsLoadedSig.set(true);
+        } else {
+          this.userSig.set(undefined);
         }
+
+        this.userIsLoadedSig.set(true);
       });
     });
   }

@@ -8,7 +8,7 @@
   class="app-delete-board__delete-board-button"
   app-button
   appearance="warn"
-  (click)="_isRequesting.set(true)"
+  (click)="boardDelete()"
   [disabled]="_isRequesting()"
 >
   Delete

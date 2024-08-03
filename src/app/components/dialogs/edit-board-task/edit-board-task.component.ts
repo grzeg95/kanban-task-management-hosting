@@ -1,7 +1,7 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, OnDestroy, signal, ViewEncapsulation} from '@angular/core';
 import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, NEVER} from 'rxjs';
+import {catchError, NEVER, of} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskUpdateData} from '../../../models/board-task';
 import {BoardService} from '../../../services/board.service';
@@ -41,9 +41,8 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
     class: 'app-edit-board-task'
   }
 })
-export class EditBoardTaskComponent {
+export class EditBoardTaskComponent implements OnDestroy {
 
-  protected readonly _isDone = signal(false);
   protected readonly _isRequesting = signal(false);
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
@@ -215,75 +214,73 @@ export class EditBoardTaskComponent {
 
     effect(() => {
 
-      if (this._isDone()) {
-        this.close();
-      }
-    });
-
-    effect(() => {
-
       if (this._isRequesting()) {
         this._form.disable();
       } else {
         this._form.enable();
       }
     });
+  }
 
-    effect(() => {
+  boardTaskUpdate() {
 
-      if (!this._isRequesting()) {
-        return;
-      }
+    if (this._isRequesting()) {
+      return;
+    }
 
-      this._form.updateValueAndValidity();
-      this._form.markAllAsTouched();
+    this._form.updateValueAndValidity();
+    this._form.markAllAsTouched();
 
-      if (this._form.invalid) {
-        return;
-      }
+    if (this._form.invalid) {
+      return;
+    }
 
-      const formValue = this._form.value;
+    const formValue = this._form.value;
 
-      const boardTaskUpdateData = {
-        id: formValue.id,
-        boardId: formValue.boardId,
-        boardStatus: {
-          id: this._boardStatusId(),
-          newId: formValue.boardStatusId
-        },
-        title: formValue.title,
-        description: formValue.description,
-        boardTaskSubtasks: formValue.boardTaskSubtasks!.map((boardTaskSubtask) => {
+    const boardTaskUpdateData = {
+      id: formValue.id,
+      boardId: formValue.boardId,
+      boardStatus: {
+        id: this._boardStatusId(),
+        newId: formValue.boardStatusId
+      },
+      title: formValue.title,
+      description: formValue.description,
+      boardTaskSubtasks: formValue.boardTaskSubtasks!.map((boardTaskSubtask) => {
 
-          if (!boardTaskSubtask.id) {
-            delete boardTaskSubtask.id;
-          }
+        if (!boardTaskSubtask.id) {
+          delete boardTaskSubtask.id;
+        }
 
-          return boardTaskSubtask
-        })
-      } as BoardTaskUpdateData;
+        return boardTaskSubtask
+      })
+    } as BoardTaskUpdateData;
 
-      if (boardTaskUpdateData.boardStatus.id === boardTaskUpdateData.boardStatus.newId) {
-        delete boardTaskUpdateData.boardStatus.newId;
-      }
+    if (boardTaskUpdateData.boardStatus.id === boardTaskUpdateData.boardStatus.newId) {
+      delete boardTaskUpdateData.boardStatus.newId;
+    }
 
-      this._boardService.boardTaskUpdate(boardTaskUpdateData).pipe(
-        catchError(() => {
-          this._isRequesting.set(false);
-          return NEVER;
-        })
-      ).subscribe(() => {
-        this._isDone.set(true);
+    this._isRequesting.set(true);
+
+    this._boardService.boardTaskUpdate(boardTaskUpdateData).pipe(
+      catchError(() => {
+
         this._isRequesting.set(false);
-      });
+        return of(null);
+      })
+    ).subscribe((result) => {
+
+      if (result) {
+        this.close();
+      }
     });
   }
 
   addNewBoardTaskSubtask(id: null | string = null, title = '') {
     this._form.controls.boardTaskSubtasks.push(
       new FormGroup({
-        id: new FormControl(id),
-        title: new FormControl(title, [Validators.required])
+        id: new FormControl(id, Validators.required),
+        title: new FormControl(title, Validators.required)
       })
     );
   }
@@ -294,5 +291,9 @@ export class EditBoardTaskComponent {
     } catch {
       /* empty */
     }
+  }
+
+  ngOnDestroy(): void {
+    this._boardService.boardTaskIdSig.set(undefined);
   }
 }

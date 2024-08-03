@@ -59,7 +59,7 @@
     class="app-view-board-task__create-task-button"
     app-button
     appearance="primary"
-    (click)="_isRequesting.set(true)"
+    (click)="boardTaskCreate()"
     [disabled]="_isRequesting()"
   >
     Create Board Task

@@ -39,7 +39,7 @@
     class="app-add-new-board__add-new-board-button"
     app-button
     appearance="primary"
-    (click)="_isRequesting.set(true)"
+    (click)="boardCreate()"
     [disabled]="_isRequesting()"
   >
     Create New Board
