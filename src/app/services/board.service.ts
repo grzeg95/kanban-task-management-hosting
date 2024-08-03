@@ -185,8 +185,9 @@ export class BoardService {
 
         this.loadingBoardSig.set(false);
 
-        if (!board) {
+        if (!board || !board.exists) {
           this.boardSig.set(undefined);
+          this.boardIdSig.set(undefined);
           return;
         }
 
@@ -382,6 +383,9 @@ export class BoardService {
 
     return this._functionsService.httpsCallable<BoardCreateData, BoardCreateResult>('board-create', data).pipe(
       tap(() => {
+
+        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+
         this._snackBarService.open('Board has been created', 3000);
       }),
       catchError((error) => {
