@@ -74,6 +74,7 @@ export class DeleteBoardComponent {
       ).subscribe(() => {
         this._isDone.set(true);
         this._isRequesting.set(false);
+        this._boardService.boardIdSig.set(undefined);
       });
     });
   }
