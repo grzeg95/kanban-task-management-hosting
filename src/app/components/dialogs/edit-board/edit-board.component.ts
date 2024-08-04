@@ -12,6 +12,8 @@ import {FormFieldComponent} from '../../form/form-field/form-field.component';
 import {InputComponent} from '../../form/input/input.component';
 import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
+import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-edit-board',
@@ -29,9 +31,9 @@ import {LoaderComponent} from '../../loader/loader.component';
   templateUrl: './edit-board.component.html',
   styleUrl: './edit-board.component.scss',
   encapsulation: ViewEncapsulation.None,
-  host: {
-    class: 'app-edit-board'
-  }
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
 export class EditBoardComponent {
 
@@ -41,6 +43,9 @@ export class EditBoardComponent {
 
   private _initialBoardName = '';
   private readonly _initialBoardStatuses = new Map<string, string>();
+
+  private readonly _viewIsReadyToShowSig = new Sig(1);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
 
   protected readonly _form = new FormGroup({
     boardId: new FormControl('', Validators.required),
@@ -87,6 +92,8 @@ export class EditBoardComponent {
           this._initialBoardStatuses.set(boardStatus!.id, boardStatus!.name);
         });
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
 
     effect(() => {

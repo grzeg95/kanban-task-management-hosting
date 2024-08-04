@@ -1,52 +1,58 @@
-<div class="app-edit-board__title">Edit Board</div>
+@if (_viewIsReadyToShow() === 0) {
 
-<form [formGroup]="_form">
+  <div class="app-edit-board" [@fadeZoomInOutTrigger]>
+    <div class="app-edit-board__title">Edit Board</div>
 
-  <app-form-field>
-    <app-label>Board Name</app-label>
-    <app-input
-      placeholder="e.g. Web Design"
-      [withHint]="true"
-      [formControl]="_form.controls.boardName"
-    />
-    @if (!_form.controls.boardName.valid && !_form.controls.boardName.untouched && _form.controls.boardName.errors?.['required']) {
-      <app-error>Can’t be empty</app-error>
-    }
-  </app-form-field>
+    <form [formGroup]="_form">
 
-  <app-label>Board columns</app-label>
+      <app-form-field>
+        <app-label>Board Name</app-label>
+        <app-input
+          placeholder="e.g. Web Design"
+          [withHint]="true"
+          [formControl]="_form.controls.boardName"
+        />
+        @if (!_form.controls.boardName.valid && !_form.controls.boardName.untouched && _form.controls.boardName.errors?.['required']) {
+          <app-error>Can’t be empty</app-error>
+        }
+      </app-form-field>
 
-  @for (column of _form.controls.boardStatuses.controls; track column; let i = $index) {
+      <app-label>Board columns</app-label>
 
-    <app-form-field>
-      <app-input
-        [formControl]="column.controls.name"
-        placeholder="e.g. Web Design"
-        [removeAble]="true"
-        (remove)="_form.controls.boardStatuses.removeAt(i)"
-      />
-    </app-form-field>
-  }
+      @for (column of _form.controls.boardStatuses.controls; track column; let i = $index) {
 
-  <button
-    class="app-edit-board__add-new-status-name-button"
-    app-button
-    appearance="secondary"
-    (click)="addNewStatusName()"
-    [disabled]="_isRequesting()"
-  >+ Add New Column</button>
+        <app-form-field>
+          <app-input
+            [@fadeZoomInOutTrigger]
+            [formControl]="column.controls.name"
+            placeholder="e.g. Web Design"
+            [removeAble]="true"
+            (remove)="_form.controls.boardStatuses.removeAt(i)"
+          />
+        </app-form-field>
+      }
 
-  <button
-    class="app-edit-board__update-board-button"
-    app-button
-    appearance="primary"
-    (click)="boardUpdate()"
-    [disabled]="_isRequesting()"
-  >
-    Save Changes
-    @if (_isRequesting()) {
-      <app-loader/>
-    }
-  </button>
+      <button
+        class="app-edit-board__add-new-status-name-button"
+        app-button
+        appearance="secondary"
+        (click)="addNewStatusName()"
+        [disabled]="_isRequesting()"
+      >+ Add New Column</button>
 
-</form>
+      <button
+        class="app-edit-board__update-board-button"
+        app-button
+        appearance="primary"
+        (click)="boardUpdate()"
+        [disabled]="_isRequesting()"
+      >
+        Save Changes
+        @if (_isRequesting()) {
+          <app-loader/>
+        }
+      </button>
+
+    </form>
+  </div>
+}
