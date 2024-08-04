@@ -12,6 +12,8 @@ import {FormFieldComponent} from '../../form/form-field/form-field.component';
 import {InputComponent} from '../../form/input/input.component';
 import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
+import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-add-new-board',
@@ -29,14 +31,17 @@ import {LoaderComponent} from '../../loader/loader.component';
   templateUrl: './add-new-board.component.html',
   styleUrl: './add-new-board.component.scss',
   encapsulation: ViewEncapsulation.None,
-  host: {
-    class: 'app-add-new-board'
-  }
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
 export class AddNewBoardComponent {
 
   protected readonly _isRequesting = signal(false);
   protected readonly _user = this._authService.userSig.get();
+
+  private readonly _viewIsReadyToShowSig = new Sig(1);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
 
   protected readonly _form = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -56,6 +61,8 @@ export class AddNewBoardComponent {
       if (!user) {
         this.close();
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
 
     effect(() => {
