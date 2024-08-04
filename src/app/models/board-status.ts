@@ -1,9 +1,9 @@
 import {
-  collection as firestoreCollection,
+  collection,
   doc as firestoreDoc,
   DocumentData,
-  DocumentReference as firestoreDocumentReference,
-  DocumentSnapshot as firestoreDocumentSnapshot,
+  DocumentReference,
+  DocumentSnapshot,
   FirestoreDataConverter
 } from 'firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
@@ -30,19 +30,19 @@ export class BoardStatus implements BoardStatusDoc {
     fromFirestore: BoardStatus._snapToThis
   } as FirestoreDataConverter<BoardStatus, BoardStatusDoc>;
 
-  static firestoreRef(ref: firestoreDocumentReference<Board, BoardDoc>, statusId: string) {
+  static firestoreRef(ref: DocumentReference<Board, BoardDoc>, statusId: string) {
     return firestoreDoc(ref, Collections.boardStatuses, statusId).withConverter(BoardStatus._converter);
   }
 
-  static firestoreCollectionRef(ref: firestoreDocumentReference<Board, BoardDoc>) {
-    return firestoreCollection(ref, Collections.boardStatuses).withConverter(BoardStatus._converter);
+  static firestoreCollectionRef(ref: DocumentReference<Board, BoardDoc>) {
+    return collection(ref, Collections.boardStatuses).withConverter(BoardStatus._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc>) {
+  static firestoreData(snap: DocumentSnapshot<BoardStatus, BoardStatusDoc>) {
     return BoardStatus._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<BoardStatus, BoardStatusDoc>) {
+  private static _snapToThis(snap: DocumentSnapshot<BoardStatus, BoardStatusDoc>) {
 
     const data = snap.data();
 

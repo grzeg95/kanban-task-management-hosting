@@ -3,7 +3,7 @@ import {
   DocumentData,
   DocumentReference,
   DocumentSnapshot,
-  onSnapshot as _onSnapshot,
+  onSnapshot,
   Query,
   query,
   QueryConstraint,
@@ -40,10 +40,10 @@ function fromRef<AppModelType, DbModelType extends DocumentData>(refOrQuery: Doc
   }
 
   return new Observable((subscriber) => {
-    const unsubscribe = _onSnapshot(ref || query, {includeMetadataChanges: true}, {
-      next: subscriber.next.bind(subscriber),
-      error: subscriber.error.bind(subscriber),
-      complete: subscriber.complete.bind(subscriber),
+    const unsubscribe = onSnapshot(ref || query, {includeMetadataChanges: true}, {
+      next: (docSnap) => subscriber.next(docSnap),
+      error: (firebaseError) => subscriber.error(firebaseError),
+      complete: () => subscriber.complete()
     });
     return {unsubscribe};
   });

@@ -1,8 +1,6 @@
-import {effect, Inject, Injectable} from '@angular/core';
-import {Router} from '@angular/router';
-import {Firestore, limit, updateDoc} from 'firebase/firestore';
-import isEqual from 'lodash/isEqual';
-import {catchError, defer, map, of, Subscription, takeWhile, tap} from 'rxjs';
+import {Inject, Injectable} from '@angular/core';
+import {Firestore, updateDoc} from 'firebase/firestore';
+import {catchError, defer, tap} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -23,12 +21,8 @@ import {
   BoardTaskUpdateResult
 } from '../models/board-task';
 import {BoardTaskSubtask} from '../models/board-task-subtask';
-import {User} from '../models/user';
-import {UserBoard} from '../models/user-board';
 import {FirestoreInjectionToken} from '../tokens/firebase';
 import {Sig} from '../utils/Sig';
-import {AuthService} from './auth.service';
-import {collectionSnapshots, docSnapshots} from './firebase/firestore';
 import {FunctionsService} from './firebase/functions.service';
 import {SnackBarService} from './snack-bar.service';
 
@@ -37,28 +31,13 @@ import {SnackBarService} from './snack-bar.service';
 })
 export class BoardService {
 
-  readonly user = this._authService.userSig.get();
-
   readonly boardIdSig = new Sig<string | null | undefined>(null);
-
   readonly boardTaskIdSig = new Sig<string | null>(null);
-
-  readonly userBoardsSig = new Sig<UserBoard[] | null | undefined>(undefined);
-  userBoardsSub: Subscription | undefined;
-
   readonly boardSig = new Sig<Board | null | undefined>(undefined);
-  boardSub: Subscription | undefined;
-
   readonly boardStatusesSig = new Sig<Map<string, BoardStatus> | null | undefined>(undefined);
-  _boardStatusesSub: Subscription | undefined;
-
   readonly boardTasksSig = new Sig<Map<string, BoardTask> | null | undefined>(undefined);
-  _boardTasksSub: Subscription | undefined;
-
   readonly boardTaskSig = new Sig<BoardTask | null | undefined>(undefined);
-
   readonly boardTaskSubtasksSig = new Sig<Map<string, BoardTaskSubtask> | null | undefined>(undefined);
-  _boardTaskSubtasksSub: Subscription | undefined;
 
   readonly loadingUserBoardsSig = new Sig(false);
   readonly loadingBoardSig = new Sig(false);
@@ -73,7 +52,6 @@ export class BoardService {
   readonly modificationBoardTaskSubtasksSig = new Sig(0);
 
   constructor(
-    private readonly _authService: AuthService,
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
     private readonly _functionsService: FunctionsService,
     private readonly _snackBarService: SnackBarService

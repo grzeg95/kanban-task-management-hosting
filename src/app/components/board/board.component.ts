@@ -6,13 +6,15 @@ import {
   computed,
   DestroyRef,
   effect,
-  HostBinding, Inject,
+  HostBinding,
+  Inject,
   OnDestroy,
   ViewEncapsulation
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Firestore, limit} from 'firebase/firestore';
-import {catchError, map, of, takeWhile} from 'rxjs';
+import {catchError, map, of, Subscription, takeWhile} from 'rxjs';
 import {fadeZoomInOutTrigger} from '../../animations/fade-zoom-in-out.trigger';
 import {Board} from '../../models/board';
 import {BoardStatus} from '../../models/board-status';
@@ -128,6 +130,10 @@ export class BoardComponent implements OnDestroy {
   protected readonly boardTaskSig = this._boardService.boardTaskSig;
   protected readonly _boardTask = this.boardTaskSig.get();
 
+  private _boardStatusesSub: Subscription | undefined;
+  private _boardTasksSub: Subscription | undefined;
+  private _boardTaskSubtasksSub: Subscription | undefined;
+
   protected readonly _tabIndex = computed(() => {
 
     const isOnPhone = this._isOnPhone();
@@ -148,7 +154,7 @@ export class BoardComponent implements OnDestroy {
     private readonly _router: Router,
     private readonly _layoutService: LayoutService,
     private readonly _dialog: Dialog,
-    _destroyRef: DestroyRef
+    private readonly _destroyRef: DestroyRef
   ) {
 
     effect(() => {
@@ -219,7 +225,7 @@ export class BoardComponent implements OnDestroy {
     let boardStatuses_boardId: string | undefined;
     effect(() => {
 
-      const user = this._boardService.user();
+      const user = this._user();
       const board = this._board();
 
       if (!user || !board) {
@@ -227,7 +233,7 @@ export class BoardComponent implements OnDestroy {
         boardStatuses_userId = undefined;
         boardStatuses_userConfigMaxBoardStatuses = undefined;
         boardStatuses_boardId = undefined;
-        this._boardService._boardStatusesSub && !this._boardService._boardStatusesSub.closed && this._boardService._boardStatusesSub.unsubscribe();
+        this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
         return;
       }
 
@@ -247,10 +253,11 @@ export class BoardComponent implements OnDestroy {
       const boardStatusesRef = BoardStatus.firestoreCollectionRef(boardRef);
 
       this._boardService.loadingBoardStatusesSig.set(true);
-      this._boardService._boardStatusesSub && !this._boardService._boardStatusesSub.closed && this._boardService._boardStatusesSub.unsubscribe();
-      this._boardService._boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(boardStatuses_userConfigMaxBoardStatuses)).pipe(
-        catchError(() => of(null)),
-        takeWhile(() => !!this._board() && !!this._boardService.user())
+      this._boardStatusesSub && !this._boardStatusesSub.closed && this._boardStatusesSub.unsubscribe();
+      this._boardStatusesSub = collectionSnapshots(boardStatusesRef, limit(boardStatuses_userConfigMaxBoardStatuses)).pipe(
+        takeUntilDestroyed(this._destroyRef),
+        takeWhile(() => !!this._board() && !!this._user()),
+        catchError(() => of(null))
       ).subscribe((querySnapBoardStatuses) => {
 
         this._boardService.loadingBoardStatusesSig.set(false);
@@ -275,14 +282,14 @@ export class BoardComponent implements OnDestroy {
     let boardStatuses_userConfigMaxBoardTasks: number | undefined;
     effect(() => {
 
-      const user = this._boardService.user();
+      const user = this._user();
       const board = this._board();
 
       if (!user || !board) {
         this._boardService.boardTasksSig.set(null);
         boardTasks_userId = undefined;
         boardStatuses_userConfigMaxBoardTasks = undefined;
-        this._boardService._boardTasksSub && !this._boardService._boardTasksSub.closed && this._boardService._boardTasksSub.unsubscribe();
+        this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
         return;
       }
 
@@ -302,10 +309,11 @@ export class BoardComponent implements OnDestroy {
       const boardTasksRef = BoardTask.firestoreCollectionRef(boardRef);
 
       this._boardService.loadingBoardTasksSig.set(true);
-      this._boardService._boardTasksSub && !this._boardService._boardTasksSub.closed && this._boardService._boardTasksSub.unsubscribe();
-      this._boardService._boardTasksSub = collectionSnapshots(boardTasksRef, limit(boardStatuses_userConfigMaxBoardTasks)).pipe(
-        catchError(() => of(null)),
-        takeWhile(() => !!this._board() && !!this._boardService.user())
+      this._boardTasksSub && !this._boardTasksSub.closed && this._boardTasksSub.unsubscribe();
+      this._boardTasksSub = collectionSnapshots(boardTasksRef, limit(boardStatuses_userConfigMaxBoardTasks)).pipe(
+        takeUntilDestroyed(this._destroyRef),
+        takeWhile(() => !!this._board() && !!this._user()),
+        catchError(() => of(null))
       ).subscribe((querySnapBoardTasks) => {
 
         this._boardService.loadingBoardTasksSig.set(false);
@@ -343,14 +351,14 @@ export class BoardComponent implements OnDestroy {
 
       const board = this._board();
       const boardTask = this._boardTask();
-      const user = this._boardService.user();
+      const user = this._user();
 
       if (!board || !boardTask || !user) {
         this._boardService.boardTaskSubtasksSig.set(undefined);
         boardTaskSubtasks_userId = undefined;
         boardTaskSubtasks_boardId = undefined;
         boardTaskSubtasks_boardTaskId = undefined;
-        this._boardService._boardTaskSubtasksSub && !this._boardService._boardTaskSubtasksSub.closed && this._boardService._boardTaskSubtasksSub.unsubscribe();
+        this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
         return;
       }
 
@@ -371,10 +379,11 @@ export class BoardComponent implements OnDestroy {
       const boardTaskSubtasksRef = BoardTaskSubtask.firestoreRefs(boardTaskRef);
 
       this._boardService.loadingBoardTaskSubtasksSig.set(true);
-      this._boardService._boardTaskSubtasksSub && !this._boardService._boardTaskSubtasksSub.closed && this._boardService._boardTaskSubtasksSub.unsubscribe();
-      this._boardService._boardTaskSubtasksSub = collectionSnapshots(boardTaskSubtasksRef, limit(user.config.maxBoardTaskSubtasks)).pipe(
-        catchError(() => of(null)),
-        takeWhile(() => !!this._board() && !!this._boardTask() && !!this._boardService.user())
+      this._boardTaskSubtasksSub && !this._boardTaskSubtasksSub.closed && this._boardTaskSubtasksSub.unsubscribe();
+      this._boardTaskSubtasksSub = collectionSnapshots(boardTaskSubtasksRef, limit(user.config.maxBoardTaskSubtasks)).pipe(
+        takeUntilDestroyed(this._destroyRef),
+        takeWhile(() => !!this._board() && !!this._boardTask() && !!this._user()),
+        catchError(() => of(null))
       ).subscribe((querySnapBoardTaskSubtasks) => {
 
         this._boardService.loadingBoardTaskSubtasksSig.set(false);

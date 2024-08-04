@@ -1,5 +1,5 @@
-import {computed, effect, Inject, Injectable} from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {computed, DestroyRef, effect, Inject, Injectable} from '@angular/core';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
 import {catchError, from, map, Observable, of, Subscription, takeWhile} from 'rxjs';
@@ -38,7 +38,8 @@ export class AuthService {
 
   constructor(
     @Inject(AuthInjectionToken) readonly _auth: Auth,
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore
+    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
+    private readonly _destroyRef: DestroyRef
   ) {
 
     let firebaseUserUid: string | undefined;
@@ -66,6 +67,7 @@ export class AuthService {
       this.userIsLoadedSig.set(false);
       this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
       this._userSub = docSnapshots(userRef).pipe(
+        takeUntilDestroyed(this._destroyRef),
         takeWhile(() => !!this.firebaseUser()),
         map(User.firestoreData),
         catchError(() => of(null))

@@ -1,7 +1,7 @@
 import {
-  doc as firestoreDoc,
+  doc,
   DocumentData,
-  DocumentSnapshot as firestoreDocumentSnapshot,
+  DocumentSnapshot,
   Firestore,
   FirestoreDataConverter
 } from 'firebase/firestore';
@@ -45,14 +45,14 @@ export class User implements UserDoc {
   } as FirestoreDataConverter<User, UserDoc>;
 
   static firestoreRef(firestore: Firestore, id: string) {
-    return firestoreDoc(firestore, Collections.users, id).withConverter(User._converter);
+    return doc(firestore, Collections.users, id).withConverter(User._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<User, UserDoc>) {
+  static firestoreData(snap: DocumentSnapshot<User, UserDoc>) {
     return User._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<User, UserDoc>) {
+  private static _snapToThis(snap: DocumentSnapshot<User, UserDoc>) {
 
     const data = snap.data();
 

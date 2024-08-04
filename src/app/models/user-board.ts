@@ -1,10 +1,10 @@
 import {
-  collection as firestoreCollection,
+  collection,
   DocumentData,
   DocumentReference,
-  DocumentSnapshot as firestoreDocumentSnapshot,
+  DocumentSnapshot,
   FirestoreDataConverter,
-  QueryDocumentSnapshot as firestoreQueryDocumentSnapshot
+  QueryDocumentSnapshot
 } from 'firebase/firestore';
 import cloneDeep from 'lodash/cloneDeep';
 import {Collections} from '../services/firebase/collections';
@@ -29,17 +29,17 @@ export class UserBoard implements UserBoardDoc {
   } as FirestoreDataConverter<UserBoard, UserBoardDoc>;
 
   static firestoreCollectionRef(ref: DocumentReference<User, UserDoc>) {
-    return firestoreCollection(ref, Collections.userBoards).withConverter(UserBoard._converter);
+    return collection(ref, Collections.userBoards).withConverter(UserBoard._converter);
   }
 
-  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
-  static firestoreData(snap: firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
+  static firestoreData(snap: DocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
+  static firestoreData(snap: QueryDocumentSnapshot<UserBoard, UserBoardDoc>): UserBoard;
 
-  static firestoreData(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc> | firestoreQueryDocumentSnapshot<UserBoard, UserBoardDoc>) {
+  static firestoreData(snap: DocumentSnapshot<UserBoard, UserBoardDoc> | QueryDocumentSnapshot<UserBoard, UserBoardDoc>) {
     return UserBoard._snapToThis(snap);
   }
 
-  private static _snapToThis(snap: firestoreDocumentSnapshot<UserBoard, UserBoardDoc>) {
+  private static _snapToThis(snap: DocumentSnapshot<UserBoard, UserBoardDoc>) {
 
     const data = snap.data();
 

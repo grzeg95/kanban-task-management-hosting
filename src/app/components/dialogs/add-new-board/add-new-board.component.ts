@@ -1,9 +1,10 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, NEVER, of} from 'rxjs';
+import {catchError, of} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardCreateData} from '../../../models/board';
+import {AuthService} from '../../../services/auth.service';
 import {BoardService} from '../../../services/board.service';
 import {ButtonComponent} from '../../button/button.component';
 import {ErrorComponent} from '../../form/error/error.component';
@@ -35,7 +36,7 @@ import {LoaderComponent} from '../../loader/loader.component';
 export class AddNewBoardComponent {
 
   protected readonly _isRequesting = signal(false);
-  protected readonly _user = this._boardService.user;
+  protected readonly _user = this._authService.userSig.get();
 
   protected readonly _form = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -44,7 +45,8 @@ export class AddNewBoardComponent {
 
   constructor(
     private readonly _dialogRef: DialogRef<AddNewBoardComponent>,
-    private readonly _boardService: BoardService
+    private readonly _boardService: BoardService,
+    private readonly _authService: AuthService
   ) {
 
     effect(() => {

@@ -1,11 +1,12 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {Dialog} from '@angular/cdk/dialog';
 import {NgStyle} from '@angular/common';
-import {Component, computed, effect, Inject, ViewEncapsulation} from '@angular/core';
+import {Component, computed, DestroyRef, effect, Inject, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {Router, RouterOutlet} from '@angular/router';
 import {Firestore, limit} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
-import {catchError, map, of, takeWhile} from 'rxjs';
+import {catchError, map, of, Subscription, takeWhile} from 'rxjs';
 import {ButtonComponent} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
@@ -28,6 +29,7 @@ import {LayoutService, LayoutServiceStates} from './services/layout.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
 import {FirestoreInjectionToken} from './tokens/firebase';
 import {handleTabIndex} from './utils/handle-tabindex';
+import {Sig} from './utils/Sig';
 
 @Component({
   selector: 'app-root',
@@ -80,8 +82,14 @@ import {handleTabIndex} from './utils/handle-tabindex';
 })
 export class AppComponent {
 
-  protected readonly _user = this._boardService.user;
-  protected readonly _userBoards = this._boardService.userBoardsSig.get();
+  protected readonly _user = this._authService.userSig.get();
+
+  private readonly _userBoardsSig = new Sig<UserBoard[] | null | undefined>(undefined);
+  protected readonly _userBoards = this._userBoardsSig.get();
+  private _userBoardsSub: Subscription | undefined;
+
+  private _boardSub: Subscription | undefined;
+
   protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardId = this._boardService.boardIdSig.get();
@@ -154,7 +162,8 @@ export class AppComponent {
     private readonly _layoutService: LayoutService,
     private readonly _dialog: Dialog,
     private readonly _router: Router,
-    private readonly _themeSelectorService: ThemeSelectorService
+    private readonly _themeSelectorService: ThemeSelectorService,
+    private readonly _destroyRef: DestroyRef
   ) {
 
     // userBoards
@@ -163,7 +172,7 @@ export class AppComponent {
     let userBoards_userConfigMaxUserBoards: number | undefined;
     effect(() => {
 
-      const user = this._boardService.user();
+      const user = this._user();
       const authStateReady = this._authStateReady();
 
       if (!authStateReady) {
@@ -171,11 +180,11 @@ export class AppComponent {
       }
 
       if (!user) {
-        this._boardService.userBoardsSig.set(null);
+        this._userBoardsSig.set(null);
         userBoards_userId = undefined;
         userBoards_userBoardsIds = undefined;
         userBoards_userConfigMaxUserBoards = undefined;
-        this._boardService.userBoardsSub && !this._boardService.userBoardsSub.closed && this._boardService.userBoardsSub.unsubscribe();
+        this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
         return;
       }
 
@@ -183,7 +192,7 @@ export class AppComponent {
         userBoards_userId === user.id &&
         isEqual(userBoards_userBoardsIds, user.boardsIds) &&
         userBoards_userConfigMaxUserBoards === user.config.maxUserBoards &&
-        this._boardService.userBoardsSub && !this._boardService.userBoardsSub.closed
+        this._userBoardsSub && !this._userBoardsSub.closed
       ) {
         return;
       }
@@ -195,16 +204,17 @@ export class AppComponent {
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, userBoards_userId));
 
       this._boardService.loadingUserBoardsSig.set(true);
-      this._boardService.userBoardsSub && !this._boardService.userBoardsSub.closed && this._boardService.userBoardsSub.unsubscribe();
-      this._boardService.userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
-        catchError(() => of(null)),
-        takeWhile(() => !!this._boardService.user())
+      this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
+      this._userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
+        takeUntilDestroyed(this._destroyRef),
+        takeWhile(() => !!this._user()),
+        catchError(() => of(null))
       ).subscribe((querySnapUserBoards) => {
 
         this._boardService.loadingUserBoardsSig.set(false);
 
         if (!querySnapUserBoards) {
-          this._boardService.userBoardsSig.set(undefined);
+          this._userBoardsSig.set(undefined);
           return;
         }
 
@@ -214,7 +224,7 @@ export class AppComponent {
           userBoards.push(UserBoard.firestoreData(queryDocSnapUserBoard));
         }
 
-        this._boardService.userBoardsSig.set(userBoards);
+        this._userBoardsSig.set(userBoards);
       });
     });
 
@@ -223,7 +233,7 @@ export class AppComponent {
     let board_boardId: string | undefined;
     effect(() => {
 
-      const user = this._boardService.user();
+      const user = this._user();
       const boardId = this._boardId();
 
       if (!user || !boardId) {
@@ -231,7 +241,7 @@ export class AppComponent {
         this._boardService.boardSig.set(null);
         board_userId = undefined;
         board_boardId = undefined;
-        this._boardService.boardSub && !this._boardService.boardSub.closed && this._boardService.boardSub.unsubscribe();
+        this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
         return;
       }
 
@@ -248,11 +258,12 @@ export class AppComponent {
       const boardRef = Board.firestoreRef(this._firestore, board_boardId);
 
       this._boardService.loadingBoardSig.set(true);
-      this._boardService.boardSub && !this._boardService.boardSub.closed && this._boardService.boardSub.unsubscribe();
-      this._boardService.boardSub = docSnapshots(boardRef).pipe(
-        map((docSnap) => Board.firestoreData(docSnap)),
-        catchError(() => of(null)),
+      this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
+      this._boardSub = docSnapshots(boardRef).pipe(
+        takeUntilDestroyed(this._destroyRef),
         takeWhile(() => !!this._boardId()),
+        map((docSnap) => Board.firestoreData(docSnap)),
+        catchError(() => of(null))
       ).subscribe((board) => {
 
         this._boardService.loadingBoardSig.set(false);
@@ -262,7 +273,7 @@ export class AppComponent {
           this._boardService.boardIdSig.set(undefined);
           board_userId = undefined;
           board_boardId = undefined;
-          this._boardService.boardSub && !this._boardService.boardSub.closed && this._boardService.boardSub.unsubscribe();
+          this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
           return;
         }
 
