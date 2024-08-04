@@ -1,7 +1,7 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, NEVER, of} from 'rxjs';
+import {catchError, of} from 'rxjs';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTaskCreateData} from '../../../models/board-task';
 import {BoardService} from '../../../services/board.service';
@@ -15,6 +15,8 @@ import {SelectComponent} from '../../form/select/select.component';
 import {TextareaComponent} from '../../form/textarea/textarea.component';
 import {LoaderComponent} from '../../loader/loader.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
+import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-view-board-task',
@@ -34,9 +36,9 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
   templateUrl: './add-new-bord-task.component.html',
   styleUrl: './add-new-bord-task.component.scss',
   encapsulation: ViewEncapsulation.None,
-  host: {
-    class: 'app-view-board-task'
-  }
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
 export class AddNewBordTaskComponent {
 
@@ -67,6 +69,9 @@ export class AddNewBordTaskComponent {
       } as PopMenuItem;
     });
   });
+
+  private readonly _viewIsReadyToShowSig = new Sig(2);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
 
   protected readonly form = new FormGroup({
     boardId: new FormControl('', Validators.required),
@@ -101,6 +106,8 @@ export class AddNewBordTaskComponent {
       }
 
       this.form.controls.boardId.setValue(board.id);
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
 
     effect(() => {
@@ -114,6 +121,8 @@ export class AddNewBordTaskComponent {
         ) {
           this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
         }
+
+        this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
       });
     });
 
