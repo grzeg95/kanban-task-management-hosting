@@ -16,6 +16,8 @@ import {SelectComponent} from '../../form/select/select.component';
 import {TextareaComponent} from '../../form/textarea/textarea.component';
 import {LoaderComponent} from '../../loader/loader.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
+import {Sig} from "../../../utils/Sig";
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
 
 @Component({
   selector: 'app-edit-board-task',
@@ -37,9 +39,9 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
   templateUrl: './edit-board-task.component.html',
   styleUrl: './edit-board-task.component.scss',
   encapsulation: ViewEncapsulation.None,
-  host: {
-    class: 'app-edit-board-task'
-  }
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
 export class EditBoardTaskComponent implements OnDestroy {
 
@@ -119,6 +121,9 @@ export class EditBoardTaskComponent implements OnDestroy {
 
   });
 
+  private readonly _viewIsReadyToShowSig = new Sig(1);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+
   protected readonly _form = new FormGroup({
     id: new FormControl<string | null>(null, Validators.required),
     boardId: new FormControl<string | null>(null, Validators.required),
@@ -189,6 +194,8 @@ export class EditBoardTaskComponent implements OnDestroy {
           this.addNewBoardTaskSubtask(boardTaskSubtask!.id, boardTaskSubtask!.title);
         });
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
 
     effect(() => {
@@ -210,6 +217,8 @@ export class EditBoardTaskComponent implements OnDestroy {
           });
         }
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
 
     effect(() => {
