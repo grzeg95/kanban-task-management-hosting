@@ -10,6 +10,8 @@ import {FormFieldComponent} from '../../form/form-field/form-field.component';
 import {InputComponent} from '../../form/input/input.component';
 import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
+import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-delete-board',
@@ -27,14 +29,17 @@ import {LoaderComponent} from '../../loader/loader.component';
   templateUrl: './delete-board.component.html',
   styleUrl: './delete-board.component.scss',
   encapsulation: ViewEncapsulation.None,
-  host: {
-    class: 'app-delete-board'
-  }
+  animations: [
+    fadeZoomInOutTrigger
+  ]
 })
 export class DeleteBoardComponent {
 
   protected readonly _isRequesting = signal(false);
   protected readonly _board = this._boardService.boardSig.get();
+
+  private readonly _viewIsReadyToShowSig = new Sig(1);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
 
   constructor(
     private readonly _dialogRef: DialogRef<DeleteBoardComponent>,
@@ -48,6 +53,8 @@ export class DeleteBoardComponent {
       if (!board && board !== undefined) {
          this.close();
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
   }
 

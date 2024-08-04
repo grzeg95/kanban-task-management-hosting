@@ -1,26 +1,30 @@
-<div class="app-delete-board__title">Delete this board?</div>
+@if (_viewIsReadyToShow() === 0) {
+  <div class="app-delete-board" [@fadeZoomInOutTrigger]>
+    <div class="app-delete-board__title">Delete this board?</div>
 
-<div class="app-delete-board__description">
-  Are you sure you want to delete the '{{ _board()?.name || '' }}' board? This action will remove all columns and tasks and cannot be reversed.
-</div>
+    <div class="app-delete-board__description">
+      Are you sure you want to delete the '{{ _board()?.name || '' }}' board? This action will remove all columns and tasks and cannot be reversed.
+    </div>
 
-<button
-  class="app-delete-board__delete-board-button"
-  app-button
-  appearance="warn"
-  (click)="boardDelete()"
-  [disabled]="_isRequesting()"
->
-  Delete
-  @if (_isRequesting()) {
-    <app-loader/>
-  }
-</button>
+    <button
+      class="app-delete-board__delete-board-button"
+      app-button
+      appearance="warn"
+      (click)="boardDelete()"
+      [disabled]="_isRequesting()"
+    >
+      Delete
+      @if (_isRequesting()) {
+        <app-loader/>
+      }
+    </button>
 
-<button
-  class="app-delete-board__cancel-button"
-  app-button
-  appearance="secondary"
-  (click)="close()"
-  [disabled]="_isRequesting()"
->Cancel</button>
+    <button
+      class="app-delete-board__cancel-button"
+      app-button
+      appearance="secondary"
+      (click)="close()"
+      [disabled]="_isRequesting()"
+    >Cancel</button>
+  </div>
+}
