@@ -1,4 +1,4 @@
-@if (_boardTaskView(); as boardTaskView) {
+@if (_viewIsReadyToShow() === 0 && _boardTaskView(); as boardTaskView) {
 
   <div class="app-view-board-task" [@fadeZoomInOutTrigger]>
     <div class="app-view-board-task__header">

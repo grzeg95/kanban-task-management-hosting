@@ -147,6 +147,9 @@ export class ViewBoardTaskComponent implements OnDestroy {
     return boardTaskView;
   });
 
+  private readonly _viewIsReadyToShowSig = new Sig(1);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+
   protected _newWindowWithTaskRequested = false;
 
   constructor(
@@ -207,6 +210,8 @@ export class ViewBoardTaskComponent implements OnDestroy {
         this.close();
         return;
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
   }
 
