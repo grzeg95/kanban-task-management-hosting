@@ -21,11 +21,13 @@ export class LoadingService {
 
   protected readonly _authStateReady = this._authService.authStateReady;
   protected readonly _whileLoginIn = this._authService.whileLoginInSig.get();
+  protected readonly _loadingUser = this._authService.loadingUserSig.get();
 
   readonly appLoading = computed(() => {
 
     const whileLoginIn = this._whileLoginIn();
     const authStateReady = this._authStateReady();
+    const loadingUser = this._loadingUser();
 
     const loadingUserBoards = this._loadingUserBoards();
     const loadingBoard = this._loadingBoard();
@@ -42,6 +44,7 @@ export class LoadingService {
     return [
       whileLoginIn,
       !authStateReady,
+      loadingUser,
       loadingUserBoards,
       loadingBoard,
       loadingBoardStatuses,

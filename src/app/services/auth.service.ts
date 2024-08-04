@@ -30,7 +30,7 @@ export class AuthService {
     return !!this.firebaseUser();
   });
 
-  readonly userIsLoadedSig = new Sig<boolean>(false);
+  readonly loadingUserSig = new Sig<boolean>(true);
   readonly userSig = new Sig<User | null>();
   private _userSub: Subscription | undefined;
 
@@ -49,7 +49,7 @@ export class AuthService {
 
       if (!firebaseUser) {
         this.userSig.set(null);
-        this.userIsLoadedSig.set(true);
+        this.loadingUserSig.set(false);
         this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
         return;
       }
@@ -64,7 +64,7 @@ export class AuthService {
 
       const userRef = User.firestoreRef(this._firestore, firebaseUserUid);
 
-      this.userIsLoadedSig.set(false);
+      this.loadingUserSig.set(true);
       this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
       this._userSub = docSnapshots(userRef).pipe(
         takeUntilDestroyed(this._destroyRef),
@@ -79,7 +79,7 @@ export class AuthService {
           this.userSig.set(undefined);
         }
 
-        this.userIsLoadedSig.set(true);
+        this.loadingUserSig.set(false);
       });
     });
   }
