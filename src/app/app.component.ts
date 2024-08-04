@@ -3,10 +3,11 @@ import {Dialog} from '@angular/cdk/dialog';
 import {NgStyle} from '@angular/common';
 import {Component, computed, DestroyRef, effect, Inject, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {Router, RouterOutlet} from '@angular/router';
+import {ActivatedRoute, Router, RouterOutlet} from '@angular/router';
 import {Firestore, limit} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
 import {catchError, map, of, Subscription, takeWhile} from 'rxjs';
+import {fadeZoomInOutTrigger} from './animations/fade-zoom-in-out.trigger';
 import {ButtonComponent} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
@@ -77,7 +78,8 @@ import {Sig} from './utils/Sig';
           animate('0.333s ease-in-out'),
         )
       ]
-    )
+    ),
+    fadeZoomInOutTrigger
   ]
 })
 export class AppComponent {
@@ -100,6 +102,9 @@ export class AppComponent {
   protected readonly _isLoggedIn = this._authService.isLoggedIn;
   protected readonly _authStateReady = this._authService.authStateReady;
   protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
+
+  private readonly _boardViewSig = this._boardService.boardViewSig;
+  protected readonly _boardView = this._boardViewSig.get();
 
   protected readonly _userBoardsSorted = computed(() => {
 
@@ -163,7 +168,8 @@ export class AppComponent {
     private readonly _dialog: Dialog,
     private readonly _router: Router,
     private readonly _themeSelectorService: ThemeSelectorService,
-    private readonly _destroyRef: DestroyRef
+    private readonly _destroyRef: DestroyRef,
+    private readonly _activatedRoute: ActivatedRoute,
   ) {
 
     // userBoards
@@ -350,7 +356,12 @@ export class AppComponent {
   }
 
   select(boardId: string) {
-    this._router.navigate(['/', boardId]);
+
+    this._boardService.boardViewSig.set(true);
+
+    setTimeout(() => {
+      this._router.navigate(['/', boardId]);
+    }, 333);
   }
 
   signInAnonymously(): Promise<void> {

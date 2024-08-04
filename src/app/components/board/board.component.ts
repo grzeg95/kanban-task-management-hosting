@@ -194,10 +194,12 @@ export class BoardComponent implements OnDestroy {
       const user = this._user();
 
       if (loaded && authStateReady && !user) {
+        this._boardService.boardViewSig.set(false);
         this._router.navigate(['/']);
         return;
       }
 
+      this._boardService.boardViewSig.set(true);
       this._boardService.boardIdSig.set(id);
     });
 

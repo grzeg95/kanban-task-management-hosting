@@ -219,8 +219,8 @@
             } @placeholder (minimum 300ms) { }
           }
 
-          @if (userBoards.length > 0 && !_board()) {
-            <div class="app-root__boards__empty">
+          @if (userBoards.length > 0 && !_board() && !_boardView()) {
+            <div class="app-root__boards__empty" [@fadeZoomInOutTrigger]>
               <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
               @if (!_showSideBar()) {
                 <button
