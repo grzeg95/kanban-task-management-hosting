@@ -11,6 +11,7 @@ import {FormFieldComponent} from '../../form/form-field/form-field.component';
 import {InputComponent} from '../../form/input/input.component';
 import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
+import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-delete-board-task',
@@ -38,6 +39,9 @@ export class DeleteBoardTaskComponent implements OnDestroy {
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardTask = this._boardService.boardTaskSig.get();
 
+  private readonly _viewIsReadyToShowSig = new Sig(1);
+  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+
   constructor(
     private readonly _boardService: BoardService,
     private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>
@@ -60,6 +64,8 @@ export class DeleteBoardTaskComponent implements OnDestroy {
       if (!boardTask && boardTask !== undefined) {
         this.close();
       }
+
+      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
   }
 
