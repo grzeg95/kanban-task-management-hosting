@@ -197,7 +197,6 @@
   [ngStyle]="{height: 'calc(100% - ' + _heightNav() + 'px)'}"
   class="app-root__boards"
 >
-  <router-outlet/>
 
   @if (_authStateReady()) {
     @if (_isLoggedIn()) {
@@ -207,19 +206,17 @@
         @if (_userBoards(); as userBoards) {
           @if (!userBoards || userBoards.length === 0) {
 
-            @defer {
-              <div class="app-root__boards__empty">
-                <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
-                <button
-                  app-button
-                  appearance="primary"
-                  (click)="openAddBoardDialog($event)"
-                >+ Add New Board</button>
-              </div>
-            } @placeholder (minimum 300ms) { }
+            <div class="app-root__boards__empty">
+              <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
+              <button
+                app-button
+                appearance="primary"
+                (click)="openAddBoardDialog($event)"
+              >+ Add New Board</button>
+            </div>
           }
 
-          @if (userBoards.length > 0 && !_board() && !_boardView()) {
+          @else if (userBoards.length > 0 && !_board() && !_boardId()) {
             <div class="app-root__boards__empty" [@fadeZoomInOutTrigger]>
               <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
               @if (!_showSideBar()) {
@@ -230,9 +227,10 @@
                 >Open Sidebar</button>
               }
             </div>
+          } @else {
+            <router-outlet/>
           }
         }
-
 
       }
     } @else {

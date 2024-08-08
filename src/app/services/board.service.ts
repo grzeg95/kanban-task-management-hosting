@@ -31,8 +31,6 @@ import {SnackBarService} from './snack-bar.service';
 })
 export class BoardService {
 
-  readonly boardViewSig = new Sig(false);
-
   readonly boardIdSig = new Sig<string | null | undefined>(null);
   readonly boardTaskIdSig = new Sig<string | null>(null);
   readonly boardSig = new Sig<Board | null | undefined>(undefined);
