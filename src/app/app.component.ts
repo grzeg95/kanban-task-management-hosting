@@ -8,7 +8,7 @@ import {Firestore, limit} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
 import {catchError, filter, map, of, Subscription, takeWhile} from 'rxjs';
 import {fadeZoomInOutTrigger} from './animations/fade-zoom-in-out.trigger';
-import {ButtonComponent} from './components/button/button.component';
+import {ButtonComponent, ButtonSize} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
 import {AddNewBoardComponent} from './components/dialogs/add-new-board/add-new-board.component';
 import {DeleteBoardComponent} from './components/dialogs/delete-board/delete-board.component';
@@ -155,6 +155,17 @@ export class AppComponent {
     }
 
     return 0;
+  });
+
+  navButtonSize = computed(() => {
+
+    let buttonSize: ButtonSize = 'large';
+
+    if (this._isOnPhone()) {
+      buttonSize = 'small';
+    }
+
+    return buttonSize;
   });
 
   constructor(

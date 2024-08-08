@@ -17,7 +17,7 @@ import {LayoutService, LayoutServiceStates} from '../../services/layout.service'
 import {LoadingService} from '../../services/loading.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
-import {ButtonComponent} from '../button/button.component';
+import {ButtonComponent, ButtonSize} from '../button/button.component';
 import {LoadingComponent} from '../loading/loading.component';
 import {PopMenuItemComponent} from '../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuComponent} from '../pop-menu/pop-menu.component';
@@ -59,19 +59,19 @@ enum NavComponentStates {
         state(
           LayoutServiceStates.hidden,
           style({
-            width: 187
+            width: 154
           })
         ),
         state(
           LayoutServiceStates.tablet,
           style({
-            width: 237
+            width: 212
           })
         ),
         state(
           LayoutServiceStates.desktop,
           style({
-            width: 276
+            width: 242
           })
         ),
         transition(
@@ -142,6 +142,17 @@ export class NavComponent {
     }
 
     return 'logo';
+  });
+
+  loginButtonSize = computed(() => {
+
+    let buttonSize: ButtonSize = 'large';
+
+    if (this._isOnPhone()) {
+      buttonSize = 'small';
+    }
+
+    return buttonSize;
   });
 
   constructor(

@@ -52,6 +52,13 @@
     outline: none;
   }
 
+  &--small {
+    min-height: 32px;
+    border-radius: 24px;
+    @include typography.heading-s();
+    padding: 0 24px;
+  }
+
   &--large {
     min-height: 48px;
     border-radius: 24px;

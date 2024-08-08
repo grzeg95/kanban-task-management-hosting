@@ -102,12 +102,13 @@ body {
   @include nav.theme((
     background: $dark-gray,
     border-color: $lines-dark,
+    separator-color: $lines-dark,
     selected-color: $white
   ));
 
   @include pop-menu.theme((
-    background: $very-dark-gray,
-    box-shadow-color: $main-purple-hover
+    background: #1d1d25,
+    box-shadow-color: #000000
   ));
 
   @include pop-menu-item.theme((
@@ -302,6 +303,7 @@ body {
   @include nav.theme((
     background: $white,
     border-color: $lines,
+    separator-color: $lines,
     selected-color: $black
   ));
 

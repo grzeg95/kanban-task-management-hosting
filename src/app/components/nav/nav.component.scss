@@ -3,71 +3,66 @@
 
 .app-nav {
 
-  height: 64px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
   border-bottom: solid 1px black;
-
-  @include layout.from-tablet() {
-    height: 80px;
-  }
-
-  @include layout.from-desktop() {
-    height: 97px;
-  }
 
   &__left {
 
     display: flex;
-    min-width: 0;
-    height: 100%;
 
     &__branding {
 
       position: relative;
-      padding-right: 16px;
       margin-left: 16px;
-      height: 100%;
+      margin-top: 19px;
+      margin-bottom: 19px;
       display: flex;
       align-items: center;
 
       @include layout.from-tablet() {
-        border-right: solid 1px black;
-        padding-right: 24px;
+        margin-right: 24px;
         margin-left: 24px;
       }
 
       @include layout.from-desktop() {
-        padding-right: 33px;
+        margin-right: 33px;
+        margin-top: 35px;
+        margin-bottom: 35px;
       }
 
       &__loading {
 
-        top: 48px;
+        top: 33px;
         width: 25px !important;
 
         @include layout.from-tablet() {
-          top: 57px;
+          top: 37px;
           width: 153px !important;
         }
 
         @include layout.from-desktop() {
-          top: 65px !important;
+          top: 29px !important;
         }
       }
+    }
+
+    &__separator {
+      height: 100%;
+      width: 1px;
     }
 
     &__selected-label {
 
       position: relative;
-      height: 100%;
       display: flex;
       align-items: center;
       text-wrap: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       margin-right: 16px;
+      margin-top: 20px;
+      margin-bottom: 20px;
       gap: 8px;
       user-select: none;
       cursor: pointer;
@@ -77,14 +72,12 @@
       @include layout.from-tablet() {
         font-size: 20px;
         font-weight: bold;
-        padding-left: 24px;
-        margin-right: 24px;
+        margin: 27px 24px;
       }
 
       @include layout.from-desktop() {
         @include typography.heading-xl();
-        padding-left: 32px;
-        margin-right: 32px;
+        margin: 33px 32px;
       }
     }
   }
@@ -93,12 +86,22 @@
 
     margin-right: 16px;
     display: flex;
-    align-items: center;
     gap: calc(16px - 9.5px);
 
     @include layout.from-tablet() {
       margin-right: 24px;
       gap: calc(24px - 9.5px);
+    }
+
+    &__login-button {
+
+      margin-top: 16px;
+      margin-bottom: 16px;
+
+      @include layout.from-desktop() {
+        margin-top: 24px;
+        margin-bottom: 24px;
+      }
     }
 
     &__trigger {
@@ -109,6 +112,18 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      margin-top: 24px;
+      margin-bottom: 24px;
+
+      @include layout.from-tablet() {
+        margin-top: 28px;
+        margin-bottom: 28px;
+      }
+
+      @include layout.from-desktop() {
+        margin-top: 36px;
+        margin-bottom: 36px;
+      }
 
       &--inactive {
         opacity: 0.3;

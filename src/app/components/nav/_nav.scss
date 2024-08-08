@@ -6,6 +6,7 @@
 
     $background: map-get($theme, 'background');
     $border-color: map-get($theme, 'border-color');
+    $separator-color: map-get($theme, 'separator-color');
     $selected-color: map-get($theme, 'selected-color');
 
     background: $background;
@@ -13,15 +14,8 @@
 
     &__left {
 
-      &__branding {
-
-        @include layout.from-tablet() {
-          border-right: solid 1px $border-color;
-        }
-
-        @include layout.from-desktop() {
-          border-right: solid 1px $border-color;
-        }
+      &__separator {
+        background: $separator-color;
       }
 
       &__selected-label {

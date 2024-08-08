@@ -12,7 +12,7 @@ import {
 
 type Appearance = 'primary' | 'secondary' | 'warn' | null | undefined;
 
-type Size = 'large' | null | undefined;
+export type ButtonSize = 'large' | 'small' | null | undefined;
 
 const HOST_SELECTOR_CLASS_PAIR: {attribute: string; classes: string[]}[] = [
   {
@@ -37,7 +37,7 @@ export class ButtonComponent implements AfterViewChecked {
   private readonly _element: HTMLElement;
 
   private _appearance: Appearance;
-  private _size: Size;
+  private _buttonSize: ButtonSize;
 
   protected _innerText = '';
 
@@ -66,15 +66,15 @@ export class ButtonComponent implements AfterViewChecked {
   }
 
   @Input()
-  set size(size: Size) {
+  set size(buttonSize: ButtonSize) {
 
-    if (this._size) {
-      this._renderer.removeClass(this._element, `app-button--${this._size}`);
+    if (this._buttonSize) {
+      this._renderer.removeClass(this._element, `app-button--${this._buttonSize}`);
     }
 
-    if (size) {
-      this._renderer.addClass(this._element, `app-button--${size}`);
-      this._size = size;
+    if (buttonSize) {
+      this._renderer.addClass(this._element, `app-button--${buttonSize}`);
+      this._buttonSize = buttonSize;
     }
   }
 

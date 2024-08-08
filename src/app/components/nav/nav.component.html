@@ -7,6 +7,10 @@
     }
   </div>
 
+  @if (!_isOnPhone()) {
+    <div class="app-nav__left__separator"></div>
+  }
+
   <div class="app-nav__left__selected-label">
     @if (appNavSelectedLabelTemplateRef; as appNavSelectedLabelTemplateRef) {
       <ng-container [ngTemplateOutlet]="appNavSelectedLabelTemplateRef"/>
@@ -35,9 +39,10 @@
   @if (_authStateReady()) {
     @if (!_isLoggedIn()) {
       <button
+        class="app-nav__menu__login-button"
         app-button
         appearance="primary"
-        size="large"
+        [size]="loginButtonSize()"
         svg="left"
         (click)="signInAnonymously()"
       >
