@@ -1,6 +1,7 @@
 <div class="app-nav__left">
-  <div class="app-nav__left__branding" [@move-branding-for-side-bar]="_moveBrandingForSideBarState()">
+  <div class="app-nav__left__branding">
     <svg [appSvg]="_logo()"/>
+    <div [@move-branding-for-side-bar]="_moveBrandingForSideBarState()"></div>
 
     @if (_appLoading()) {
       <app-loading class="app-nav__left__branding__loading"/>

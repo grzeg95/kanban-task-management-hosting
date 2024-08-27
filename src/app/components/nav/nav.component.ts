@@ -1,15 +1,7 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {NgTemplateOutlet} from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  Input,
-  signal,
-  TemplateRef,
-  ViewEncapsulation
-} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {Router} from '@angular/router';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AuthService} from '../../services/auth.service';
@@ -21,10 +13,6 @@ import {ButtonComponent, ButtonSize} from '../button/button.component';
 import {LoadingComponent} from '../loading/loading.component';
 import {PopMenuItemComponent} from '../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuComponent} from '../pop-menu/pop-menu.component';
-
-enum NavComponentStates {
-  hiddenPhone = 'hidden-phone'
-}
 
 @Component({
   selector: 'app-nav',
@@ -51,15 +39,9 @@ enum NavComponentStates {
       'move-branding-for-side-bar',
       [
         state(
-          NavComponentStates.hiddenPhone,
-          style({
-            width: 41
-          })
-        ),
-        state(
           LayoutServiceStates.hidden,
           style({
-            width: 154
+            width: 0
           })
         ),
         state(
@@ -105,13 +87,8 @@ export class NavComponent {
     const showSideBar = this._showSideBar();
     const isOnDesktop = this._isOnDesktop();
     const isOnTablet = this._isOnTablet();
-    const isOnPhone = this._isOnPhone();
 
     let state = 'hidden';
-
-    if (isOnPhone) {
-      state = NavComponentStates.hiddenPhone;
-    }
 
     if (showSideBar) {
       if (isOnDesktop) {
