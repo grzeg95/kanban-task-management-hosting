@@ -53,7 +53,7 @@
   }
 
   &--small {
-    min-height: 32px;
+    height: 32px;
     border-radius: 24px;
     @include typography.heading-s();
     padding: 0 24px;

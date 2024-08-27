@@ -84,17 +84,6 @@
     user-select: none;
   }
 
-  &__nav-button {
-
-    margin-top: 16px;
-    margin-bottom: 16px;
-
-    @include layout.from-desktop() {
-      margin-top: 24px;
-      margin-bottom: 24px;
-    }
-  }
-
   &__boards {
 
     height: 100%;
