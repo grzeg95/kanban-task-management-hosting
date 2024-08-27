@@ -90,8 +90,6 @@ export class AppComponent {
   protected readonly _userBoards = this._userBoardsSig.get();
   private _userBoardsSub: Subscription | undefined;
 
-  private _boardSub: Subscription | undefined;
-
   protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
   protected readonly _board = this._boardService.boardSig.get();
   protected readonly _boardId = this._boardService.boardIdSig.get();
@@ -250,59 +248,6 @@ export class AppComponent {
         }
 
         this._userBoardsSig.set(userBoards);
-      });
-    });
-
-    // board
-    let board_userId: string | undefined;
-    let board_boardId: string | undefined;
-    effect(() => {
-
-      const user = this._user();
-      const boardId = this._boardId();
-
-      if (!user || !boardId) {
-        this._router.navigate(['/']);
-        this._boardService.boardSig.set(null);
-        board_userId = undefined;
-        board_boardId = undefined;
-        this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
-        return;
-      }
-
-      if (
-        board_userId === user.id &&
-        board_boardId === boardId
-      ) {
-        return;
-      }
-
-      board_userId = user.id;
-      board_boardId = boardId;
-
-      const boardRef = Board.firestoreRef(this._firestore, board_boardId);
-
-      this._boardService.loadingBoardSig.set(true);
-      this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
-      this._boardSub = docSnapshots(boardRef).pipe(
-        takeUntilDestroyed(this._destroyRef),
-        takeWhile(() => !!this._boardId()),
-        map((docSnap) => Board.firestoreData(docSnap)),
-        catchError(() => of(null))
-      ).subscribe((board) => {
-
-        this._boardService.loadingBoardSig.set(false);
-
-        if (!board || !board.exists) {
-          this._boardService.boardSig.set(undefined);
-          this._boardService.boardIdSig.set(undefined);
-          board_userId = undefined;
-          board_boardId = undefined;
-          this._boardSub && !this._boardSub.closed && this._boardSub.unsubscribe();
-          return;
-        }
-
-        this._boardService.boardSig.set(board);
       });
     });
   }
