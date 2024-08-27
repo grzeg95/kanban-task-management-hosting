@@ -38,7 +38,7 @@ export class LayoutService {
   readonly heightNavSig = new Sig(0);
 
   readonly showNavMenuOptionsSig = new Sig(false);
-  readonly showSideBarSig = new Sig(true);
+  readonly showSideBarSig = new Sig(false);
   private readonly _showSideBar = this.showSideBarSig.get();
   readonly moveForSideBarStateSig = new Sig('hidden-first');
 
