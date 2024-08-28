@@ -24,13 +24,15 @@
     class="app-root__nav-button"
     app-button
     appearance="primary"
+    [svg]="false"
     [size]="navButtonSize()"
     [disabled]="!_board()"
     (click)="openAddTaskDialog($event)"
   >
-    +
     @if (!_isOnPhone()) {
-      Add new task
+      + Add new task
+    } @else {
+      <svg appSvg="icon-plus"/>
     }
   </button>
 </ng-template>

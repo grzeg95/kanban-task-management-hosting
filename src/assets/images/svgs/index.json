@@ -32,6 +32,10 @@
     "src": "icon-light-theme.svg"
   },
   {
+    "name": "icon-plus",
+    "src": "icon-plus.svg"
+  },
+  {
     "name": "icon-show-sidebar",
     "src": "icon-show-sidebar.svg"
   },
