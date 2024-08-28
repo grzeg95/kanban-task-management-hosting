@@ -45,16 +45,16 @@
 
       &__loading {
 
-        top: 33px;
+        top: 28px;
         width: 25px !important;
 
         @include layout.from-tablet() {
-          top: 37px;
-          width: 153px !important;
+          top: 27px;
+          width: 143px !important;
         }
 
         @include layout.from-desktop() {
-          top: 29px !important;
+          top: 27px !important;
         }
       }
     }
