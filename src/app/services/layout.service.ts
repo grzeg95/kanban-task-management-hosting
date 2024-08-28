@@ -59,7 +59,7 @@ export class LayoutService {
       }
 
       if (isOnTablet) {
-        height = 80;
+        height = 81;
       }
 
       if (isOnDesktop) {

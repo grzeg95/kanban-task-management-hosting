@@ -10,7 +10,10 @@
     $selected-color: map-get($theme, 'selected-color');
 
     background: $background;
-    border-bottom: solid 1px $border-color;
+
+    @include layout.from-tablet() {
+      border-bottom: solid 1px $border-color;
+    }
 
     &__left {
 

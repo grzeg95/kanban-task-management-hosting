@@ -40,6 +40,7 @@
   @if (_authStateReady()) {
     @if (!_isLoggedIn()) {
       <button
+        class="app-nav__menu__login-button"
         app-button
         appearance="primary"
         [size]="loginButtonSize()"
