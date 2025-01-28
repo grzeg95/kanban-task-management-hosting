@@ -1,0 +1,163 @@
+@use 'styles/layout' as layout;
+@use 'styles/typography-mixins' as typography;
+
+@mixin theme($theme) {
+
+  $background: map-get($theme, 'background');
+
+  $app-side-bar__items__container__button-background: map-get($theme, 'app-side-bar__items__container__button-background');
+  $app-side-bar__items__container__button-background--hover: map-get($theme, 'app-side-bar__items__container__button-background--hover');
+  $app-side-bar__items__container__button-background--active: map-get($theme, 'app-side-bar__items__container__button-background--active');
+  $app-side-bar__items__container__button-background--focus-visible: map-get($theme, 'app-side-bar__items__container__button-background--focus-visible');
+  $app-side-bar__items__container__button-background--active--focus-visible: map-get($theme, 'app-side-bar__items__container__button-background--active--focus-visible');
+
+  $app-side-bar__items__container__button-color: map-get($theme, 'app-side-bar__items__container__button-color');
+  $app-side-bar__items__container__button-color--hover: map-get($theme, 'app-side-bar__items__container__button-color--hover');
+  $app-side-bar__items__container__button-color--active: map-get($theme, 'app-side-bar__items__container__button-color--active');
+
+  $empty-title-color: map-get($theme, 'empty-title-color');
+
+  $app-boards__app-intro__title-color: map-get($theme, 'app-boards__app-intro__title-color');
+
+  .app-root {
+
+    &__app-side-bar__items__container__button {
+
+      background: $app-side-bar__items__container__button-background;
+      color: $app-side-bar__items__container__button-color;
+
+      svg {
+        path {
+          fill: $app-side-bar__items__container__button-color;
+          stroke: $app-side-bar__items__container__button-color;
+        }
+        circle {
+          stroke: $app-side-bar__items__container__button-color;
+        }
+      }
+
+      &:hover {
+
+        background: $app-side-bar__items__container__button-background--hover;
+        color: $app-side-bar__items__container__button-color--hover;
+
+        svg {
+          path {
+            fill: $app-side-bar__items__container__button-color--hover;
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
+          circle {
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
+        }
+      }
+
+      &:focus-visible:not(:hover) {
+        background: $app-side-bar__items__container__button-background--focus-visible;
+      }
+
+      &--active {
+
+        background: $app-side-bar__items__container__button-background--active;
+        color: $app-side-bar__items__container__button-color--active;
+
+        svg path {
+          fill: $app-side-bar__items__container__button-color--active;
+        }
+
+        &:hover {
+
+          background: $app-side-bar__items__container__button-background--active;
+          color: $app-side-bar__items__container__button-color--active;
+
+          svg path {
+            fill: $app-side-bar__items__container__button-color--active;
+          }
+        }
+
+        &:focus-visible:not(:hover) {
+          background: $app-side-bar__items__container__button-background--active--focus-visible;
+        }
+      }
+    }
+
+    &__app-side-bar-mobile__items__container__button {
+
+      background: $app-side-bar__items__container__button-background;
+      color: $app-side-bar__items__container__button-color;
+
+      svg {
+        path {
+          fill: $app-side-bar__items__container__button-color;
+          stroke: $app-side-bar__items__container__button-color;
+        }
+        circle {
+          stroke: $app-side-bar__items__container__button-color;
+        }
+      }
+
+      &:hover {
+
+        background: $app-side-bar__items__container__button-background--hover;
+        color: $app-side-bar__items__container__button-color--hover;
+
+        svg {
+          path {
+            fill: $app-side-bar__items__container__button-color--hover;
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
+          circle {
+            stroke: $app-side-bar__items__container__button-color--hover;
+          }
+        }
+      }
+
+      &:focus-visible:not(:hover) {
+        background: $app-side-bar__items__container__button-background--focus-visible;
+      }
+
+      &--active {
+
+        background: $app-side-bar__items__container__button-background--active;
+        color: $app-side-bar__items__container__button-color--active;
+
+        svg path {
+          fill: $app-side-bar__items__container__button-color--active;
+        }
+
+        &:hover {
+
+          background: $app-side-bar__items__container__button-background--active;
+          color: $app-side-bar__items__container__button-color--active;
+
+          svg path {
+            fill: $app-side-bar__items__container__button-color--active;
+          }
+        }
+
+        &:focus-visible:not(:hover) {
+          background: $app-side-bar__items__container__button-background--active--focus-visible;
+        }
+      }
+    }
+
+    &__boards {
+
+      background: $background;
+
+      &__empty {
+        &__title {
+          color: $empty-title-color;
+        }
+      }
+
+      &__app-intro {
+
+        &__title {
+          @include typography.heading-l();
+          color: $app-boards__app-intro__title-color;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+<input
+  type="text"
+  class="app-input__input"
+  (change)="_onChange($event)"
+  (input)="_onInput($event)"
+  (blur)="_onTouched()"
+  [disabled]="disabled"
+  [value]="value"
+  [placeholder]="placeholder"
+  [id]="_id"
+/>
+
+@if (removeAble) {
+  <svg
+    tabindex="0"
+    #removeIcon
+    class="app-input__remove"
+    (click)="handleClickRemoveButton($event)"
+    (keydown)="handleClickRemoveButton($event)"
+    appSvg="icon-cross"
+    appSvgHover="#ea5555"
+  />
+}

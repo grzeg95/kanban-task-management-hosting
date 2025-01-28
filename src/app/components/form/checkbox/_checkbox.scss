@@ -1,0 +1,53 @@
+@mixin theme($theme) {
+
+  .app-checkbox {
+
+    $font-family: map-get($theme, 'font-family');
+    $color: map-get($theme, 'color');
+    $color-checked: map-get($theme, 'color-checked');
+    $background: map-get($theme, 'background');
+    $background-hover: map-get($theme, 'background-hover');
+    $checkbox-unchecked-border-color: map-get($theme, 'checkbox-unchecked-border-color');
+    $checkbox-checked-border-color: map-get($theme, 'checkbox-checked-border-color');
+    $checkbox-unchecked-background: map-get($theme, 'checkbox-unchecked-background');
+    $checkbox-checked-background: map-get($theme, 'checkbox-checked-background');
+    $checkbox-focus-visible-check-outline-color: map-get($theme, 'checkbox-focus-visible-check-outline-color');
+
+    $app-subtask-checkbox: '.app-subtask-checkbox';
+
+    background: $background;
+
+    &:hover:not(&--checked) {
+      background: $background-hover;
+    }
+
+    &__checkbox {
+      &:focus-visible {
+        &+ #{$app-subtask-checkbox}__check {
+          outline: solid 2px $checkbox-focus-visible-check-outline-color;
+        }
+      }
+    }
+
+    &__check {
+
+      background-color: $checkbox-unchecked-background;
+      border: solid 1px $checkbox-unchecked-border-color;
+
+      &--checked {
+        background-color: $checkbox-checked-background;
+        border: solid 1px $checkbox-checked-border-color;
+      }
+    }
+
+    &__label {
+
+      font-family: $font-family;
+      color: $color;
+
+      &--checked {
+        color: $color-checked;
+      }
+    }
+  }
+}

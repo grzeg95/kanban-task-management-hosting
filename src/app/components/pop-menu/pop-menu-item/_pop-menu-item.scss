@@ -1,0 +1,16 @@
+@mixin theme($theme) {
+
+  .app-pop-menu-item {
+
+    $font-family: map-get($theme, 'font-family');
+    $color: map-get($theme, 'color');
+    $color-danger: map-get($theme, 'color-danger');
+
+    font-family: $font-family;
+    color: $color;
+
+    &--danger {
+      color: $color-danger;
+    }
+  }
+}

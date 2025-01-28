@@ -1,0 +1,248 @@
+<!-- appNavSelectedLabelTemplateRef -->
+<ng-template #appNavSelectedLabelTemplateRef>
+  @if (_isOnPhone()) {
+    <span
+      class="app-root__app-nav__left__selected-label"
+      [tabindex]="0"
+      (keydown)="setShowSideBar($event, !_showSideBar())"
+      (click)="setShowSideBar($event, !_showSideBar())"
+    >
+      <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+      {{ _navTitle() }}
+    </span>
+
+  } @else {
+    <span>
+      {{ _navTitle() }}
+    </span>
+  }
+</ng-template>
+
+<!-- appNavButtonTemplateRef -->
+<ng-template #appNavButtonTemplateRef>
+  <button
+    class="app-root__nav-button"
+    app-button
+    appearance="primary"
+    [svg]="false"
+    [size]="navButtonSize()"
+    [disabled]="!_board()"
+    (click)="openAddTaskDialog($event)"
+  >
+    @if (!_isOnPhone()) {
+      + Add new task
+    } @else {
+      <svg appSvg="icon-plus"/>
+    }
+  </button>
+</ng-template>
+
+<!-- appNavMenuButtonsTemplateRef -->
+<ng-template #appNavMenuButtonsTemplateRef>
+  @if (_board()) {
+    <app-pop-menu-item (click)="openEditBoardDialog($event); setShowNavMenuOptions(false);">Edit board</app-pop-menu-item>
+    <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event); setShowNavMenuOptions(false);">Delete board</app-pop-menu-item>
+  }
+</ng-template>
+
+<!-- appSideBarItemsTitleTemplateRef -->
+<ng-template #appSideBarItemsTitleTemplateRef>
+  @if (_isLoggedIn()) {
+    All Boards ({{_userBoards()?.length || 0}})
+  } @else {
+    All Boards (0)
+  }
+</ng-template>
+
+<!-- appSideBarItemsContainerTemplateRef -->
+<ng-template #appSideBarItemsContainerTemplateRef>
+
+  @if (_authStateReady()) {
+    @if (_isLoggedIn()) {
+
+      @if (_userBoardsSorted(); as boards) {
+        @for (board of boards; track board.id) {
+          <button
+            [tabIndex]="_tabIndexSideBar()"
+            class="app-root__app-side-bar__items__container__button"
+            [class.app-root__app-side-bar__items__container__button--active]="board.id === _boardId()"
+            app-button
+            svg="left"
+            (click)="select(board.id)"
+          >
+            <svg
+              class="app-root__app-side-bar__items__container__button__svg"
+              [class.app-root__app-side-bar__items__container__button__svg--active]="board.id === _boardId()"
+              appSvg="icon-board"
+            />
+            {{ board.name }}
+          </button>
+        }
+      }
+
+      <button
+        [tabIndex]="_tabIndexSideBar()"
+        class="app-root__app-side-bar__items__container__button"
+        app-button
+        svg="left"
+        (click)="openAddBoardDialog($event)"
+      >
+        <svg
+          class="app-root__app-side-bar__items__container__button__svg"
+          appSvg="icon-board"
+        />
+        + Create New Board
+      </button>
+    } @else {
+      <button
+        [tabIndex]="_tabIndexSideBar()"
+        class="app-root__app-side-bar__items__container__button"
+        app-button
+        svg="left"
+        (click)="signInAnonymously()"
+      >
+        <svg
+          class="app-root__app-side-bar__items__container__button__svg"
+          appSvg="incognito"
+        />
+        Try it
+      </button>
+    }
+  }
+
+
+</ng-template>
+
+<!-- appSideBarPhoneItemsTitleTemplateRef -->
+<ng-template #appSideBarPhoneItemsTitleTemplateRef>
+
+  @if (_authStateReady()) {
+    @if (_isLoggedIn()) {
+      All Boards ({{_userBoards()?.length || 0}})
+    } @else {
+      All Boards (0)
+    }
+  }
+</ng-template>
+
+<!-- appSideBarPhoneItemsContainerTemplateRef -->
+<ng-template #appSideBarPhoneItemsContainerTemplateRef>
+
+  @if (_authStateReady()) {
+    @if (_isLoggedIn()) {
+      @if (_userBoardsSorted(); as boards) {
+        @for (board of boards; track board) {
+          <button
+            class="app-root__app-side-bar-mobile__items__container__button"
+            [class.app-root__app-side-bar-mobile__items__container__button--active]="board.id === _boardId()"
+            app-button
+            svg="left"
+            (click)="select(board.id); setShowSideBar($event,false)"
+          >
+            <svg
+              class="app-root__app-side-bar-mobile__items__container__button__svg"
+              [class.app-root__app-side-bar-mobile__items__container__button__svg--active]="board.id === _boardId()"
+              appSvg="icon-board"
+            />
+            {{ board.name }}
+          </button>
+        }
+      }
+
+      <button
+        class="app-root__app-side-bar-mobile__items__container__button"
+        app-button
+        svg="left"
+        (click)="openAddBoardDialog($event); setShowSideBar($event,false)"
+      >
+        <svg
+          class="app-root__app-side-bar-mobile__items__container__button__svg"
+          appSvg="icon-board"
+        />
+        + Create New Board
+      </button>
+    } @else {
+      <button
+        [tabIndex]="_tabIndexSideBar()"
+        class="app-root__app-side-bar__items__container__button"
+        app-button
+        svg="left"
+        (click)="signInAnonymously()"
+      >
+        <svg
+          class="app-root__app-side-bar__items__container__button__svg"
+          appSvg="incognito"
+        />
+        Try it
+      </button>
+    }
+  }
+</ng-template>
+
+<app-nav
+  [appNavButtonTemplateRef]="appNavButtonTemplateRef"
+  [appNavMenuButtonsTemplateRef]="appNavMenuButtonsTemplateRef"
+  [appNavSelectedLabelTemplateRef]="appNavSelectedLabelTemplateRef"
+/>
+
+<app-side-bar
+  [appSideBarItemsTitleTemplateRef]="appSideBarItemsTitleTemplateRef"
+  [appSideBarItemsContainerTemplateRef]="appSideBarItemsContainerTemplateRef"
+/>
+
+<app-side-bar-phone-wrapper
+  [appSideBarPhoneItemsTitleTemplateRef]="appSideBarPhoneItemsTitleTemplateRef"
+  [appSideBarPhoneItemsContainerTemplateRef]="appSideBarPhoneItemsContainerTemplateRef"
+/>
+
+<div
+  [@moveRouterOutletForSideBar]="_moveRouterOutletForSideBar()"
+  [ngStyle]="{height: 'calc(100% - ' + _heightNav() + 'px)'}"
+  class="app-root__boards"
+>
+
+  @if (_authStateReady()) {
+    @if (_isLoggedIn()) {
+
+      @if (!_loadingUserBoards()) {
+
+        @if (_userBoards(); as userBoards) {
+          @if (!userBoards || userBoards.length === 0) {
+
+            <div class="app-root__boards__empty">
+              <div class="app-root__boards__empty__title">There is no boards. Create a new board to get started.</div>
+              <button
+                app-button
+                appearance="primary"
+                (click)="openAddBoardDialog($event)"
+              >+ Add New Board</button>
+            </div>
+          }
+
+          @else if (userBoards.length > 0 && !_board() && !_boardId()) {
+            <div class="app-root__boards__empty" [@fadeZoomInOutTrigger]>
+              <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
+              @if (!_showSideBar()) {
+                <button
+                  app-button
+                  appearance="primary"
+                  (click)="setShowSideBar($event, true)"
+                >Open Sidebar</button>
+              }
+            </div>
+          } @else {
+            <router-outlet/>
+          }
+        }
+
+      }
+    } @else {
+
+      <div class="app-root__boards__app-intro">
+        <img [src]="'/assets/images/' + (_darkMode() ? 'desktop-view-task-dark.svg' : 'desktop-view-task-light.svg')" alt="desktop-view-task"/>
+        <div class="app-root__boards__app-intro__title">Research points of various projects and try Kanban model.</div>
+      </div>
+
+    }
+  }
+</div>

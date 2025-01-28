@@ -1,0 +1,18 @@
+@use 'styles/typography-mixins' as typography;
+
+@mixin basic() {
+
+  @include typography.heading-l();
+  padding: 32px;
+  max-width: 480px;
+  max-height: calc(100vh - 32px);
+  display: block;
+  background: white;
+  width: calc(100vw - 32px);
+  border-radius: 6px;
+  overflow: auto;
+
+  &__title {
+    margin-bottom: 24px;
+  }
+}

@@ -1,0 +1,19 @@
+@mixin theme($theme) {
+
+  .app-delete-board-task {
+
+    $background: map-get($theme, 'background');
+    $title-color: map-get($theme, 'title-color');
+    $description-color: map-get($theme, 'description-color');
+
+    background: $background;
+
+    &__title {
+      color: $title-color;
+    }
+
+    &__description {
+      color: $description-color;
+    }
+  }
+}

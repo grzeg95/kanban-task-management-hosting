@@ -1,0 +1,146 @@
+@use 'styles/typography-mixins' as typography;
+@use 'styles/layout' as layout;
+
+.app-nav {
+
+  display: flex;
+  justify-content: space-between;
+
+  @include layout.from-tablet() {
+    border-bottom: solid 1px black;
+  }
+
+  height: 64px;
+
+  @include layout.from-tablet() {
+    height: 81px;
+  }
+
+  @include layout.from-desktop() {
+    height: 97px;
+  }
+
+  &__left {
+
+    display: flex;
+
+    &__branding {
+
+      position: relative;
+      margin-left: 16px;
+      margin-top: 19px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      @include layout.from-tablet() {
+        margin: 28px 24px;
+      }
+
+      @include layout.from-desktop() {
+        margin: 35px 33px 36px 24px;
+      }
+
+      &__loading {
+
+        top: 28px;
+        width: 25px !important;
+
+        @include layout.from-tablet() {
+          top: 27px;
+          width: 143px !important;
+        }
+
+        @include layout.from-desktop() {
+          top: 27px !important;
+        }
+      }
+    }
+
+    &__separator {
+      height: 100%;
+      width: 1px;
+    }
+
+    &__selected-label {
+
+      position: relative;
+      display: flex;
+      align-items: center;
+      text-wrap: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 21px 16px 20px;
+      gap: 8px;
+      user-select: none;
+      cursor: pointer;
+
+      @include typography.heading-l();
+
+      @include layout.from-tablet() {
+        font-size: 20px;
+        font-weight: bold;
+        margin: 27px 24px;
+      }
+
+      @include layout.from-desktop() {
+        @include typography.heading-xl();
+        margin: 33px 32px;
+      }
+    }
+  }
+
+  &__menu {
+
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    gap: calc(16px - 9.5px);
+
+    @include layout.from-tablet() {
+      margin-right: 24px;
+      gap: calc(24px - 9.5px);
+    }
+
+    &__login-button {
+
+      margin-top: 16px;
+      margin-bottom: 16px;
+
+      @include layout.from-desktop() {
+        margin-top: 20px;
+        margin-bottom: 28px;
+      }
+    }
+
+    &__trigger {
+
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-top: 24px;
+      margin-bottom: 24px;
+
+      @include layout.from-tablet() {
+        margin-top: 30px;
+        margin-bottom: 30px;
+      }
+
+      @include layout.from-desktop() {
+        margin-top: 34px;
+        margin-bottom: 42px;
+      }
+
+      &--inactive {
+        opacity: 0.3;
+        cursor: auto;
+        pointer-events: none;
+      }
+    }
+  }
+}

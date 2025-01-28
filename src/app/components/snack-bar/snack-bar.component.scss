@@ -1,0 +1,18 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-snack-bar {
+
+  @include typography.body-l();
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  padding: 7px 15px;
+  border-radius: 4px;
+  justify-content: space-between;
+  cursor: pointer;
+  min-width: 200px;
+  margin-bottom: 30px;
+}

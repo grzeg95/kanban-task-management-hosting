@@ -1,3 +1,36 @@
+@use 'app/app' as app-root;
+
+@use 'app/components/board/board' as board;
+@use 'app/components/button/button' as button;
+@use 'app/components/loading/loading' as loading;
+@use 'app/components/nav/nav' as nav;
+@use 'app/components/pop-menu/pop-menu' as pop-menu;
+@use 'app/components/pop-menu/pop-menu-item/pop-menu-item' as pop-menu-item;
+@use 'app/components/side-bar/side-bar' as side-bar;
+@use 'app/components/side-bar-phone/side-bar-phone' as side-bar-phone;
+@use 'app/components/snack-bar/snack-bar' as snack-bar;
+
+@use 'app/components/dialogs/add-new-board/add-new-board' as add-new-board;
+@use 'app/components/dialogs/add-new-board-task/add-new-board-task' as add-new-board-task;
+@use 'app/components/dialogs/delete-board/delete-board' as delete-board;
+@use 'app/components/dialogs/delete-board-task/delete-board-task' as delete-board-task;
+@use 'app/components/dialogs/edit-board/edit-board' as edit-board;
+@use 'app/components/dialogs/edit-board-task/edit-board-task' as edit-board-task;
+@use 'app/components/dialogs/view-board-task/view-board-task' as view-board-task;
+
+@use 'app/components/form/checkbox/checkbox' as checkbox;
+@use 'app/components/form/error/error' as error;
+@use 'app/components/form/form-field/form-field' as form-field;
+@use 'app/components/form/input/input' as input;
+@use 'app/components/form/label/label' as label;
+@use 'app/components/form/select/select' as select;
+@use 'app/components/form/switch/switch' as switch;
+@use 'app/components/form/textarea/textarea' as textarea;
+
+@import 'styles/typography';
+@import 'styles/colors';
+@import 'styles/overlay';
+
 *,
 *::before,
 *::after {
@@ -12,4 +45,407 @@ body {
   margin: 0;
   overflow: auto;
   height: 100vh;
+  font-family: $font-family;
+}
+
+.dark {
+
+  @include app-root.theme((
+    background: $very-dark-gray,
+    app-side-bar__items__title-color: $medium-gray,
+    app-side-bar__items__container__button-background: transparent,
+    app-side-bar__items__container__button-background--hover: $white,
+    app-side-bar__items__container__button-background--active: $main-purple,
+    app-side-bar__items__container__button-background--focus-visible: $very-dark-gray,
+    app-side-bar__items__container__button-background--active--focus-visible: $main-purple-hover,
+    app-side-bar__items__container__button-color: $medium-gray,
+    app-side-bar__items__container__button-color--hover: $main-purple,
+    app-side-bar__items__container__button-color--active: $white,
+    empty-title-color: $medium-gray,
+    app-boards__app-intro__title-color: $medium-gray
+  ));
+
+  @include board.theme((
+    font-family: $font-family,
+    status-title-color: $medium-gray,
+    task-background: $dark-gray,
+    task-box-shadow-color: transparentize(#364E7E, 0.8985),
+    task-title-color: $white,
+    task-title-color-hover: $main-purple,
+    task-done-of-color: $medium-gray,
+    status-new-background: linear-gradient(to bottom, transparentize($dark-gray, 0.5), transparentize($dark-gray, 0.75)),
+    status-new-color: $medium-gray,
+    status-new-color-hover: $main-purple,
+    empty-title-color: $medium-gray
+  ));
+
+  @include button.theme((
+    font-family: $font-family,
+    primary-background: $main-purple,
+    primary-color: $white,
+    primary-hover-background: $main-purple-hover,
+    primary-hover-color: $white,
+    secondary-background: $white,
+    secondary-color: $main-purple,
+    secondary-hover-background: transparentize($main-purple, 0.75),
+    secondary-hover-color: $main-purple,
+    warn-background: $red,
+    warn-color: $white,
+    warn-hover-background: $red-hover,
+    warn-hover-color: $white
+  ));
+
+  @include loading.theme((
+    background-url: '/assets/images/loading-part.svg'
+  ));
+
+  @include nav.theme((
+    background: $dark-gray,
+    border-color: $lines-dark,
+    separator-color: $lines-dark,
+    selected-color: $white
+  ));
+
+  @include pop-menu.theme((
+    background: #1d1d25,
+    box-shadow-color: #000000
+  ));
+
+  @include pop-menu-item.theme((
+    font-family: $font-family,
+    color: $medium-gray,
+    color-danger: $red
+  ));
+
+  @include side-bar.theme((
+    items__title-color: $medium-gray,
+    background: $dark-gray,
+    border-color: $lines-dark,
+    bottom-menu__hide-side-bar-button-background: transparent,
+    bottom-menu__hide-side-bar-button-background--hover: $white,
+    bottom-menu__hide-side-bar-button-color: $medium-gray,
+    bottom-menu__hide-side-bar-button-color--hover: $main-purple,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $very-dark-gray
+  ));
+
+  @include side-bar-phone.theme((
+    items__title-color: $medium-gray,
+    background: $dark-gray,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $very-dark-gray
+  ));
+
+  @include snack-bar.theme((
+    font-family: $font-family,
+    color: $white,
+    background: #39395b
+  ));
+
+  @include add-new-board.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include add-new-board-task.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include delete-board.theme((
+    background: $dark-gray,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
+  @include delete-board-task.theme((
+    background: $dark-gray,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
+  @include edit-board.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include edit-board-task.theme((
+    background: $dark-gray,
+    title-color: $white
+  ));
+
+  @include view-board-task.theme((
+    background: $dark-gray,
+    title-color: $white,
+    description-color: $medium-gray
+  ));
+
+  @include checkbox.theme((
+    font-family: $font-family,
+    color: $white,
+    color-checked: mix($white, $very-dark-gray, 50%),
+    background: $very-dark-gray,
+    background-hover: mix($main-purple, $dark-gray, 24.89%),
+    checkbox-unchecked-border-color: mix($medium-gray, $dark-gray, 24.89%),
+    checkbox-checked-border-color: transparent,
+    checkbox-unchecked-background: $dark-gray,
+    checkbox-checked-background: $main-purple,
+    checkbox-focus-visible-check-outline-color: $white
+  ));
+
+  @include error.theme((
+    font-family: $font-family,
+    color: $red
+  ));
+
+  @include form-field.theme(());
+
+  @include input.theme((
+    font-family: $font-family,
+    color: $white,
+    color-error: $red,
+    color-placeholder: transparentize($white, 0.75),
+    background: $dark-gray,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+
+  @include label.theme((
+    font-family: $font-family,
+    color: $white
+  ));
+
+  @include select.theme((
+    font-family: $font-family,
+    color: $white,
+    color-option: $white,
+    color-placeholder: transparentize($white, 0.75),
+    background: $dark-gray,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+
+  @include switch.theme((
+    background: $main-purple,
+    handler-color: $white,
+    outline-color: $white
+  ));
+
+  @include textarea.theme((
+    font-family: $font-family,
+    color: $white,
+    color-error: $red,
+    color-placeholder: transparentize($white, 0.75),
+    background: $dark-gray,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+}
+
+.light {
+
+  @include app-root.theme((
+    background: $light-gray,
+    app-side-bar__items__title-color: $medium-gray,
+    app-side-bar__items__container__button-background: transparent,
+    app-side-bar__items__container__button-background--hover: transparentize(#979797, 0.9),
+    app-side-bar__items__container__button-background--active: $main-purple,
+    app-side-bar__items__container__button-background--focus-visible: $light-gray,
+    app-side-bar__items__container__button-background--active--focus-visible: $main-purple-hover,
+    app-side-bar__items__container__button-color: $medium-gray,
+    app-side-bar__items__container__button-color--hover: $main-purple,
+    app-side-bar__items__container__button-color--active: white,
+    empty-title-color: $medium-gray,
+    app-boards__app-intro__title-color: $dark-gray
+  ));
+
+  @include board.theme((
+    font-family: $font-family,
+    status-title-color: $medium-gray,
+    task-background: $white,
+    task-box-shadow-color: transparentize(#364E7E, 0.8985),
+    task-title-color: $black,
+    task-title-color-hover: $main-purple,
+    task-done-of-color: $medium-gray,
+    status-new-background: linear-gradient(to bottom, #E9EFFA, transparentize(#E9EFFA, 0.75)),
+    status-new-color: $medium-gray,
+    status-new-color-hover: $main-purple,
+    empty-title-color: $medium-gray
+  ));
+
+  @include button.theme((
+    font-family: $font-family,
+    primary-background: $main-purple,
+    primary-color: $white,
+    primary-hover-background: $main-purple-hover,
+    primary-hover-color: $white,
+    secondary-background: transparentize($main-purple, 0.9),
+    secondary-color: $main-purple,
+    secondary-hover-background: transparentize($main-purple, 0.75),
+    secondary-hover-color: $main-purple,
+    warn-background: $red,
+    warn-color: $white,
+    warn-hover-background: $red-hover,
+    warn-hover-color: $white
+  ));
+
+  @include loading.theme((
+    background-url: '/assets/images/loading-part.svg'
+  ));
+
+  @include nav.theme((
+    background: $white,
+    border-color: $lines,
+    separator-color: $lines,
+    selected-color: $black
+  ));
+
+  @include pop-menu.theme((
+    background: $white,
+    box-shadow-color: $main-purple-hover
+  ));
+
+  @include pop-menu-item.theme((
+    font-family: $font-family,
+    color: $medium-gray,
+    color-danger: $red
+  ));
+
+  @include side-bar.theme((
+    items__title-color: $medium-gray,
+    background: $white,
+    border-color: $lines,
+    bottom-menu__hide-side-bar-button-background: transparent,
+    bottom-menu__hide-side-bar-button-background--hover: transparentize(#979797, 0.9),
+    bottom-menu__hide-side-bar-button-color: $medium-gray,
+    bottom-menu__hide-side-bar-button-color--hover: $main-purple,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $light-gray
+  ));
+
+  @include side-bar-phone.theme((
+    items__title-color: $medium-gray,
+    background: $white,
+    bottom-menu__theme-switch-wrapper__theme-switch-background: $light-gray
+  ));
+
+  @include snack-bar.theme((
+    font-family: $font-family,
+    color: $black,
+    background: $light-gray
+  ));
+
+  @include add-new-board.theme((
+    background: $white,
+    title-color: $black
+  ));
+
+  @include add-new-board-task.theme((
+    background: $white,
+    title-color: $black
+  ));
+
+  @include delete-board.theme((
+    background: $white,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
+  @include delete-board-task.theme((
+    background: $white,
+    title-color: $red,
+    description-color: $medium-gray
+  ));
+
+  @include edit-board.theme((
+    background: $white,
+    title-color: $black
+  ));
+
+  @include edit-board-task.theme((
+    background: $white,
+    title-color: $black
+  ));
+
+  @include view-board-task.theme((
+    background: $white,
+    title-color: $black,
+    description-color: $medium-gray
+  ));
+
+  @include checkbox.theme((
+    font-family: $font-family,
+    color: $black,
+    color-checked: mix($black, $light-gray, 50%),
+    background: $light-gray,
+    background-hover: mix($main-purple, $white, 25%),
+    checkbox-unchecked-border-color: mix($medium-gray, $white, 24.89%),
+    checkbox-checked-border-color: transparent,
+    checkbox-unchecked-background: $white,
+    checkbox-checked-background: $main-purple,
+    checkbox-focus-visible-check-outline-color: $black
+  ));
+
+  @include error.theme((
+    font-family: $font-family,
+    color: $red
+  ));
+
+  @include form-field.theme(());
+
+  @include input.theme((
+    font-family: $font-family,
+    color: $black,
+    color-error: $red,
+    color-placeholder: transparentize($black, 0.75),
+    background: $white,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+
+  @include label.theme((
+    font-family: $font-family,
+    color: $medium-gray
+  ));
+
+  @include select.theme((
+    font-family: $font-family,
+    color: $black,
+    color-option: $black,
+    color-placeholder: transparentize($black, 0.75),
+    background: $white,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
+
+  @include switch.theme((
+    background: $main-purple,
+    handler-color: $white,
+    outline-color: $black
+  ));
+
+  @include textarea.theme((
+    font-family: $font-family,
+    color: $black,
+    color-error: $red,
+    color-placeholder: transparentize($black, 0.75),
+    background: $white,
+    border-color: transparentize($medium-gray, 0.75),
+    border-color-hover: $main-purple,
+    border-color-active: $main-purple,
+    border-color-focus: $main-purple,
+    border-color-error: $red
+  ));
 }

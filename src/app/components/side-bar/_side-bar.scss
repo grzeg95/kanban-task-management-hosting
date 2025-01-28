@@ -1,0 +1,77 @@
+@use 'styles/layout' as layout;
+
+@mixin side-bar-button {
+
+  position: relative !important;
+  left: -20px !important;
+  width: 240px !important;
+  padding-left: 44px !important;
+  justify-content: flex-start !important;
+
+  @include layout.from-desktop() {
+    width: 282px !important;
+    padding-left: 52px !important;
+  };
+}
+
+@mixin theme($theme) {
+
+  .app-side-bar {
+
+    $items__title-color: map-get($theme, 'items__title-color');
+    $background: map-get($theme, 'background');
+    $border-color: map-get($theme, 'border-color');
+    $bottom-menu__hide-side-bar-button-background: map-get($theme, 'bottom-menu__hide-side-bar-button-background');
+    $bottom-menu__hide-side-bar-button-background--hover: map-get($theme, 'bottom-menu__hide-side-bar-button-background--hover');
+    $bottom-menu__hide-side-bar-button-color: map-get($theme, 'bottom-menu__hide-side-bar-button-color');
+    $bottom-menu__hide-side-bar-button-color--hover: map-get($theme, 'bottom-menu__hide-side-bar-button-color--hover');
+    $bottom-menu__theme-switch-wrapper__theme-switch-background: map-get($theme, 'bottom-menu__theme-switch-wrapper__theme-switch-background');
+
+    &__content {
+
+      background: $background;
+      border-right: solid 1px $border-color;
+
+      &__items {
+        &__title {
+          color: $items__title-color;
+        }
+      }
+
+      &__bottom-menu {
+
+        &__theme-switch-wrapper {
+
+          &__theme-switch {
+            background: $bottom-menu__theme-switch-wrapper__theme-switch-background;
+          }
+        }
+
+        &__hide-side-bar-button {
+
+          background: $bottom-menu__hide-side-bar-button-background;
+          color: $bottom-menu__hide-side-bar-button-color;
+
+          svg path {
+            fill: $bottom-menu__hide-side-bar-button-color;
+          }
+
+          &:hover {
+
+            background: $bottom-menu__hide-side-bar-button-background--hover;
+            color: $bottom-menu__hide-side-bar-button-color--hover;
+
+            svg path {
+              fill: $bottom-menu__hide-side-bar-button-color--hover;
+            }
+          }
+
+          &:focus-visible:not(:hover) {
+            background: $bottom-menu__hide-side-bar-button-background--hover;
+            color: $bottom-menu__hide-side-bar-button-color--hover;
+          }
+        }
+      }
+    }
+  }
+}

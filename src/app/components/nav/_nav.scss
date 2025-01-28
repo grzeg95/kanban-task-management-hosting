@@ -1,0 +1,29 @@
+@use 'styles/layout' as layout;
+
+@mixin theme($theme) {
+
+  .app-nav {
+
+    $background: map-get($theme, 'background');
+    $border-color: map-get($theme, 'border-color');
+    $separator-color: map-get($theme, 'separator-color');
+    $selected-color: map-get($theme, 'selected-color');
+
+    background: $background;
+
+    @include layout.from-tablet() {
+      border-bottom: solid 1px $border-color;
+    }
+
+    &__left {
+
+      &__separator {
+        background: $separator-color;
+      }
+
+      &__selected-label {
+        color: $selected-color;
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "icon-board",
+    "src": "icon-board.svg"
+  },
+  {
+    "name": "icon-check",
+    "src": "icon-check.svg"
+  },
+  {
+    "name": "icon-chevron-down",
+    "src": "icon-chevron-down.svg"
+  },
+  {
+    "name": "icon-chevron-up",
+    "src": "icon-chevron-up.svg"
+  },
+  {
+    "name": "icon-cross",
+    "src": "icon-cross.svg"
+  },
+  {
+    "name": "icon-dark-theme",
+    "src": "icon-dark-theme.svg"
+  },
+  {
+    "name": "icon-hide-sidebar",
+    "src": "icon-hide-sidebar.svg"
+  },
+  {
+    "name": "icon-light-theme",
+    "src": "icon-light-theme.svg"
+  },
+  {
+    "name": "icon-plus",
+    "src": "icon-plus.svg"
+  },
+  {
+    "name": "icon-show-sidebar",
+    "src": "icon-show-sidebar.svg"
+  },
+  {
+    "name": "icon-vertical-ellipsis",
+    "src": "icon-vertical-ellipsis.svg"
+  },
+  {
+    "name": "incognito",
+    "src": "incognito.svg"
+  },
+  {
+    "name": "logo",
+    "src": "logo.svg"
+  },
+  {
+    "name": "logo-dark",
+    "src": "logo-dark.svg"
+  },
+  {
+    "name": "logo-light",
+    "src": "logo-light.svg"
+  }
+]

@@ -1,0 +1,99 @@
+<div class="app-nav__left">
+  <div class="app-nav__left__branding">
+    <svg [appSvg]="_logo()"/>
+    <div [@move-branding-for-side-bar]="_moveBrandingForSideBarState()"></div>
+
+    @if (_appLoading()) {
+      <app-loading class="app-nav__left__branding__loading"/>
+    }
+  </div>
+
+  @if (!_isOnPhone()) {
+    <div class="app-nav__left__separator"></div>
+  }
+
+  <div class="app-nav__left__selected-label">
+    @if (appNavSelectedLabelTemplateRef; as appNavSelectedLabelTemplateRef) {
+      <ng-container [ngTemplateOutlet]="appNavSelectedLabelTemplateRef"/>
+    } @else {
+      @if (_isOnPhone()) {
+        <span
+          class="app-nav__left__selected-label"
+          tabindex="0"
+          (keydown)="setShowSideBar($event, !_showSideBar())"
+          (click)="setShowSideBar($event, !_showSideBar())"
+        >
+      <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+          {{ _authStateReady() === undefined ? 'Loading ...' : 'App' }}
+    </span>
+      } @else {
+        <span>{{ _authStateReady() === undefined ? 'Loading ...' : 'App' }}</span>
+      }
+    }
+  </div>
+</div>
+
+<div
+  class="app-nav__menu"
+>
+
+  @if (_authStateReady()) {
+    @if (!_isLoggedIn()) {
+      <button
+        class="app-nav__menu__login-button"
+        app-button
+        appearance="primary"
+        [size]="loginButtonSize()"
+        svg="left"
+        (click)="signInAnonymously()"
+      >
+        <svg appSvg="incognito"/>
+
+        @if (!_isOnPhone()) {
+          Try It
+        }
+      </button>
+    }
+  }
+
+  @if (appNavButtonTemplateRef; as appNavButtonTemplateRef) {
+    <ng-container [ngTemplateOutlet]="appNavButtonTemplateRef"/>
+  }
+
+  @if (_authStateReady()) {
+    <div
+      cdkOverlayOrigin
+      #trigger="cdkOverlayOrigin"
+      [tabindex]="-1"
+      (click)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
+      (keydown)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
+    >
+      <svg
+        [tabindex]="_isLoggedIn() ? 0 : -1"
+        class="app-nav__menu__trigger"
+        [class.app-nav__menu__trigger--inactive]="!_isLoggedIn()"
+        appSvg="icon-vertical-ellipsis"
+      />
+    </div>
+
+    <ng-template
+      cdkConnectedOverlay
+      #cdkConnectedOverlay="cdkConnectedOverlay"
+      [cdkConnectedOverlayOrigin]="trigger"
+      [cdkConnectedOverlayOpen]="!!_showNavMenuOptions()"
+      [cdkConnectedOverlayDisposeOnNavigation]="true"
+      (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); setShowNavMenuOptions($event,false);"
+    >
+      <app-pop-menu [style.min-width.px]="192">
+
+        @if (appNavMenuButtonsTemplateRef; as appNavMenuButtonsTemplateRef) {
+          <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
+        }
+
+        @if (_isLoggedIn()) {
+          <app-pop-menu-item [danger]="true" (click)="setShowNavMenuOptions($event,false); signOut();">Sign Out</app-pop-menu-item>
+        }
+      </app-pop-menu>
+    </ng-template>
+  }
+</div>

@@ -1,0 +1,63 @@
+<div class="app-side-bar__content" [@moveForSideBarState]="_moveForSideBarState()">
+  <div class="app-side-bar__content__branding">
+    <svg [appSvg]="_logo()"/>
+
+    @if (_appLoading()) {
+      <app-loading class="app-side-bar__content__branding__loading"/>
+    }
+  </div>
+
+  <div class="app-side-bar__content__items">
+    <div class="app-side-bar__content__items__title">
+      @if (appSideBarItemsTitleTemplateRef; as appSideBarItemsTitleTemplateRef) {
+        <ng-container [ngTemplateOutlet]="appSideBarItemsTitleTemplateRef"/>
+      } @else {
+        &nbsp;
+      }
+    </div>
+
+    <div class="app-side-bar__content__items__container">
+      @if (appSideBarItemsContainerTemplateRef; as appSideBarItemsContainerTemplateRef) {
+        <ng-container [ngTemplateOutlet]="appSideBarItemsContainerTemplateRef"/>
+      }
+    </div>
+  </div>
+
+  <div class="app-side-bar__content__bottom-menu">
+
+    <div class="app-side-bar__content__bottom-menu__theme-switch-wrapper">
+      <div class="app-side-bar__content__bottom-menu__theme-switch-wrapper__theme-switch">
+        <svg appSvg="icon-light-theme"/>
+        <app-switch [tabIndex]="_tabIndex()" [ngModel]="_darkMode()" (ngModelChange)="toggleDarkMode()"/>
+        <svg appSvg="icon-dark-theme"/>
+      </div>
+    </div>
+
+    <button
+      #hideSideBarButton
+      [tabIndex]="_tabIndex()"
+      class="app-side-bar__content__bottom-menu__hide-side-bar-button"
+      app-button
+      svg="left"
+      (click)="setShowSideBar($event,false)"
+    >
+      <svg appSvg="icon-hide-sidebar"/>
+      Hide Sidebar
+    </button>
+  </div>
+</div>
+
+<button
+  #showSideBarButton
+  [@moveShowSideBarButtonForSideBarState]="_moveShowSideBarButtonForSideBarState()"
+  [tabIndex]="_tabIndexShowSidebar()"
+  class="app-side-bar__content__show-side-bar-button"
+  app-button
+  appearance="primary"
+  svg="right"
+  (click)="setShowSideBar($event, true)"
+  (keydown)="setShowSideBar($event, true)"
+>
+  &nbsp;&nbsp;&nbsp;
+  <svg appSvg="icon-show-sidebar"/>
+</button>

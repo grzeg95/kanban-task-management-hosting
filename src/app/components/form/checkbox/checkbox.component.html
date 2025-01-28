@@ -1,0 +1,24 @@
+<label
+  class="app-checkbox__label"
+  [for]="_id"
+  [ngClass]="{'app-checkbox__label--checked': checked}"
+>
+  <input
+    type="checkbox"
+    class="app-checkbox__checkbox"
+    [checked]="checked"
+    [disabled]="disabled"
+    [id]="_id"
+  />
+
+  <span
+    class="app-checkbox__check"
+    [ngClass]="{'app-checkbox__check--checked': checked}"
+  >
+    @if (checked) {
+      <svg appSvg="icon-check"/>
+    }
+  </span>
+
+  <ng-content/>
+</label>

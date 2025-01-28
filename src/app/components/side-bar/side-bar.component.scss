@@ -1,0 +1,118 @@
+@use 'styles/layout' as layout;
+@use 'side-bar' as side-bar;
+
+.app-side-bar {
+
+  display: block;
+
+  &__content {
+
+    width: 261px;
+    height: 100vh;
+    border-right: 1px solid;
+    display: block;
+    position: absolute;
+    z-index: 1;
+    background: white;
+    top: 0;
+
+    @include layout.from-desktop() {
+      width: 300px;
+    }
+
+    &__items {
+
+      display: flex;
+      flex-direction: column;
+
+      &__title {
+        font-weight: bold;
+        font-size: 12px;
+        letter-spacing: 2.4px;
+        margin-left: 24px;
+        margin-top: 54px;
+        margin-bottom: 19px;
+
+        @include layout.from-desktop() {
+          margin-left: 32px;
+        };
+      }
+
+      &__container {
+        height: calc(100vh - 319px);
+        overflow: auto;
+
+        @include layout.from-desktop() {
+          height: calc(100vh - 311px);
+        }
+
+        &__button {
+
+          @include side-bar.side-bar-button();
+
+          &--active {
+            background: rgb(239, 239, 239);
+          }
+        }
+      }
+    }
+
+    &__branding {
+
+      padding-top: 33px;
+      margin-left: 26px;
+
+      @include layout.from-desktop() {
+        margin-left: 34px;
+      }
+
+      &__loading {
+        width: 153px;
+      }
+    }
+
+    &__bottom-menu {
+
+      margin-top: 32px;
+      margin-bottom: 32px;
+
+      &__theme-switch-wrapper {
+
+        padding: 0 13px;
+
+        @include layout.from-desktop() {
+          padding: 0 24px;
+        }
+
+        &__theme-switch {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 24px;
+          height: 48px;
+          border-radius: 6px;
+          margin-bottom: 16px;
+
+          @include layout.from-desktop() {
+            margin-bottom: 8px;
+          }
+        }
+      }
+
+      &__hide-side-bar-button.app-button {
+        @include side-bar.side-bar-button();
+      }
+    }
+
+    &__show-side-bar-button.app-button {
+
+      position: absolute;
+      bottom: 32px;
+      left: 261px;
+
+      @include layout.from-desktop() {
+        left: 300px;
+      }
+    }
+  }
+}

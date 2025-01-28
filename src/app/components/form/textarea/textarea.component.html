@@ -1,0 +1,15 @@
+<textarea
+  class="app-textarea__textarea"
+  (change)="_onChange($event)"
+  (input)="_onInput($event)"
+  (blur)="_onTouched()"
+  [disabled]="disabled"
+  [value]="value"
+  [placeholder]="placeholder"
+  [id]="_id"
+  [rows]="rows"
+></textarea>
+
+@if (removeAble) {
+  <svg tabindex="0" class="app-textarea__remove" (click)="remove.emit()" appSvg="icon-cross"/>
+}

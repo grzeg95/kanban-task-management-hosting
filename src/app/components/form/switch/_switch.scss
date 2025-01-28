@@ -1,0 +1,22 @@
+@mixin theme($theme) {
+
+  .app-switch {
+
+    $background: map-get($theme, 'background');
+    $handler-color: map-get($theme, 'handler-color');
+    $outline-color: map-get($theme, 'outline-color');
+
+    &__input:focus-visible + .app-switch__label::after {
+      border-color: $outline-color;
+    }
+
+    &__label {
+
+      background: $background;
+
+      &::before {
+        background-color: $handler-color;
+      }
+    }
+  }
+}

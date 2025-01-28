@@ -1,0 +1,61 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-checkbox {
+
+  padding: 12px;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 4px;
+  position: relative;
+  user-select: none;
+
+  &__checkbox {
+
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  &__check {
+
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    svg {
+      position: relative;
+      top: 1px;
+    }
+  }
+
+  &__label {
+
+    @include typography.body-m();
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    &--checked {
+      text-decoration: line-through;
+    }
+  }
+
+  &--disabled {
+    opacity: 0.75;
+    cursor: default;
+    pointer-events: none;
+  }
+}

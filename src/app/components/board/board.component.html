@@ -1,0 +1,58 @@
+@if (!_loadingBoard() && !_loadingBoardStatuses() && !_loadingBoardTasks()) {
+  @if (_authStateReady() && _user()) {
+    @if (_boardView(); as boardView) {
+
+      @defer {
+
+        @for (boardStatusView of boardView; track boardStatusView.id; let index = $index; let count = $count) {
+
+          <div class="app-board__status" [@fadeZoomInOutTrigger]>
+            <div class="app-board__status__title-wrapper">
+              <div class="app-board__status__title-wrapper__indicator" [style.background-color]="colorShift(index / (count - 1))"></div>
+              <div class="app-board__status__title-wrapper__title">({{ boardStatusView.boardTasksIds.length }}) {{ boardStatusView.name }}</div>
+            </div>
+
+            @for (boardStatusTask of boardStatusView.boardTasks; track boardStatusTask.id) {
+
+              <div class="app-board__task" [@fadeZoomInOutTrigger] tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
+                <div class="app-board__task__title-wrapper">
+                  <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
+                </div>
+
+                @if (boardStatusTask.boardTaskSubtasksIds.length > 0) {
+                  <div class="app-board__task__done-of">{{ boardStatusTask.completedBoardTaskSubtasks }} of {{ boardStatusTask.boardTaskSubtasksIds.length }} subtasks</div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (boardView.length === 0) {
+          <div class="app-board__empty" [@fadeZoomInOutTrigger]>
+            <div class="app-board__empty__title">This board is empty. Create a new column to get started.</div>
+            <button app-button (click)="openEditBoardDialog($event)" appearance="primary">+ Add New Column</button>
+          </div>
+        }
+
+        @if (boardView.length > 0) {
+          <div
+            class="app-board__status-new"
+            [@fadeZoomInOutTrigger]
+            tabindex="{{_tabIndex()}}"
+            (click)="openEditBoardDialog($event)"
+            (keydown)="openEditBoardDialog($event)"
+            [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
+          >
+            + New Column
+          </div>
+        }
+      } @placeholder (minimum 75ms) { }
+    }
+  }
+} @else {
+  @defer {
+    <div class="app-board__empty" [@fadeZoomInOutTrigger]>
+      <div class="app-board__empty__title">Loading board...</div>
+    </div>
+  } @placeholder (minimum 150ms) { }
+}

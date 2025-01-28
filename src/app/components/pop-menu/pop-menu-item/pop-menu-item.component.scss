@@ -1,0 +1,8 @@
+@use 'styles/typography-mixins' as typography;
+
+.app-pop-menu-item {
+  @include typography.body-l();
+  padding: 7px 15px;
+  cursor: pointer;
+  user-select: none;
+}

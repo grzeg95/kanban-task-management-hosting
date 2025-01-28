@@ -1,0 +1,21 @@
+@use 'styles/typography-mixins' as typography;
+@use '../dialog' as dialog;
+
+.app-delete-board-task {
+
+  @include dialog.basic();
+
+  &__description {
+    @include typography.body-l();
+    margin-bottom: 22px;
+  }
+
+  &__delete-task-button {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  &__cancel-button {
+    width: 100%;
+  }
+}
