@@ -1,8 +1,10 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, computed, effect, signal, ViewEncapsulation} from '@angular/core';
+import {AsyncPipe} from '@angular/common';
+import {Component, DestroyRef, OnInit, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, of} from 'rxjs';
-import {SvgDirective} from '../../../directives/svg.directive';
+import {BehaviorSubject, catchError, combineLatest, map, of} from 'rxjs';
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
 import {BoardTaskCreateData} from '../../../models/board-task';
 import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
@@ -15,8 +17,6 @@ import {SelectComponent} from '../../form/select/select.component';
 import {TextareaComponent} from '../../form/textarea/textarea.component';
 import {LoaderComponent} from '../../loader/loader.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
-import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
-import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-view-board-task',
@@ -25,13 +25,13 @@ import {Sig} from "../../../utils/Sig";
     InputComponent,
     ButtonComponent,
     ReactiveFormsModule,
-    SvgDirective,
     FormFieldComponent,
     LabelComponent,
     ErrorComponent,
     TextareaComponent,
     SelectComponent,
-    LoaderComponent
+    LoaderComponent,
+    AsyncPipe
   ],
   templateUrl: './add-new-bord-task.component.html',
   styleUrl: './add-new-bord-task.component.scss',
@@ -40,38 +40,39 @@ import {Sig} from "../../../utils/Sig";
     fadeZoomInOutTrigger
   ]
 })
-export class AddNewBordTaskComponent {
+export class AddNewBordTaskComponent implements OnInit {
 
-  protected readonly _isRequesting = signal(false);
-  protected readonly _board = this._boardService.boardSig.get();
-  protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
+  protected readonly _isRequesting$ = new BehaviorSubject(false);
+  protected readonly _board$ = this._boardService.board$;
+  protected readonly _boardStatuses$ = this._boardService.boardStatuses$;
 
-  protected readonly _boardStatusesPopMenuItems = computed<PopMenuItem[]>(() => {
+  protected readonly _boardStatusesPopMenuItems$ = combineLatest([
+    this._board$,
+    this._boardStatuses$
+  ]).pipe(
+    map(([
+      board,
+      boardStatuses
+    ]) => {
+      if (
+        (!board && board !== undefined) ||
+        (!boardStatuses && boardStatuses !== undefined)
+      ) {
+        return [];
+      }
 
-    const board = this._board();
-    const boardStatuses = this._boardStatuses();
+      if (board === undefined || boardStatuses === undefined) {
+        return [];
+      }
 
-    if (
-      (!board && board !== undefined) ||
-      (!boardStatuses && boardStatuses !== undefined)
-    ) {
-      return [];
-    }
-
-    if (board === undefined || boardStatuses === undefined) {
-      return [];
-    }
-
-    return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
-      return {
-        value: boardStatus!.id,
-        label: boardStatus!.name
-      } as PopMenuItem;
-    });
-  });
-
-  private readonly _viewIsReadyToShowSig = new Sig(2);
-  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+      return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((boardStatus) => !!boardStatus).map((boardStatus) => {
+        return {
+          value: boardStatus!.id,
+          label: boardStatus!.name
+        } as PopMenuItem;
+      });
+    })
+  );
 
   protected readonly form = new FormGroup({
     boardId: new FormControl('', Validators.required),
@@ -84,13 +85,22 @@ export class AddNewBordTaskComponent {
   constructor(
     private readonly _boardService: BoardService,
     private readonly _dialogRef: DialogRef<AddNewBordTaskComponent>,
-    private readonly _snackBarService: SnackBarService
+    private readonly _snackBarService: SnackBarService,
+    private readonly _destroyRef: DestroyRef
   ) {
+  }
 
-    effect(() => {
+  ngOnInit() {
 
-      const board = this._board();
-      const boardStatuses = this._boardStatuses();
+    combineLatest([
+      this._board$,
+      this._boardStatuses$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef),
+    ).subscribe(([
+      board,
+      boardStatuses
+    ]) => {
 
       if (
         (!board && board !== undefined) ||
@@ -106,13 +116,15 @@ export class AddNewBordTaskComponent {
       }
 
       this.form.controls.boardId.setValue(board.id);
-
-      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
 
-    effect(() => {
-
-      const boardStatusesPopMenuItems = this._boardStatusesPopMenuItems();
+    combineLatest([
+      this._boardStatusesPopMenuItems$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef),
+    ).subscribe(([
+      boardStatusesPopMenuItems
+    ]) => {
 
       setTimeout(() => {
         if (
@@ -121,26 +133,29 @@ export class AddNewBordTaskComponent {
         ) {
           this.form.controls.boardStatusId.setValue(boardStatusesPopMenuItems[0].value);
         }
-
-        this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
       });
     });
 
-    effect(() => {
-
-      if (this._isRequesting()) {
+    combineLatest([
+      this._isRequesting$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef),
+    ).subscribe(([
+      isRequesting
+    ]) => {
+      if (isRequesting) {
         this.form.disable();
       } else {
         this.form.enable();
       }
-    });
+    })
 
     this.addNewSubtask();
   }
 
   boardTaskCreate() {
 
-    if (this._isRequesting()) {
+    if (this._isRequesting$.value) {
       return;
     }
 
@@ -159,12 +174,12 @@ export class AddNewBordTaskComponent {
       boardTaskSubtasksTitles: this.form.value.boardTaskSubtasksTitles,
     } as BoardTaskCreateData;
 
-    this._isRequesting.set(true);
+    this._isRequesting$.next(true);
 
     this._boardService.boardTaskCreate(createTaskData).pipe(
       catchError(() => {
 
-        this._isRequesting.set(false);
+        this._isRequesting$.next(false);
         return of(null);
       })
     ).subscribe((result) => {

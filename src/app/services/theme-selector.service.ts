@@ -1,9 +1,9 @@
 import {DOCUMENT, isPlatformBrowser} from '@angular/common';
-import {effect, Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
+import {Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
 import {Firestore} from 'firebase/firestore';
+import {BehaviorSubject, combineLatest} from 'rxjs';
 import {User} from '../models/user';
 import {FirestoreInjectionToken} from '../tokens/firebase';
-import {Sig} from '../utils/Sig';
 import {AuthService} from './auth.service';
 import {updateDoc} from './firebase/firestore';
 
@@ -13,8 +13,8 @@ import {updateDoc} from './firebase/firestore';
 export class ThemeSelectorService {
 
   private readonly _renderer: Renderer2;
-  readonly darkModeSig = new Sig<boolean | undefined>(undefined);
-  private readonly _user = this._authService.userSig.get();
+  readonly darkMode$ = new BehaviorSubject<boolean | undefined>(undefined);
+  private readonly _user$ = this._authService.user$;
 
   constructor(
     private readonly _rendererFactory: RendererFactory2,
@@ -26,9 +26,9 @@ export class ThemeSelectorService {
     this._renderer = this._rendererFactory.createRenderer(null, null);
 
     let userDarkMode: boolean | null;
-    effect(() => {
-
-      const user = this._user();
+    combineLatest([
+      this._user$
+    ]).subscribe(([user]) => {
 
       if (!user) {
         return;
@@ -62,9 +62,9 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'light');
     }
 
-    this.darkModeSig.set(false);
+    this.darkMode$.next(false);
 
-    const user = this._user();
+    const user = this._user$.value;
 
     if (user && user.darkMode !== null && user.darkMode) {
       const userRef = User.firestoreRef(this._firestore, user.id);
@@ -86,9 +86,9 @@ export class ThemeSelectorService {
       localStorage.setItem('theme', 'dark');
     }
 
-    this.darkModeSig.set(true);
+    this.darkMode$.next(true);
 
-    const user = this._user();
+    const user = this._user$.value;
 
     if (user && !user.darkMode) {
       const userRef = User.firestoreRef(this._firestore, user.id);

@@ -1,14 +1,14 @@
 <div class="app-nav__left">
   <div class="app-nav__left__branding">
-    <svg [appSvg]="_logo()"/>
-    <div [@move-branding-for-side-bar]="_moveBrandingForSideBarState()"></div>
+    <svg [appSvg]="(_logo$ | async) || ''"/>
+    <div [@move-branding-for-side-bar]="_moveBrandingForSideBarState$ | async"></div>
 
-    @if (_appLoading()) {
+    @if (_appLoading$ | async) {
       <app-loading class="app-nav__left__branding__loading"/>
     }
   </div>
 
-  @if (!_isOnPhone()) {
+  @if (!!!(_isOnPhone$ | async)) {
     <div class="app-nav__left__separator"></div>
   }
 
@@ -16,18 +16,18 @@
     @if (appNavSelectedLabelTemplateRef; as appNavSelectedLabelTemplateRef) {
       <ng-container [ngTemplateOutlet]="appNavSelectedLabelTemplateRef"/>
     } @else {
-      @if (_isOnPhone()) {
+      @if (_isOnPhone$ | async) {
         <span
           class="app-nav__left__selected-label"
           tabindex="0"
-          (keydown)="setShowSideBar($event, !_showSideBar())"
-          (click)="setShowSideBar($event, !_showSideBar())"
+          (keydown)="setShowSideBar($event, !_showSideBar)"
+          (click)="setShowSideBar($event, !_showSideBar)"
         >
-      <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
-          {{ _authStateReady() === undefined ? 'Loading ...' : 'App' }}
+      <svg [appSvg]="_showSideBar ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+          {{ (_authStateReady$ | async) === undefined ? 'Loading ...' : 'App' }}
     </span>
       } @else {
-        <span>{{ _authStateReady() === undefined ? 'Loading ...' : 'App' }}</span>
+        <span>{{ (_authStateReady$ | async) === undefined ? 'Loading ...' : 'App' }}</span>
       }
     }
   </div>
@@ -37,19 +37,19 @@
   class="app-nav__menu"
 >
 
-  @if (_authStateReady()) {
-    @if (!_isLoggedIn()) {
+  @if (_authStateReady$ | async) {
+    @if (!!!(_isLoggedIn$ | async)) {
       <button
         class="app-nav__menu__login-button"
         app-button
         appearance="primary"
-        [size]="loginButtonSize()"
+        [size]="_loginButtonSize$ | async"
         svg="left"
         (click)="signInAnonymously()"
       >
         <svg appSvg="incognito"/>
 
-        @if (!_isOnPhone()) {
+        @if (!!!(_isOnPhone$ | async)) {
           Try It
         }
       </button>
@@ -60,18 +60,18 @@
     <ng-container [ngTemplateOutlet]="appNavButtonTemplateRef"/>
   }
 
-  @if (_authStateReady()) {
+  @if (_authStateReady$ | async) {
     <div
       cdkOverlayOrigin
       #trigger="cdkOverlayOrigin"
       [tabindex]="-1"
-      (click)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
-      (keydown)="setShowNavMenuOptions($event, !_showNavMenuOptions())"
+      (click)="setShowNavMenuOptions($event, !_showNavMenuOptions)"
+      (keydown)="setShowNavMenuOptions($event, !_showNavMenuOptions)"
     >
       <svg
-        [tabindex]="_isLoggedIn() ? 0 : -1"
+        [tabindex]="(_isLoggedIn$ | async) ? 0 : -1"
         class="app-nav__menu__trigger"
-        [class.app-nav__menu__trigger--inactive]="!_isLoggedIn()"
+        [class.app-nav__menu__trigger--inactive]="(_isLoggedIn$ | async) === false"
         appSvg="icon-vertical-ellipsis"
       />
     </div>
@@ -80,7 +80,7 @@
       cdkConnectedOverlay
       #cdkConnectedOverlay="cdkConnectedOverlay"
       [cdkConnectedOverlayOrigin]="trigger"
-      [cdkConnectedOverlayOpen]="!!_showNavMenuOptions()"
+      [cdkConnectedOverlayOpen]="!!_showNavMenuOptions"
       [cdkConnectedOverlayDisposeOnNavigation]="true"
       (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); setShowNavMenuOptions($event,false);"
     >
@@ -90,7 +90,7 @@
           <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
         }
 
-        @if (_isLoggedIn()) {
+        @if (_isLoggedIn$ | async) {
           <app-pop-menu-item [danger]="true" (click)="setShowNavMenuOptions($event,false); signOut();">Sign Out</app-pop-menu-item>
         }
       </app-pop-menu>

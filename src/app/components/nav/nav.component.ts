@@ -1,8 +1,9 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, computed, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
+import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {Router} from '@angular/router';
+import {combineLatest, map} from 'rxjs';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AuthService} from '../../services/auth.service';
 import {LayoutService, LayoutServiceStates} from '../../services/layout.service';
@@ -25,7 +26,8 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
     PopMenuComponent,
     PopMenuItemComponent,
     SvgDirective,
-    LoadingComponent
+    LoadingComponent,
+    AsyncPipe
   ],
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.scss',
@@ -70,67 +72,96 @@ export class NavComponent {
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavSelectedLabelTemplateRef: TemplateRef<any> | undefined;
 
-  private readonly _firstAnimation = this._layoutService.firstAnimation.get();
+  private readonly _firstAnimation$ = this._layoutService.firstAnimation$;
 
-  protected readonly _showNavMenuOptions = this._layoutService.showNavMenuOptionsSig.get();
-  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
-  protected readonly _isLoggedIn = this._authService.isLoggedIn;
-  protected readonly _authStateReady = this._authService.authStateReady;
-  protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
-  protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
-  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
+  protected readonly _showNavMenuOptions$ = this._layoutService.showNavMenuOptions$;
+  protected readonly _darkMode$ = this._themeSelectorService.darkMode$;
+  protected readonly _isLoggedIn$ = this._authService.isLoggedIn$;
+  protected readonly _authStateReady$ = this._authService.authStateReady$;
+  protected readonly _isOnDesktop$ = this._layoutService.isOnDesktop$;
+  protected readonly _isOnTablet$ = this._layoutService.isOnTablet$;
+  protected readonly _isOnPhone$ = this._layoutService.isOnPhone$;
+  protected readonly _showSideBar$ = this._layoutService.showSideBar$;
 
-  protected readonly _moveBrandingForSideBarState = computed(() => {
+  protected get _showSideBar() {
+    return this._showSideBar$.value;
+  }
 
-    const firstAnimation = this._firstAnimation();
+  protected get _showNavMenuOptions() {
+    return this._showNavMenuOptions$.value;
+  }
 
-    const showSideBar = this._showSideBar();
-    const isOnDesktop = this._isOnDesktop();
-    const isOnTablet = this._isOnTablet();
+  protected readonly _moveBrandingForSideBarState$ = combineLatest([
+    this._firstAnimation$,
+    this._showSideBar$,
+    this._isOnDesktop$,
+    this._isOnTablet$
+  ]).pipe(
+    map(([
+      firstAnimation,
+      showSideBar,
+      isOnDesktop,
+      isOnTablet
+    ]) => {
 
-    let state = 'hidden';
+      let state = 'hidden';
 
-    if (showSideBar) {
-      if (isOnDesktop) {
-        state = LayoutServiceStates.desktop;
-      } else if (isOnTablet) {
-        state = LayoutServiceStates.tablet;
+      if (showSideBar) {
+        if (isOnDesktop) {
+          state = LayoutServiceStates.desktop;
+        } else if (isOnTablet) {
+          state = LayoutServiceStates.tablet;
+        }
       }
-    }
 
-    if (firstAnimation) {
-      state += '-first';
-    }
-
-    return state;
-  });
-
-  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
-
-  protected readonly _appLoading = this._loadingService.appLoading;
-
-  protected readonly _logo = computed(() => {
-
-    if (this._isOnTablet() || this._isOnDesktop()) {
-      if (this._darkMode()) {
-        return 'logo-light';
+      if (firstAnimation) {
+        state += '-first';
       }
-      return 'logo-dark';
-    }
 
-    return 'logo';
-  });
+      return state;
+    })
+  );
 
-  loginButtonSize = computed(() => {
+  protected readonly _appLoading$ = this._loadingService.appLoading$;
 
-    let buttonSize: ButtonSize = 'large';
+  protected readonly _logo$ = combineLatest([
+    this._isOnTablet$,
+    this._isOnDesktop$,
+    this._darkMode$
+  ]).pipe(
+    map(([
+      isOnTablet,
+      isOnDesktop,
+      darkMode
+    ]) => {
 
-    if (this._isOnPhone()) {
-      buttonSize = 'small';
-    }
+      if (isOnTablet || isOnDesktop) {
+        if (darkMode) {
+          return 'logo-light';
+        }
+        return 'logo-dark';
+      }
 
-    return buttonSize;
-  });
+      return 'logo';
+    })
+  );
+
+  protected readonly _loginButtonSize$ = combineLatest([
+    this._isOnPhone$
+  ]).pipe(
+    map(([
+      isOnPhone
+    ]) => {
+
+      let buttonSize: ButtonSize = 'large';
+
+      if (isOnPhone) {
+        buttonSize = 'small';
+      }
+
+      return buttonSize;
+    })
+  );
 
   constructor(
     private readonly _themeSelectorService: ThemeSelectorService,
@@ -163,7 +194,7 @@ export class NavComponent {
       }
     }
 
-    this._layoutService.showSideBarSig.set(value);
+    this._layoutService.showSideBar$.next(value);
   }
 
   setShowNavMenuOptions($event: KeyboardEvent | MouseEvent, value: boolean) {
@@ -178,6 +209,6 @@ export class NavComponent {
       }
     }
 
-    this._layoutService.showNavMenuOptionsSig.set(value);
+    this._layoutService.showNavMenuOptions$.next(value);
   }
 }

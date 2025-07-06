@@ -1,4 +1,4 @@
-@if (_viewIsReadyToShow() === 0 && _boardTaskView(); as boardTaskView) {
+@if ((_boardTaskView$ | async); as boardTaskView) {
 
   <div class="app-view-board-task" [@fadeZoomInOutTrigger]>
     <div class="app-view-board-task__header">
@@ -8,8 +8,8 @@
         tabindex="0"
         class="app-view-board-task__header__menu__trigger"
         [@fadeZoomInOutTrigger]
-        (click)="setShowMenuOptions($event, !_showMenuOptions())"
-        (keydown)="setShowMenuOptions($event, !_showMenuOptions())"
+        (click)="setShowMenuOptions($event, !(_showMenuOptions))"
+        (keydown)="setShowMenuOptions($event, !(_showMenuOptions))"
       >
         <svg
           appSvg="icon-vertical-ellipsis"
@@ -22,7 +22,7 @@
         cdkConnectedOverlay
         #cdkConnectedOverlay="cdkConnectedOverlay"
         [cdkConnectedOverlayOrigin]="trigger"
-        [cdkConnectedOverlayOpen]="_showMenuOptions()"
+        [cdkConnectedOverlayOpen]="(_showMenuOptions$ | async) || false"
         [cdkConnectedOverlayDisposeOnNavigation]="true"
         [cdkConnectedOverlayPositions]="[{
         originX: 'start',
@@ -30,11 +30,11 @@
         overlayX: 'end',
         overlayY: 'top'
       }]"
-        (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); _showMenuOptions.set(false);"
+        (overlayOutsideClick)="cdkConnectedOverlay.overlayRef.detach(); _showMenuOptions$.next(false);"
       >
         <app-pop-menu [style.min-width.px]="192" [@fadeZoomInOutTrigger]>
-          <app-pop-menu-item (click)="_showMenuOptions.set(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
-          <app-pop-menu-item [danger]="true" (click)="_showMenuOptions.set(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
+          <app-pop-menu-item (click)="_showMenuOptions$.next(false); this.openBoardTaskEditDialog($event);">Edit board task</app-pop-menu-item>
+          <app-pop-menu-item [danger]="true" (click)="_showMenuOptions$.next(false); this.openBoardTaskDeleteDialog($event);">Delete board task</app-pop-menu-item>
         </app-pop-menu>
       </ng-template>
 
@@ -55,7 +55,7 @@
           (click)="updateBoardTaskSubtaskIsCompleted($event, boardTaskSubtask.id, appCheckbox.checked)"
           #appCheckbox
           [checked]="boardTaskSubtask.isCompleted"
-          [disabled]="_isRequesting()"
+          [disabled]="(_isRequesting$ | async) === true"
         >{{ boardTaskSubtask.title }}</app-checkbox>
       }
     }
@@ -63,9 +63,9 @@
     <app-form-field [@fadeZoomInOutTrigger]>
       <app-label>Current board status</app-label>
       <app-select
-        [ngModel]="_boardStatusId()"
-        [items]="_boardStatusesPopMenuItems()"
-        [disabled]="_isRequesting()"
+        [ngModel]="((_boardTask$ | async) || {boardStatusId: ''}).boardStatusId"
+        [items]="(_boardStatusesPopMenuItems$ | async) || []"
+        [disabled]="(_isRequesting$ | async) === true"
         (ngModelChange)="onBoardTaskStatusIdChange($event)"
       />
     </app-form-field>

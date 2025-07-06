@@ -1,6 +1,6 @@
 import {Inject, Injectable} from '@angular/core';
 import {Firestore, updateDoc} from 'firebase/firestore';
-import {catchError, defer, tap} from 'rxjs';
+import {BehaviorSubject, catchError, defer, tap} from 'rxjs';
 import {
   Board,
   BoardCreateData,
@@ -22,7 +22,6 @@ import {
 } from '../models/board-task';
 import {BoardTaskSubtask} from '../models/board-task-subtask';
 import {FirestoreInjectionToken} from '../tokens/firebase';
-import {Sig} from '../utils/Sig';
 import {FunctionsService} from './firebase/functions.service';
 import {SnackBarService} from './snack-bar.service';
 
@@ -31,25 +30,25 @@ import {SnackBarService} from './snack-bar.service';
 })
 export class BoardService {
 
-  readonly boardIdSig = new Sig<string | null | undefined>(null);
-  readonly boardTaskIdSig = new Sig<string | null>(null);
-  readonly boardSig = new Sig<Board | null | undefined>(undefined);
-  readonly boardStatusesSig = new Sig<Map<string, BoardStatus> | null | undefined>(undefined);
-  readonly boardTasksSig = new Sig<Map<string, BoardTask> | null | undefined>(undefined);
-  readonly boardTaskSig = new Sig<BoardTask | null | undefined>(undefined);
-  readonly boardTaskSubtasksSig = new Sig<Map<string, BoardTaskSubtask> | null | undefined>(undefined);
+  readonly boardId$ = new BehaviorSubject<string | null | undefined>(null);
+  readonly boardTaskId$ = new BehaviorSubject<string | null>(null);
+  readonly board$ = new BehaviorSubject<Board | null | undefined>(undefined);
+  readonly boardStatuses$ = new BehaviorSubject<Map<string, BoardStatus> | null | undefined>(undefined);
+  readonly boardTasks$ = new BehaviorSubject<Map<string, BoardTask> | null | undefined>(undefined);
+  readonly boardTask$ = new BehaviorSubject<BoardTask | null | undefined>(undefined);
+  readonly boardTaskSubtasks$ = new BehaviorSubject<Map<string, BoardTaskSubtask> | null | undefined>(undefined);
 
-  readonly loadingUserBoardsSig = new Sig(false);
-  readonly loadingBoardSig = new Sig(false);
-  readonly loadingBoardStatusesSig = new Sig(false);
-  readonly loadingBoardTasksSig = new Sig(false);
-  readonly loadingBoardTaskSubtasksSig = new Sig(false);
+  readonly loadingUserBoards$ = new BehaviorSubject(false);
+  readonly loadingBoard$ = new BehaviorSubject(false);
+  readonly loadingBoardStatuses$ = new BehaviorSubject(false);
+  readonly loadingBoardTasks$ = new BehaviorSubject(false);
+  readonly loadingBoardTaskSubtasks$ = new BehaviorSubject(false);
 
-  readonly modificationUserBoardsSig = new Sig(0);
-  readonly modificationBoardSig = new Sig(0);
-  readonly modificationBoardStatusesSig = new Sig(0);
-  readonly modificationBoardTasksSig = new Sig(0);
-  readonly modificationBoardTaskSubtasksSig = new Sig(0);
+  readonly modificationUserBoards$ = new BehaviorSubject(0);
+  readonly modificationBoard$ = new BehaviorSubject(0);
+  readonly modificationBoardStatuses$ = new BehaviorSubject(0);
+  readonly modificationBoardTasks$ = new BehaviorSubject(0);
+  readonly modificationBoardTaskSubtasks$ = new BehaviorSubject(0);
 
   constructor(
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
@@ -60,18 +59,18 @@ export class BoardService {
 
   boardCreate(data: BoardCreateData) {
 
-    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
+    this.modificationUserBoards$.next(this.modificationUserBoards$.value + 1);
 
     return this._functionsService.httpsCallable<BoardCreateData, BoardCreateResult>('board-create', data).pipe(
       tap(() => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
 
         this._snackBarService.open('Board has been created', 3000);
       }),
       catchError((error) => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
 
         throw error;
       })
@@ -80,27 +79,27 @@ export class BoardService {
 
   boardDelete(data: BoardDeleteData) {
 
-    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
-    this.modificationBoardSig.update((value) => (value || 0) + 1);
-    this.modificationBoardStatusesSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+    this.modificationUserBoards$.next(this.modificationUserBoards$.value + 1);
+    this.modificationBoard$.next(this.modificationBoard$.value + 1);
+    this.modificationBoardStatuses$.next(this.modificationBoardStatuses$.value + 1);
+    this.modificationBoardTasks$.next(this.modificationBoardTasks$.value + 1);
 
     return this._functionsService.httpsCallable<BoardDeleteData, BoardDeleteResult>('board-delete', data).pipe(
       tap(() => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardStatuses$.next(this.modificationBoardStatuses$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
 
         this._snackBarService.open('Board has been deleted', 3000);
       }),
       catchError((error) => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardStatuses$.next(this.modificationBoardStatuses$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
 
         throw error;
       })
@@ -109,27 +108,27 @@ export class BoardService {
 
   boardUpdate(data: BoardUpdateData, boardNameWasChanged: boolean, boardStatusNameWasChanged: boolean, boardStatusAddedOrDeleted: boolean) {
 
-    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
-    this.modificationBoardSig.update((value) => (value || 0) + 1);
-    this.modificationBoardStatusesSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
+    this.modificationUserBoards$.next(this.modificationUserBoards$.value + 1);
+    this.modificationBoard$.next(this.modificationBoard$.value + 1);
+    this.modificationBoardStatuses$.next(this.modificationBoardStatuses$.value + 1);
+    this.modificationBoardTasks$.next(this.modificationBoardTasks$.value + 1);
 
     return this._functionsService.httpsCallable<BoardUpdateData, BoardUpdateResult>('board-update', data).pipe(
       tap(() => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardStatuses$.next(this.modificationBoardStatuses$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
 
         this._snackBarService.open('Board has been updated', 3000);
       }),
       catchError((error) => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardStatusesSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardStatuses$.next(this.modificationBoardStatuses$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
 
         throw error;
       })
@@ -138,27 +137,27 @@ export class BoardService {
 
   boardTaskCreate(data: BoardTaskCreateData) {
 
-    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
-    this.modificationBoardSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) + 1);
+    this.modificationUserBoards$.next(this.modificationUserBoards$.value + 1);
+    this.modificationBoard$.next(this.modificationBoard$.value + 1);
+    this.modificationBoardTasks$.next(this.modificationBoardTasks$.value + 1);
+    this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value + 1);
 
     return this._functionsService.httpsCallable<BoardTaskCreateData, BoardTaskCreateResult>('board-task-create', data).pipe(
       tap(() => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
+        this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value - 1);
 
         this._snackBarService.open('Board task has been created', 3000);
       }),
       catchError((error) => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
+        this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value - 1);
 
         throw error;
       })
@@ -167,27 +166,27 @@ export class BoardService {
 
   boardTaskDelete(data: BoardTaskDeleteData) {
 
-    this.modificationUserBoardsSig.update((value) => (value || 0) + 1);
-    this.modificationBoardSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) + 1);
+    this.modificationUserBoards$.next(this.modificationUserBoards$.value + 1);
+    this.modificationBoard$.next(this.modificationBoard$.value + 1);
+    this.modificationBoardTasks$.next(this.modificationBoardTasks$.value + 1);
+    this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value + 1);
 
     return this._functionsService.httpsCallable<BoardTaskDeleteData, BoardTaskDeleteResult>('board-task-delete', data).pipe(
       tap(() => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
+        this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value - 1);
 
         this._snackBarService.open('Board task has been deleted', 3000);
       }),
       catchError((error) => {
 
-        this.modificationUserBoardsSig.update((value) => (value || 0) - 1);
-        this.modificationBoardSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+        this.modificationUserBoards$.next(this.modificationUserBoards$.value - 1);
+        this.modificationBoard$.next(this.modificationBoard$.value - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
+        this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value - 1);
 
         throw error;
       })
@@ -196,21 +195,21 @@ export class BoardService {
 
   boardTaskUpdate(data: BoardTaskUpdateData) {
 
-    this.modificationBoardTasksSig.update((value) => (value || 0) + 1);
-    this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) + 1);
+    this.modificationBoardTasks$.next(this.modificationBoardTasks$.value + 1);
+    this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value + 1);
 
     return this._functionsService.httpsCallable<BoardTaskUpdateData, BoardTaskUpdateResult>('board-task-update', data).pipe(
       tap(() => {
 
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
+        this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value - 1);
 
         this._snackBarService.open('Board task has been updated', 3000);
       }),
       catchError((error) => {
 
-        this.modificationBoardTasksSig.update((value) => (value || 0) - 1);
-        this.modificationBoardTaskSubtasksSig.update((value) => (value || 0) - 1);
+        this.modificationBoardTasks$.next(this.modificationBoardTasks$.value - 1);
+        this.modificationBoardTaskSubtasks$.next(this.modificationBoardTaskSubtasks$.value - 1);
 
         throw error;
       })

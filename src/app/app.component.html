@@ -1,19 +1,19 @@
 <!-- appNavSelectedLabelTemplateRef -->
 <ng-template #appNavSelectedLabelTemplateRef>
-  @if (_isOnPhone()) {
+  @if (_isOnPhone$ | async) {
     <span
       class="app-root__app-nav__left__selected-label"
       [tabindex]="0"
-      (keydown)="setShowSideBar($event, !_showSideBar())"
-      (click)="setShowSideBar($event, !_showSideBar())"
+      (keydown)="setShowSideBar($event, !_showSideBar)"
+      (click)="setShowSideBar($event, !_showSideBar)"
     >
-      <svg [appSvg]="_showSideBar() ? 'icon-chevron-up' : 'icon-chevron-down'"/>
-      {{ _navTitle() }}
+      <svg [appSvg]="_showSideBar ? 'icon-chevron-up' : 'icon-chevron-down'"/>
+      {{ _navTitle$ | async }}
     </span>
 
   } @else {
     <span>
-      {{ _navTitle() }}
+      {{ _navTitle$ | async }}
     </span>
   }
 </ng-template>
@@ -25,11 +25,11 @@
     app-button
     appearance="primary"
     [svg]="false"
-    [size]="navButtonSize()"
-    [disabled]="!_board()"
+    [size]="_navButtonSize$ | async"
+    [disabled]="!!!(_board$ | async)"
     (click)="openAddTaskDialog($event)"
   >
-    @if (!_isOnPhone()) {
+    @if ((_isOnPhone$ | async) === false) {
       + Add new task
     } @else {
       <svg appSvg="icon-plus"/>
@@ -39,7 +39,7 @@
 
 <!-- appNavMenuButtonsTemplateRef -->
 <ng-template #appNavMenuButtonsTemplateRef>
-  @if (_board()) {
+  @if (_board$ | async) {
     <app-pop-menu-item (click)="openEditBoardDialog($event); setShowNavMenuOptions(false);">Edit board</app-pop-menu-item>
     <app-pop-menu-item [danger]="true" (click)="openDeleteBoardDialog($event); setShowNavMenuOptions(false);">Delete board</app-pop-menu-item>
   }
@@ -47,8 +47,8 @@
 
 <!-- appSideBarItemsTitleTemplateRef -->
 <ng-template #appSideBarItemsTitleTemplateRef>
-  @if (_isLoggedIn()) {
-    All Boards ({{_userBoards()?.length || 0}})
+  @if (_isLoggedIn$ | async) {
+    All Boards ({{(_userBoards$ | async)?.length || 0}})
   } @else {
     All Boards (0)
   }
@@ -57,22 +57,22 @@
 <!-- appSideBarItemsContainerTemplateRef -->
 <ng-template #appSideBarItemsContainerTemplateRef>
 
-  @if (_authStateReady()) {
-    @if (_isLoggedIn()) {
+  @if (_authStateReady$ | async) {
+    @if (_isLoggedIn$ | async) {
 
-      @if (_userBoardsSorted(); as boards) {
+      @if (_userBoardsSorted$ | async; as boards) {
         @for (board of boards; track board.id) {
           <button
-            [tabIndex]="_tabIndexSideBar()"
+            [tabIndex]="_tabIndexSideBar$ | async"
             class="app-root__app-side-bar__items__container__button"
-            [class.app-root__app-side-bar__items__container__button--active]="board.id === _boardId()"
+            [class.app-root__app-side-bar__items__container__button--active]="board.id === (_boardId$ | async)"
             app-button
             svg="left"
             (click)="select(board.id)"
           >
             <svg
               class="app-root__app-side-bar__items__container__button__svg"
-              [class.app-root__app-side-bar__items__container__button__svg--active]="board.id === _boardId()"
+              [class.app-root__app-side-bar__items__container__button__svg--active]="board.id === (_boardId$ | async)"
               appSvg="icon-board"
             />
             {{ board.name }}
@@ -81,7 +81,7 @@
       }
 
       <button
-        [tabIndex]="_tabIndexSideBar()"
+        [tabIndex]="_tabIndexSideBar$ | async"
         class="app-root__app-side-bar__items__container__button"
         app-button
         svg="left"
@@ -95,7 +95,7 @@
       </button>
     } @else {
       <button
-        [tabIndex]="_tabIndexSideBar()"
+        [tabIndex]="_tabIndexSideBar$ | async"
         class="app-root__app-side-bar__items__container__button"
         app-button
         svg="left"
@@ -116,9 +116,9 @@
 <!-- appSideBarPhoneItemsTitleTemplateRef -->
 <ng-template #appSideBarPhoneItemsTitleTemplateRef>
 
-  @if (_authStateReady()) {
-    @if (_isLoggedIn()) {
-      All Boards ({{_userBoards()?.length || 0}})
+  @if (_authStateReady$ | async) {
+    @if (_isLoggedIn$ | async) {
+      All Boards ({{(_userBoards$ | async)?.length || 0}})
     } @else {
       All Boards (0)
     }
@@ -128,20 +128,20 @@
 <!-- appSideBarPhoneItemsContainerTemplateRef -->
 <ng-template #appSideBarPhoneItemsContainerTemplateRef>
 
-  @if (_authStateReady()) {
-    @if (_isLoggedIn()) {
-      @if (_userBoardsSorted(); as boards) {
+  @if (_authStateReady$ | async) {
+    @if (_isLoggedIn$ | async) {
+      @if (_userBoardsSorted$ | async; as boards) {
         @for (board of boards; track board) {
           <button
             class="app-root__app-side-bar-mobile__items__container__button"
-            [class.app-root__app-side-bar-mobile__items__container__button--active]="board.id === _boardId()"
+            [class.app-root__app-side-bar-mobile__items__container__button--active]="board.id === (_boardId$ | async)"
             app-button
             svg="left"
             (click)="select(board.id); setShowSideBar($event,false)"
           >
             <svg
               class="app-root__app-side-bar-mobile__items__container__button__svg"
-              [class.app-root__app-side-bar-mobile__items__container__button__svg--active]="board.id === _boardId()"
+              [class.app-root__app-side-bar-mobile__items__container__button__svg--active]="board.id === (_boardId$ | async)"
               appSvg="icon-board"
             />
             {{ board.name }}
@@ -163,7 +163,7 @@
       </button>
     } @else {
       <button
-        [tabIndex]="_tabIndexSideBar()"
+        [tabIndex]="_tabIndexSideBar$ | async"
         class="app-root__app-side-bar__items__container__button"
         app-button
         svg="left"
@@ -196,17 +196,17 @@
 />
 
 <div
-  [@moveRouterOutletForSideBar]="_moveRouterOutletForSideBar()"
-  [ngStyle]="{height: 'calc(100% - ' + _heightNav() + 'px)'}"
+  [@moveRouterOutletForSideBar]="_moveRouterOutletForSideBar$ | async"
+  [ngStyle]="{height: 'calc(100% - ' + (_heightNav$ | async) + 'px)'}"
   class="app-root__boards"
 >
 
-  @if (_authStateReady()) {
-    @if (_isLoggedIn()) {
+  @if (_authStateReady$ | async) {
+    @if (_isLoggedIn$ | async) {
 
-      @if (!_loadingUserBoards()) {
+      @if ((_loadingUserBoards$ | async) === false) {
 
-        @if (_userBoards(); as userBoards) {
+        @if (_userBoards$ | async; as userBoards) {
           @if (!userBoards || userBoards.length === 0) {
 
             <div class="app-root__boards__empty">
@@ -219,10 +219,10 @@
             </div>
           }
 
-          @else if (userBoards.length > 0 && !_board() && !_boardId()) {
+          @else if (userBoards.length > 0 && !!!(_board$ | async) && !!!(_boardId$ | async)) {
             <div class="app-root__boards__empty" [@fadeZoomInOutTrigger]>
               <div class="app-root__boards__empty__title">Select Board From Sidebar</div>
-              @if (!_showSideBar()) {
+              @if ((_showSideBar$ | async) === false) {
                 <button
                   app-button
                   appearance="primary"
@@ -239,7 +239,7 @@
     } @else {
 
       <div class="app-root__boards__app-intro">
-        <img [src]="'/assets/images/' + (_darkMode() ? 'desktop-view-task-dark.svg' : 'desktop-view-task-light.svg')" alt="desktop-view-task"/>
+        <img [src]="'/assets/images/' + ((_darkMode$ | async) ? 'desktop-view-task-dark.svg' : 'desktop-view-task-light.svg')" alt="desktop-view-task"/>
         <div class="app-root__boards__app-intro__title">Research points of various projects and try Kanban model.</div>
       </div>
 

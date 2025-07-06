@@ -1,76 +1,73 @@
-@if (_viewIsReadyToShow() === 0) {
+<div class="app-edit-board-task" [@fadeZoomInOutTrigger]>
+  <div class="app-edit-board-task__title">Edit Board Task</div>
 
-  <div class="app-edit-board-task" [@fadeZoomInOutTrigger]>
-    <div class="app-edit-board-task__title">Edit Board Task</div>
+  <form [formGroup]="_form">
 
-    <form [formGroup]="_form">
-
-      <app-form-field>
-        <app-label>Title</app-label>
-        <app-input
-          placeholder="e.g. Take coffee break"
-          [withHint]="true"
-          [formControl]="_form.controls.title"
-        />
-        @if (!_form.controls.title.valid && !_form.controls.title.untouched && _form.controls.title.errors?.['required']) {
-          <app-error>Can’t be empty</app-error>
-        }
-      </app-form-field>
-
-      <app-form-field>
-        <app-label>Description</app-label>
-        <app-textarea
-          placeholder="e.g. It’s always good to take a break. This 15 minute break will  recharge the batteries a little."
-          [withHint]="true"
-          [formControl]="_form.controls.description"
-        />
-      </app-form-field>
-
-      <app-label>Subtasks</app-label>
-
-      @for (subtask of _form.controls.boardTaskSubtasks.controls; track subtask; let i = $index) {
-        <app-form-field>
-          <app-input
-            [@fadeZoomInOutTrigger]
-            [formControl]="subtask.controls.title"
-            placeholder="e.g. Make coffee"
-            [removeAble]="true"
-            (remove)="_form.controls.boardTaskSubtasks.removeAt(i)"
-          />
-        </app-form-field>
+    <app-form-field>
+      <app-label>Title</app-label>
+      <app-input
+        placeholder="e.g. Take coffee break"
+        [withHint]="true"
+        [formControl]="_form.controls.title"
+      />
+      @if (!_form.controls.title.valid && !_form.controls.title.untouched && _form.controls.title.errors?.['required']) {
+        <app-error>Can’t be empty</app-error>
       }
+    </app-form-field>
 
-      <button
-        class="app-edit-board-task__add-new-subtask-button"
-        app-button
-        appearance="secondary"
-        (click)="addNewBoardTaskSubtask()"
-        [disabled]="_isRequesting()"
-      >+ Add New Board Task Subtask
-      </button>
+    <app-form-field>
+      <app-label>Description</app-label>
+      <app-textarea
+        placeholder="e.g. It’s always good to take a break. This 15 minute break will  recharge the batteries a little."
+        [withHint]="true"
+        [formControl]="_form.controls.description"
+      />
+    </app-form-field>
 
+    <app-label>Subtasks</app-label>
+
+    @for (subtask of _form.controls.boardTaskSubtasks.controls; track subtask; let i = $index) {
       <app-form-field>
-        <app-label>BoardStatus</app-label>
-        <app-select
-          placeholder="e.g. Take coffee break"
-          [formControl]="_form.controls.boardStatusId"
-          [items]="boardStatusesPopMenuItems()"
-          [withHint]="true"
+        <app-input
+          [@fadeZoomInOutTrigger]
+          [formControl]="subtask.controls.title"
+          placeholder="e.g. Make coffee"
+          [removeAble]="true"
+          (remove)="_form.controls.boardTaskSubtasks.removeAt(i)"
         />
       </app-form-field>
+    }
 
-      <button
-        class="app-edit-board-task__update-task-button"
-        app-button
-        appearance="primary"
-        (click)="boardTaskUpdate()"
-      >
-        Save Changes
-        @if (_isRequesting()) {
-          <app-loader/>
-        }
-      </button>
+    <button
+      class="app-edit-board-task__add-new-subtask-button"
+      app-button
+      appearance="secondary"
+      (click)="addNewBoardTaskSubtask()"
+      [disabled]="(_isRequesting$ | async) === true"
+    >+ Add New Board Task Subtask
+    </button>
 
-    </form>
-  </div>
-}
+    <app-form-field>
+      <app-label>BoardStatus</app-label>
+      <app-select
+        placeholder="e.g. Take coffee break"
+        [formControl]="_form.controls.boardStatusId"
+        [items]="(boardStatusesPopMenuItems$ | async) || []"
+        [withHint]="true"
+      />
+    </app-form-field>
+
+    <button
+      class="app-edit-board-task__update-task-button"
+      app-button
+      appearance="primary"
+      (click)="boardTaskUpdate()"
+    >
+      Save Changes
+      @if ((_isRequesting$ | async) === true) {
+        <app-loader/>
+      }
+    </button>
+
+  </form>
+</div>

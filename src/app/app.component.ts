@@ -1,12 +1,12 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {Dialog} from '@angular/cdk/dialog';
-import {NgStyle} from '@angular/common';
-import {Component, computed, DestroyRef, effect, Inject, ViewEncapsulation} from '@angular/core';
+import {AsyncPipe, NgStyle} from '@angular/common';
+import {Component, DestroyRef, Inject, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import {Firestore, limit} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
-import {catchError, filter, map, of, Subscription, takeWhile} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, filter, map, of, Subscription} from 'rxjs';
 import {fadeZoomInOutTrigger} from './animations/fade-zoom-in-out.trigger';
 import {ButtonComponent, ButtonSize} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
@@ -20,17 +20,15 @@ import {
 } from './components/side-bar-phone/side-bar-phone-wrapper/side-bar-phone-wrapper.component';
 import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {SvgDirective} from './directives/svg.directive';
-import {Board} from './models/board';
 import {User} from './models/user';
 import {UserBoard} from './models/user-board';
 import {AuthService} from './services/auth.service';
 import {BoardService} from './services/board.service';
-import {collectionSnapshots, docSnapshots} from './services/firebase/firestore';
+import {collectionSnapshots} from './services/firebase/firestore';
 import {LayoutService, LayoutServiceStates} from './services/layout.service';
 import {ThemeSelectorService} from './services/theme-selector.service';
 import {FirestoreInjectionToken} from './tokens/firebase';
 import {handleTabIndex} from './utils/handle-tabindex';
-import {Sig} from './utils/Sig';
 
 @Component({
   selector: 'app-root',
@@ -43,7 +41,8 @@ import {Sig} from './utils/Sig';
     NgStyle,
     ButtonComponent,
     PopMenuItemComponent,
-    SvgDirective
+    SvgDirective,
+    AsyncPipe
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -82,89 +81,112 @@ import {Sig} from './utils/Sig';
     fadeZoomInOutTrigger
   ]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
 
-  protected readonly _user = this._authService.userSig.get();
+  protected readonly _user$ = this._authService.user$;
 
-  private readonly _userBoardsSig = new Sig<UserBoard[] | null | undefined>(undefined);
-  protected readonly _userBoards = this._userBoardsSig.get();
+  protected readonly _userBoards$ = new BehaviorSubject<UserBoard[] | null | undefined>(undefined);
   private _userBoardsSub: Subscription | undefined;
 
-  protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
-  protected readonly _board = this._boardService.boardSig.get();
-  protected readonly _boardId = this._boardService.boardIdSig.get();
-  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected readonly _moveRouterOutletForSideBar = this._layoutService.moveForSideBarStateSig.get();
-  protected readonly _heightNav = this._layoutService.heightNavSig.get();
-  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
-  protected readonly _isLoggedIn = this._authService.isLoggedIn;
-  protected readonly _authStateReady = this._authService.authStateReady;
-  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
+  protected readonly _loadingUserBoards$ = this._boardService.loadingUserBoards$;
+  protected readonly _board$ = this._boardService.board$;
+  protected readonly _boardId$ = this._boardService.boardId$;
+  protected readonly _isOnPhone$ = this._layoutService.isOnPhone$;
+  protected readonly _moveRouterOutletForSideBar$ = this._layoutService.moveForSideBarState$;
+  protected readonly _heightNav$ = this._layoutService.heightNav$;
+  protected readonly _showSideBar$ = this._layoutService.showSideBar$;
+  protected readonly _isLoggedIn$ = this._authService.isLoggedIn$;
+  protected readonly _authStateReady$ = this._authService.authStateReady$;
+  protected readonly _darkMode$ = this._themeSelectorService.darkMode$;
 
-  protected readonly _userBoardsSorted = computed(() => {
+  protected get _showSideBar() {
+    return this._showSideBar$.value;
+  }
 
-    const user = this._user();
-    const userBoards = this._userBoards();
+  protected readonly _userBoardsSorted$ = combineLatest([
+    this._user$,
+    this._userBoards$
+  ]).pipe(
+    map(([
+      user,
+      userBoards
+    ]) => {
 
-    if (!user || !userBoards) {
-      return null;
-    }
+      if (!user || !userBoards) {
+        return null;
+      }
 
-    const userBoardsMap = new Map<string, UserBoard>();
+      const userBoardsMap = new Map<string, UserBoard>();
 
-    for (const userBoard of userBoards) {
-      userBoardsMap.set(userBoard.id, userBoard);
-    }
+      for (const userBoard of userBoards) {
+        userBoardsMap.set(userBoard.id, userBoard);
+      }
 
-    return user.boardsIds
-      .map((boardId) => userBoardsMap.get(boardId))
-      .filter((userBoard) => !!userBoard) as UserBoard[];
-  });
+      return user.boardsIds
+        .map((boardId) => userBoardsMap.get(boardId))
+        .filter((userBoard) => !!userBoard) as UserBoard[];
+    })
+  );
 
-  protected readonly _navTitle = computed(() => {
+  protected readonly _navTitle$ = combineLatest([
+    this._isLoggedIn$,
+    this._userBoards$,
+    this._board$
+  ]).pipe(
+    map(([
+      isLoggedIn,
+      userBoards,
+      board
+    ]) => {
 
-    const isLoggedIn = this._isLoggedIn();
-    const userBoards = this._userBoards();
+      if (!isLoggedIn) {
+        return 'App';
+      }
 
-    const board = this._board();
+      if (userBoards === null || userBoards?.length === 0) {
+        return 'Create Board';
+      }
 
-    if (!isLoggedIn) {
-      return 'App';
-    }
+      if (board) {
+        return board.name;
+      }
 
-    if (userBoards === null || userBoards?.length === 0) {
-      return 'Create Board';
-    }
+      return 'Select Board';
+    })
+  );
 
-    if (board) {
-      return board.name;
-    }
+  protected readonly _tabIndexSideBar$ = combineLatest([
+    this._isOnPhone$,
+    this._showSideBar$
+  ]).pipe(
+    map(([
+      isOnPhone,
+      showSideBar
+    ]) => {
+      if (isOnPhone && showSideBar || !showSideBar) {
+        return -1;
+      }
 
-    return 'Select Board';
-  });
+      return 0;
+    })
+  );
 
-  protected readonly _tabIndexSideBar = computed(() => {
+  protected readonly _navButtonSize$ = combineLatest([
+    this._isOnPhone$
+  ]).pipe(
+    map(([
+      isOnPhone
+    ]) => {
 
-    const isOnPhone = this._isOnPhone();
-    const showSideBar = this._showSideBar();
+      let buttonSize: ButtonSize = 'large';
 
-    if (isOnPhone && showSideBar || !showSideBar) {
-      return -1;
-    }
+      if (isOnPhone) {
+        buttonSize = 'small';
+      }
 
-    return 0;
-  });
-
-  navButtonSize = computed(() => {
-
-    let buttonSize: ButtonSize = 'large';
-
-    if (this._isOnPhone()) {
-      buttonSize = 'small';
-    }
-
-    return buttonSize;
-  });
+      return buttonSize;
+    })
+  );
 
   constructor(
     @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
@@ -176,6 +198,9 @@ export class AppComponent {
     private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _destroyRef: DestroyRef
   ) {
+  }
+
+  ngOnInit() {
 
     this._router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
@@ -185,7 +210,7 @@ export class AppComponent {
       const boardId = (regex.exec(navigationEnd.url) || [])[1];
 
       if (boardId) {
-        this._boardService.boardIdSig.set(boardId);
+        this._boardService.boardId$.next(boardId);
       }
     });
 
@@ -193,17 +218,22 @@ export class AppComponent {
     let userBoards_userId: string | undefined;
     let userBoards_userBoardsIds: string[] | undefined;
     let userBoards_userConfigMaxUserBoards: number | undefined;
-    effect(() => {
-
-      const user = this._user();
-      const authStateReady = this._authStateReady();
+    combineLatest([
+      this._user$,
+      this._authStateReady$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef)
+    ).subscribe(([
+      user,
+      authStateReady
+    ]) => {
 
       if (!authStateReady) {
         return;
       }
 
       if (!user) {
-        this._userBoardsSig.set(null);
+        this._userBoards$.next(null);
         userBoards_userId = undefined;
         userBoards_userBoardsIds = undefined;
         userBoards_userConfigMaxUserBoards = undefined;
@@ -226,18 +256,17 @@ export class AppComponent {
 
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, userBoards_userId));
 
-      this._boardService.loadingUserBoardsSig.set(true);
+      this._boardService.loadingUserBoards$.next(true);
       this._userBoardsSub && !this._userBoardsSub.closed && this._userBoardsSub.unsubscribe();
       this._userBoardsSub = collectionSnapshots(userBoardCollectionRef, limit(userBoards_userConfigMaxUserBoards)).pipe(
         takeUntilDestroyed(this._destroyRef),
-        takeWhile(() => !!this._user()),
         catchError(() => of(null))
       ).subscribe((querySnapUserBoards) => {
 
-        this._boardService.loadingUserBoardsSig.set(false);
+        this._boardService.loadingUserBoards$.next(false);
 
         if (!querySnapUserBoards) {
-          this._userBoardsSig.set(undefined);
+          this._userBoards$.next(undefined);
           return;
         }
 
@@ -247,7 +276,7 @@ export class AppComponent {
           userBoards.push(UserBoard.firestoreData(queryDocSnapUserBoard));
         }
 
-        this._userBoardsSig.set(userBoards);
+        this._userBoards$.next(userBoards);
       });
     });
   }
@@ -312,16 +341,16 @@ export class AppComponent {
       }
     }
 
-    this._layoutService.showSideBarSig.set(value);
+    this._layoutService.showSideBar$.next(value);
   }
 
   setShowNavMenuOptions(value: boolean) {
-    this._layoutService.showNavMenuOptionsSig.set(value);
+    this._layoutService.showNavMenuOptions$.next(value);
   }
 
   select(boardId: string) {
     this._router.navigate(['/', boardId]);
-    this._boardService.boardIdSig.set(boardId);
+    this._boardService.boardId$.next(boardId);
   }
 
   signInAnonymously(): Promise<void> {

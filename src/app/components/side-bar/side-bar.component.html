@@ -1,8 +1,8 @@
-<div class="app-side-bar__content" [@moveForSideBarState]="_moveForSideBarState()">
+<div class="app-side-bar__content" [@moveForSideBarState]="_moveForSideBarState$ | async">
   <div class="app-side-bar__content__branding">
-    <svg [appSvg]="_logo()"/>
+    <svg [appSvg]="(_logo$ | async) || ''"/>
 
-    @if (_appLoading()) {
+    @if ((_appLoading$ | async) === true) {
       <app-loading class="app-side-bar__content__branding__loading"/>
     }
   </div>
@@ -28,14 +28,14 @@
     <div class="app-side-bar__content__bottom-menu__theme-switch-wrapper">
       <div class="app-side-bar__content__bottom-menu__theme-switch-wrapper__theme-switch">
         <svg appSvg="icon-light-theme"/>
-        <app-switch [tabIndex]="_tabIndex()" [ngModel]="_darkMode()" (ngModelChange)="toggleDarkMode()"/>
+        <app-switch [tabIndex]="(_tabIndex$ | async) || 0" [ngModel]="_darkMode$ | async" (ngModelChange)="toggleDarkMode()"/>
         <svg appSvg="icon-dark-theme"/>
       </div>
     </div>
 
     <button
       #hideSideBarButton
-      [tabIndex]="_tabIndex()"
+      [tabIndex]="_tabIndex$ | async"
       class="app-side-bar__content__bottom-menu__hide-side-bar-button"
       app-button
       svg="left"
@@ -49,8 +49,8 @@
 
 <button
   #showSideBarButton
-  [@moveShowSideBarButtonForSideBarState]="_moveShowSideBarButtonForSideBarState()"
-  [tabIndex]="_tabIndexShowSidebar()"
+  [@moveShowSideBarButtonForSideBarState]="_moveShowSideBarButtonForSideBarState$ | async"
+  [tabIndex]="_tabIndexShowSidebar$ | async"
   class="app-side-bar__content__show-side-bar-button"
   app-button
   appearance="primary"

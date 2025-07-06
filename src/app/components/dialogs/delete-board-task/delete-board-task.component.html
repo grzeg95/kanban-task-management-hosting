@@ -1,32 +1,29 @@
-@if (_viewIsReadyToShow() === 0) {
+<div class="app-delete-board-task" [@fadeZoomInOutTrigger]>
+  <div class="app-delete-board-task__title">Delete this task?</div>
 
-  <div class="app-delete-board-task" [@fadeZoomInOutTrigger]>
-    <div class="app-delete-board-task__title">Delete this task?</div>
-
-    <div class="app-delete-board-task__description">
-      Are you sure you want to delete the '{{ _boardTask()?.title || '' }}' task and its subtasks? This action cannot be reversed.
-    </div>
-
-    <button
-      class="app-delete-board-task__delete-task-button"
-      app-button
-      appearance="warn"
-      (click)="boardTaskDelete()"
-      [disabled]="_isRequesting()"
-    >
-      Delete
-      @if (_isRequesting()) {
-        <app-loader/>
-      }
-    </button>
-
-    <button
-      class="app-delete-board-task__cancel-button"
-      app-button
-      appearance="secondary"
-      (click)="close()"
-      [disabled]="_isRequesting()"
-    >Cancel
-    </button>
+  <div class="app-delete-board-task__description">
+    Are you sure you want to delete the '{{( _boardTask$ | async)?.title || '' }}' task and its subtasks? This action cannot be reversed.
   </div>
-}
+
+  <button
+    class="app-delete-board-task__delete-task-button"
+    app-button
+    appearance="warn"
+    (click)="boardTaskDelete()"
+    [disabled]="(_isRequesting$ | async) === true"
+  >
+    Delete
+    @if ((_isRequesting$ | async) === true) {
+      <app-loader/>
+    }
+  </button>
+
+  <button
+    class="app-delete-board-task__cancel-button"
+    app-button
+    appearance="secondary"
+    (click)="close()"
+    [disabled]="(_isRequesting$ | async) === true"
+  >Cancel
+  </button>
+</div>

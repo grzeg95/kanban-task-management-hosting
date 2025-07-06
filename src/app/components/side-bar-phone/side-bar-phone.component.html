@@ -19,7 +19,7 @@
     <div class="app-side-bar-phone__content__bottom-menu__theme-switch-wrapper">
       <div class="app-side-bar-phone__content__bottom-menu__theme-switch-wrapper__theme-switch">
         <svg appSvg="icon-light-theme"/>
-        <app-switch [ngModel]="_darkMode()" (ngModelChange)="toggleDarkMode()"/>
+        <app-switch [ngModel]="_darkMode$ | async" (ngModelChange)="toggleDarkMode()"/>
         <svg appSvg="icon-dark-theme"/>
       </div>
     </div>

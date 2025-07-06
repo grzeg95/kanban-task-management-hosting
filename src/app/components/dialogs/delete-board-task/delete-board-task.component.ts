@@ -1,30 +1,22 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, OnDestroy, signal, ViewEncapsulation} from '@angular/core';
+import {AsyncPipe} from '@angular/common';
+import {Component, DestroyRef, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ReactiveFormsModule} from '@angular/forms';
-import {catchError, of} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, of} from 'rxjs';
 import {fadeZoomInOutTrigger} from '../../../animations/fade-zoom-in-out.trigger';
-import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardService} from '../../../services/board.service';
 import {ButtonComponent} from '../../button/button.component';
-import {ErrorComponent} from '../../form/error/error.component';
-import {FormFieldComponent} from '../../form/form-field/form-field.component';
-import {InputComponent} from '../../form/input/input.component';
-import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
-import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-delete-board-task',
   standalone: true,
   imports: [
-    InputComponent,
     ButtonComponent,
     ReactiveFormsModule,
-    SvgDirective,
-    FormFieldComponent,
-    LabelComponent,
-    ErrorComponent,
-    LoaderComponent
+    LoaderComponent,
+    AsyncPipe
   ],
   templateUrl: './delete-board-task.component.html',
   styleUrl: './delete-board-task.component.scss',
@@ -33,24 +25,30 @@ import {Sig} from "../../../utils/Sig";
     fadeZoomInOutTrigger
   ]
 })
-export class DeleteBoardTaskComponent implements OnDestroy {
+export class DeleteBoardTaskComponent implements OnInit, OnDestroy {
 
-  protected readonly _isRequesting = signal(false);
-  protected readonly _board = this._boardService.boardSig.get();
-  protected readonly _boardTask = this._boardService.boardTaskSig.get();
-
-  private readonly _viewIsReadyToShowSig = new Sig(1);
-  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+  protected readonly _isRequesting$ = new BehaviorSubject(false);
+  protected readonly _board$ = this._boardService.board$;
+  protected readonly _boardTask$ = this._boardService.boardTask$;
 
   constructor(
     private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>
+    private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>,
+    private readonly _destroyRef: DestroyRef
   ) {
+  }
 
-    effect(() => {
+  ngOnInit() {
 
-      const board = this._board();
-      const boardTask = this._boardTask();
+    combineLatest([
+      this._board$,
+      this._boardTask$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef)
+    ).subscribe(([
+      board,
+      boardTask
+    ]) => {
 
       if (!board && board !== undefined) {
         this.close();
@@ -64,25 +62,23 @@ export class DeleteBoardTaskComponent implements OnDestroy {
       if (!boardTask && boardTask !== undefined) {
         this.close();
       }
-
-      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
   }
 
   boardTaskDelete() {
 
-    if (this._isRequesting()) {
+    if (this._isRequesting$.value) {
       return;
     }
 
-    const board = this._board();
-    const boardTask = this._boardTask();
+    const board = this._board$.value;
+    const boardTask = this._boardTask$.value;
 
     if (!board || !boardTask) {
       return;
     }
 
-    this._isRequesting.set(true);
+    this._isRequesting$.next(true);
 
     this._boardService.boardTaskDelete({
       id: boardTask.id,
@@ -90,7 +86,7 @@ export class DeleteBoardTaskComponent implements OnDestroy {
     }).pipe(
       catchError(() => {
 
-        this._isRequesting.set(false);
+        this._isRequesting$.next(false);
         return of(null);
       })
     ).subscribe((result) => {
@@ -110,6 +106,6 @@ export class DeleteBoardTaskComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this._boardService.boardTaskIdSig.set(undefined);
+    this._boardService.boardTaskId$.next(null);
   }
 }
