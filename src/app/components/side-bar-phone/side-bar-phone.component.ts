@@ -1,5 +1,5 @@
 import {animate, animation, style, transition, trigger} from '@angular/animations';
-import {NgTemplateOutlet} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
@@ -26,7 +26,8 @@ const animateTiming = '0.333s ease-in-out';
     SvgDirective,
     SwitchComponent,
     FormsModule,
-    NgTemplateOutlet
+    NgTemplateOutlet,
+    AsyncPipe
   ],
   templateUrl: './side-bar-phone.component.html',
   styleUrl: './side-bar-phone.component.scss',
@@ -54,7 +55,7 @@ export class SideBarPhoneComponent {
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
+  protected readonly _darkMode$ = this._themeSelectorService.darkMode$;
 
   constructor(
     private readonly _layoutService: LayoutService,
@@ -63,7 +64,7 @@ export class SideBarPhoneComponent {
   }
 
   toggleDarkMode() {
-    if (this._darkMode()) {
+    if (this._darkMode$.value) {
       this._themeSelectorService.setLight();
     } else {
       this._themeSelectorService.setDark();
@@ -71,6 +72,6 @@ export class SideBarPhoneComponent {
   }
 
   setShowSideBar(value: boolean) {
-    this._layoutService.showSideBarSig.set(value);
+    this._layoutService.showSideBar$.next(value);
   }
 }

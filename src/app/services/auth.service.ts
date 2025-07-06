@@ -1,11 +1,10 @@
-import {computed, DestroyRef, effect, Inject, Injectable} from '@angular/core';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {DestroyRef, Inject, Injectable} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
-import {catchError, from, map, Observable, of, Subscription, takeWhile} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, from, map, Observable, of, Subscription} from 'rxjs';
 import {User} from '../models/user';
 import {AuthInjectionToken, FirestoreInjectionToken} from '../tokens/firebase';
-import {Sig} from '../utils/Sig';
 import {docSnapshots} from './firebase/firestore';
 
 @Injectable({
@@ -13,28 +12,28 @@ import {docSnapshots} from './firebase/firestore';
 })
 export class AuthService {
 
-  readonly authStateReady = toSignal(from(this._auth.authStateReady()).pipe(
+  readonly authStateReady$ = from(this._auth.authStateReady()).pipe(
     map(() => true)
-  ));
+  );
 
-  readonly firebaseUser = toSignal(new Observable<FirebaseUser | null>((subscriber) => {
+  readonly firebaseUser$ = new Observable<FirebaseUser | null>((subscriber) => {
     const unsubscribe = onAuthStateChanged(this._auth, {
       next: subscriber.next.bind(subscriber),
       error: subscriber.error.bind(subscriber),
       complete: subscriber.complete.bind(subscriber)
     });
     return {unsubscribe};
-  }));
-
-  readonly isLoggedIn = computed(() => {
-    return !!this.firebaseUser();
   });
 
-  readonly loadingUserSig = new Sig<boolean>(true);
-  readonly userSig = new Sig<User | null>();
+  readonly isLoggedIn$ = this.firebaseUser$.pipe(
+    map((isLoggedIn) => !!isLoggedIn)
+  );
+
+  readonly loadingUser$ = new BehaviorSubject<boolean>(true);
+  readonly user$ = new BehaviorSubject<User | null | undefined>(undefined);
   private _userSub: Subscription | undefined;
 
-  readonly whileLoginInSig = new Sig<boolean>(false);
+  readonly whileLoginIn$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     @Inject(AuthInjectionToken) readonly _auth: Auth,
@@ -42,52 +41,44 @@ export class AuthService {
     private readonly _destroyRef: DestroyRef
   ) {
 
-    let firebaseUserUid: string | undefined;
-    effect(() => {
-
-      const firebaseUser = this.firebaseUser();
+    combineLatest([
+      this.firebaseUser$
+    ]).subscribe(([firebaseUser]) => {
 
       if (!firebaseUser) {
-        this.userSig.set(null);
-        this.loadingUserSig.set(false);
+        this.user$.next(null);
+        this.loadingUser$.next(false);
         this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
         return;
       }
 
-      if (
-        firebaseUserUid === firebaseUser.uid &&
-        this._userSub && !this._userSub.closed
-      ) {
-        return;
-      }
-      firebaseUserUid = firebaseUser.uid;
+      const userRef = User.firestoreRef(this._firestore, firebaseUser.uid);
 
-      const userRef = User.firestoreRef(this._firestore, firebaseUserUid);
-
-      this.loadingUserSig.set(true);
+      this.loadingUser$.next(true);
       this._userSub && !this._userSub.closed && this._userSub.unsubscribe();
+
       this._userSub = docSnapshots(userRef).pipe(
         takeUntilDestroyed(this._destroyRef),
-        takeWhile(() => !!this.firebaseUser()),
         map(User.firestoreData),
         catchError(() => of(null))
       ).subscribe((user) => {
 
         if (user?.configLoaded) {
-          this.userSig.set(user);
+          this.user$.next(user);
         } else {
-          this.userSig.set(undefined);
+          this.user$.next(undefined);
         }
 
-        this.loadingUserSig.set(false);
+        this.loadingUser$.next(false);
       });
+
     });
   }
 
   signInAnonymously(): Promise<void> {
-    this.whileLoginInSig.set(true);
+    this.whileLoginIn$.next(true);
     return signInAnonymously(this._auth).then(() => {
-      this.whileLoginInSig.set(false);
+      this.whileLoginIn$.next(false);
     });
   }
 

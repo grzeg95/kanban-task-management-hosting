@@ -1,8 +1,10 @@
 import {DialogRef} from '@angular/cdk/dialog';
-import {Component, effect, signal, ViewEncapsulation} from '@angular/core';
+import {AsyncPipe} from '@angular/common';
+import {Component, DestroyRef, OnInit, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {catchError, NEVER, of} from 'rxjs';
-import {SvgDirective} from '../../../directives/svg.directive';
+import {BehaviorSubject, catchError, combineLatest, of} from 'rxjs';
+import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
 import {BoardUpdateData} from '../../../models/board';
 import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
@@ -12,8 +14,6 @@ import {FormFieldComponent} from '../../form/form-field/form-field.component';
 import {InputComponent} from '../../form/input/input.component';
 import {LabelComponent} from '../../form/label/label.component';
 import {LoaderComponent} from '../../loader/loader.component';
-import {fadeZoomInOutTrigger} from "../../../animations/fade-zoom-in-out.trigger";
-import {Sig} from "../../../utils/Sig";
 
 @Component({
   selector: 'app-edit-board',
@@ -22,11 +22,11 @@ import {Sig} from "../../../utils/Sig";
     InputComponent,
     ButtonComponent,
     ReactiveFormsModule,
-    SvgDirective,
     FormFieldComponent,
     LabelComponent,
     ErrorComponent,
-    LoaderComponent
+    LoaderComponent,
+    AsyncPipe
   ],
   templateUrl: './edit-board.component.html',
   styleUrl: './edit-board.component.scss',
@@ -35,17 +35,16 @@ import {Sig} from "../../../utils/Sig";
     fadeZoomInOutTrigger
   ]
 })
-export class EditBoardComponent {
+export class EditBoardComponent implements OnInit {
 
-  protected readonly _isRequesting = signal(false);
-  protected readonly _board = this._boardService.boardSig.get();
-  protected readonly _boardStatusesSig = this._boardService.boardStatusesSig.get();
+  protected readonly _isRequesting$ = new BehaviorSubject(false);
+  protected readonly _board$ = this._boardService.board$;
+  protected readonly _boardStatuses$ = this._boardService.boardStatuses$;
 
   private _initialBoardName = '';
   private readonly _initialBoardStatuses = new Map<string, string>();
 
-  private readonly _viewIsReadyToShowSig = new Sig(1);
-  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+  protected readonly _viewIsReadyToShow$ = new BehaviorSubject(1);
 
   protected readonly _form = new FormGroup({
     boardId: new FormControl('', Validators.required),
@@ -56,13 +55,22 @@ export class EditBoardComponent {
   constructor(
     private readonly _boardService: BoardService,
     private readonly _dialogRef: DialogRef<EditBoardComponent>,
-    private readonly _snackBarService: SnackBarService
+    private readonly _snackBarService: SnackBarService,
+    private readonly _destroyRef: DestroyRef
   ) {
+  }
 
-    effect(() => {
+  ngOnInit() {
 
-      const board = this._board();
-      const boardStatuses = this._boardStatusesSig();
+    combineLatest([
+      this._board$,
+      this._boardStatuses$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef)
+    ).subscribe(([
+      board,
+      boardStatuses
+    ]) => {
 
       if (
         (!board && board !== undefined) ||
@@ -93,12 +101,17 @@ export class EditBoardComponent {
         });
       }
 
-      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
+      this._viewIsReadyToShow$.next(this._viewIsReadyToShow$.value - 1);
     });
 
-    effect(() => {
-
-      if (this._isRequesting()) {
+    combineLatest([
+      this._isRequesting$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef)
+    ).subscribe(([
+      isRequesting
+    ]) => {
+      if (isRequesting) {
         this._form.disable();
       } else {
         this._form.enable();
@@ -108,7 +121,7 @@ export class EditBoardComponent {
 
   boardUpdate() {
 
-    if (this._isRequesting()) {
+    if (this._isRequesting$.value) {
       return;
     }
 
@@ -136,12 +149,12 @@ export class EditBoardComponent {
     const boardStatusNameWasChanged = updateBoardData.boardStatuses.some((boardStatus) => boardStatus.id && this._initialBoardStatuses.get(boardStatus.id) !== boardStatus.name);
     const boardStatusAddedOrDeleted = this._initialBoardStatuses.size !== updateBoardData.boardStatuses.length;
 
-    this._isRequesting.set(true);
+    this._isRequesting$.next(true);
 
     this._boardService.boardUpdate(updateBoardData, boardNameWasChanged, boardStatusNameWasChanged, boardStatusAddedOrDeleted).pipe(
       catchError(() => {
 
-        this._isRequesting.set(false);
+        this._isRequesting$.next(false);
         return of(null);
       })
     ).subscribe((result) => {

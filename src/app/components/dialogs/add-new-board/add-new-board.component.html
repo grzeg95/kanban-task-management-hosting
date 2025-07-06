@@ -1,57 +1,54 @@
-@if (_viewIsReadyToShow() === 0) {
+<div class="app-add-new-board" [@fadeZoomInOutTrigger]>
+  <div class="app-add-new-board__title">Add New Board</div>
 
-  <div class="app-add-new-board" [@fadeZoomInOutTrigger]>
-    <div class="app-add-new-board__title">Add New Board</div>
+  <form [formGroup]="_form">
 
-    <form [formGroup]="_form">
-
-      <app-form-field>
-        <app-label>Board Name</app-label>
-        <app-input
-          placeholder="e.g. Web Design"
-          [withHint]="true"
-          [formControl]="_form.controls.name"
-        />
-        @if (!_form.controls.name.valid && !_form.controls.name.untouched && _form.controls.name.errors?.['required']) {
-          <app-error>Can’t be empty</app-error>
-        }
-      </app-form-field>
-
-      <app-label>Board columns</app-label>
-
-      @for (bordName of _form.controls.boardStatusesNames.controls; track bordName; let i = $index) {
-        <app-form-field>
-          <app-input
-            [@fadeZoomInOutTrigger]
-            [formControl]="bordName"
-            placeholder="e.g. Web Design"
-            [removeAble]="true"
-            (remove)="_form.controls.boardStatusesNames.removeAt(i)"
-          />
-        </app-form-field>
+    <app-form-field>
+      <app-label>Board Name</app-label>
+      <app-input
+        placeholder="e.g. Web Design"
+        [withHint]="true"
+        [formControl]="_form.controls.name"
+      />
+      @if (!_form.controls.name.valid && !_form.controls.name.untouched && _form.controls.name.errors?.['required']) {
+        <app-error>Can’t be empty</app-error>
       }
+    </app-form-field>
 
-      <button
-        class="app-add-new-board__add-new-status-name-button"
-        app-button
-        appearance="secondary"
-        (click)="addNewBoardStatusName()"
-        [disabled]="_isRequesting()"
-      >+ Add New Column</button>
+    <app-label>Board columns</app-label>
 
-      <button
-        class="app-add-new-board__add-new-board-button"
-        app-button
-        appearance="primary"
-        (click)="boardCreate()"
-        [disabled]="_isRequesting()"
-      >
-        Create New Board
-        @if (_isRequesting()) {
-          <app-loader/>
-        }
-      </button>
+    @for (bordName of _form.controls.boardStatusesNames.controls; track bordName; let i = $index) {
+      <app-form-field>
+        <app-input
+          [@fadeZoomInOutTrigger]
+          [formControl]="bordName"
+          placeholder="e.g. Web Design"
+          [removeAble]="true"
+          (remove)="_form.controls.boardStatusesNames.removeAt(i)"
+        />
+      </app-form-field>
+    }
 
-    </form>
-  </div>
-}
+    <button
+      class="app-add-new-board__add-new-status-name-button"
+      app-button
+      appearance="secondary"
+      (click)="addNewBoardStatusName()"
+      [disabled]="(_isRequesting$ | async) === true"
+    >+ Add New Column</button>
+
+    <button
+      class="app-add-new-board__add-new-board-button"
+      app-button
+      appearance="primary"
+      (click)="boardCreate()"
+      [disabled]="(_isRequesting$ | async) === true"
+    >
+      Create New Board
+      @if ((_isRequesting$ | async) === true) {
+        <app-loader/>
+      }
+    </button>
+
+  </form>
+</div>

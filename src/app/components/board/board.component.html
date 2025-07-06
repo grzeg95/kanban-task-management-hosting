@@ -1,6 +1,6 @@
-@if (!_loadingBoard() && !_loadingBoardStatuses() && !_loadingBoardTasks()) {
-  @if (_authStateReady() && _user()) {
-    @if (_boardView(); as boardView) {
+@if ((_loadingBoard$ | async) === false && (_loadingBoardStatuses$ | async) === false && (_loadingBoardTasks$ | async) === false) {
+  @if ((_authStateReady$ | async) && (_user$ | async)) {
+    @if (_boardView$ | async; as boardView) {
 
       @defer {
 
@@ -14,7 +14,7 @@
 
             @for (boardStatusTask of boardStatusView.boardTasks; track boardStatusTask.id) {
 
-              <div class="app-board__task" [@fadeZoomInOutTrigger] tabindex="{{_tabIndex()}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
+              <div class="app-board__task" [@fadeZoomInOutTrigger] tabindex="{{_tabIndex$ | async}}" (click)="openTaskDialog($event, boardStatusTask.id)" (keydown)="openTaskDialog($event, boardStatusTask.id)">
                 <div class="app-board__task__title-wrapper">
                   <div class="app-board__task__title-wrapper__title">{{ boardStatusTask.title }}</div>
                 </div>
@@ -38,10 +38,10 @@
           <div
             class="app-board__status-new"
             [@fadeZoomInOutTrigger]
-            tabindex="{{_tabIndex()}}"
+            tabindex="{{_tabIndex$ | async}}"
             (click)="openEditBoardDialog($event)"
             (keydown)="openEditBoardDialog($event)"
-            [ngStyle]="{height: 'calc(100vh - ' + (48 +  (_heightNav() || 0)) + 'px)'}"
+            [ngStyle]="{height: 'calc(100vh - ' + (48 +  ((_heightNav$ | async) || 0)) + 'px)'}"
           >
             + New Column
           </div>

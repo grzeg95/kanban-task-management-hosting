@@ -1,9 +1,10 @@
 import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
-import {JsonPipe} from '@angular/common';
-import {Component, computed, effect, OnDestroy, signal, ViewEncapsulation} from '@angular/core';
+import {AsyncPipe} from '@angular/common';
+import {Component, DestroyRef, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {catchError, NEVER, of} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, map, NEVER} from 'rxjs';
 import {fadeZoomInOutTrigger} from '../../../animations/fade-zoom-in-out.trigger';
 import {SvgDirective} from '../../../directives/svg.directive';
 import {BoardTask, BoardTaskUpdateData} from '../../../models/board-task';
@@ -11,15 +12,10 @@ import {BoardTaskSubtask} from '../../../models/board-task-subtask';
 import {BoardService} from '../../../services/board.service';
 import {SnackBarService} from '../../../services/snack-bar.service';
 import {handleTabIndex} from '../../../utils/handle-tabindex';
-import {Sig} from '../../../utils/Sig';
-import {ButtonComponent} from '../../button/button.component';
 import {CheckboxComponent} from '../../form/checkbox/checkbox.component';
-import {ErrorComponent} from '../../form/error/error.component';
 import {FormFieldComponent} from '../../form/form-field/form-field.component';
-import {InputComponent} from '../../form/input/input.component';
 import {LabelComponent} from '../../form/label/label.component';
 import {SelectComponent} from '../../form/select/select.component';
-import {TextareaComponent} from '../../form/textarea/textarea.component';
 import {PopMenuItemComponent} from '../../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
@@ -34,14 +30,10 @@ type BoardTaskView = BoardTask & {
   selector: 'app-view-board-task',
   standalone: true,
   imports: [
-    InputComponent,
-    ButtonComponent,
     ReactiveFormsModule,
     SvgDirective,
     FormFieldComponent,
     LabelComponent,
-    ErrorComponent,
-    TextareaComponent,
     SelectComponent,
     CheckboxComponent,
     FormsModule,
@@ -49,7 +41,7 @@ type BoardTaskView = BoardTask & {
     PopMenuComponent,
     PopMenuItemComponent,
     CdkOverlayOrigin,
-    JsonPipe
+    AsyncPipe
   ],
   templateUrl: './view-board-task.component.html',
   styleUrl: './view-board-task.component.scss',
@@ -58,97 +50,93 @@ type BoardTaskView = BoardTask & {
     fadeZoomInOutTrigger
   ]
 })
-export class ViewBoardTaskComponent implements OnDestroy {
+export class ViewBoardTaskComponent implements OnInit, OnDestroy {
 
-  protected readonly _isRequesting = signal(false);
+  protected readonly _isRequesting$ = new BehaviorSubject(false);
 
-  protected readonly _boardTaskId = this._boardService.boardTaskIdSig.get();
+  protected readonly _boardTaskId$ = this._boardService.boardTaskId$;
 
-  protected readonly _board = this._boardService.boardSig.get();
-  protected readonly _boardStatuses = this._boardService.boardStatusesSig.get();
-  protected readonly _showMenuOptions = signal(false);
-  protected readonly _boardTask = this._boardService.boardTaskSig.get();
-  protected readonly _boardTaskSubtasks = this._boardService.boardTaskSubtasksSig.get();
+  protected readonly _board$ = this._boardService.board$;
+  protected readonly _boardStatuses$ = this._boardService.boardStatuses$;
+  protected readonly _showMenuOptions$ = new BehaviorSubject(false);
+  protected readonly _boardTask$ = this._boardService.boardTask$;
+  protected readonly _boardTaskSubtasks$ = this._boardService.boardTaskSubtasks$;
 
-  protected readonly _loadingUserBoards = this._boardService.loadingUserBoardsSig.get();
-  protected readonly _loadingBoard = this._boardService.loadingBoardSig.get();
-  protected readonly _loadingBoardTasks = this._boardService.loadingBoardTasksSig.get();
-  protected readonly _loadingBoardStatuses = this._boardService.loadingBoardStatusesSig.get();
-  protected readonly _loadingBoardTaskSubtasks = this._boardService.loadingBoardTaskSubtasksSig.get();
+  protected readonly _loadingUserBoards$ = this._boardService.loadingUserBoards$;
+  protected readonly _loadingBoard$ = this._boardService.loadingBoard$;
+  protected readonly _loadingBoardTasks$ = this._boardService.loadingBoardTasks$;
+  protected readonly _loadingBoardStatuses$ = this._boardService.loadingBoardStatuses$;
+  protected readonly _loadingBoardTaskSubtasks$ = this._boardService.loadingBoardTaskSubtasks$;
 
-  protected readonly _modificationUserBoards = this._boardService.modificationUserBoardsSig.get();
-  protected readonly _modificationBoard = this._boardService.modificationBoardSig.get();
-  protected readonly _modificationBoardTasks = this._boardService.modificationBoardTasksSig.get();
-  protected readonly _modificationBoardStatuses = this._boardService.modificationBoardStatusesSig.get();
+  protected readonly _modificationUserBoards$ = this._boardService.modificationUserBoards$;
+  protected readonly _modificationBoard$ = this._boardService.modificationBoard$;
+  protected readonly _modificationBoardTasks$ = this._boardService.modificationBoardTasks$;
+  protected readonly _modificationBoardStatuses$ = this._boardService.modificationBoardStatuses$;
 
-  protected readonly _boardStatusesPopMenuItems = computed(() => {
+  protected get _showMenuOptions() {
+    return this._showMenuOptions$.value;
+  }
 
-    const board = this._board();
-    const boardStatuses = this._boardStatuses();
-    const boardTask = this._boardTask();
-    const boardTaskSubtasks = this._boardTaskSubtasks();
+  protected readonly _boardStatusesPopMenuItems$ = combineLatest([
+    this._board$,
+    this._boardStatuses$,
+    this._boardTask$,
+    this._boardTaskSubtasks$
+  ]).pipe(
+    map(([
+      board,
+      boardStatuses,
+      boardTask,
+      boardTaskSubtasks
+    ]) => {
 
-    if (!board || !boardStatuses || !boardTask || !boardTaskSubtasks) {
-      return [];
-    }
-
-    return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((status) => !!status).map((status) => {
-      return {
-        value: status!.id,
-        label: status!.name
-      } as PopMenuItem;
-    });
-  });
-
-  protected readonly _boardStatusId = computed(() => {
-
-    const board = this._board();
-    const boardStatuses = this._boardStatuses();
-    const boardTask = this._boardTask();
-    const boardStatusesPopMenuItems = this._boardStatusesPopMenuItems();
-
-    if (!board || !boardStatuses || !boardTask || !boardStatusesPopMenuItems) {
-      return '';
-    }
-
-    if (!boardStatusesPopMenuItems.find((boardStatusesPopMenuItem) => boardTask.boardStatusId === boardStatusesPopMenuItem.value)) {
-      return boardStatusesPopMenuItems[0]?.value || '';
-    }
-
-    return boardTask.boardStatusId;
-  });
-
-  protected readonly _boardTaskView = computed(() => {
-
-    const boardTask = this._boardTask();
-    const boardTaskSubtasks = this._boardTaskSubtasks();
-    const loadingBoardTaskSubtasks = this._loadingBoardTaskSubtasks();
-
-    if (!boardTask || !boardTaskSubtasks || loadingBoardTaskSubtasks) {
-      return null;
-    }
-
-    const boardTaskView: BoardTaskView = {
-      ...boardTask,
-      boardTaskSubtasks: []
-    };
-
-    for (const boardTaskSubtaskId of boardTask.boardTaskSubtasksIds) {
-
-      const boardTaskSubtask = boardTaskSubtasks.get(boardTaskSubtaskId);
-
-      if (!boardTaskSubtask) {
-        continue;
+      if (!board || !boardStatuses || !boardTask || !boardTaskSubtasks) {
+        return [];
       }
 
-      boardTaskView.boardTaskSubtasks.push(boardTaskSubtask);
-    }
+      return board.boardStatusesIds.map((boardStatusId) => boardStatuses.get(boardStatusId)).filter((status) => !!status).map((status) => {
+        return {
+          value: status!.id,
+          label: status!.name
+        } as PopMenuItem;
+      });
+    })
+  );
 
-    return boardTaskView;
-  });
+  protected readonly _boardTaskView$ = combineLatest([
+    this._boardTask$,
+    this._boardTaskSubtasks$,
+    this._loadingBoardTaskSubtasks$
+  ]).pipe(
+    map(([
+      boardTask,
+      boardTaskSubtasks,
+      loadingBoardTaskSubtasks
+    ]) => {
 
-  private readonly _viewIsReadyToShowSig = new Sig(1);
-  protected readonly _viewIsReadyToShow = this._viewIsReadyToShowSig.get();
+      if (!boardTask || !boardTaskSubtasks || loadingBoardTaskSubtasks) {
+        return null;
+      }
+
+      const boardTaskView: BoardTaskView = {
+        ...boardTask,
+        boardTaskSubtasks: []
+      };
+
+      for (const boardTaskSubtaskId of boardTask.boardTaskSubtasksIds) {
+
+        const boardTaskSubtask = boardTaskSubtasks.get(boardTaskSubtaskId);
+
+        if (!boardTaskSubtask) {
+          continue;
+        }
+
+        boardTaskView.boardTaskSubtasks.push(boardTaskSubtask);
+      }
+
+      return boardTaskView;
+    })
+  );
 
   protected _newWindowWithTaskRequested = false;
 
@@ -156,35 +144,50 @@ export class ViewBoardTaskComponent implements OnDestroy {
     private readonly _boardService: BoardService,
     private readonly _dialogRef: DialogRef<ViewBoardTaskComponent>,
     private readonly _dialog: Dialog,
-    private readonly _snackBarService: SnackBarService
+    private readonly _snackBarService: SnackBarService,
+    private readonly _destroyRef: DestroyRef
   ) {
+  }
 
-    effect(() => {
+  ngOnInit() {
 
-      const boardTaskId = this._boardTaskId();
-
-      const board = this._board();
-      const boardStatuses = this._boardStatuses();
-
-      const loadingUserBoards = this._loadingUserBoards();
-      const loadingBoard = this._loadingBoard();
-      const loadingBoardTask = this._loadingBoardTasks();
-      const loadingBoardStatuses = this._loadingBoardStatuses();
-
-      const modificationUserBoards = this._modificationUserBoards();
-      const modificationBoard = this._modificationBoard();
-      const modificationBoardTask = this._modificationBoardTasks();
-      const modificationBoardStatuses = this._modificationBoardStatuses();
+    combineLatest([
+      this._boardTaskId$,
+      this._board$,
+      this._boardStatuses$,
+      this._loadingUserBoards$,
+      this._loadingBoard$,
+      this._loadingBoardTasks$,
+      this._loadingBoardStatuses$,
+      this._modificationUserBoards$,
+      this._modificationBoard$,
+      this._modificationBoardTasks$,
+      this._modificationBoardStatuses$
+    ]).pipe(
+      takeUntilDestroyed(this._destroyRef),
+    ).subscribe(([
+      boardTaskId,
+      board,
+      boardStatuses,
+      loadingUserBoards,
+      loadingBoard,
+      loadingBoardTasks,
+      loadingBoardStatuses,
+      modificationUserBoards,
+      modificationBoard,
+      modificationBoardTasks,
+      modificationBoardStatuses
+    ]) => {
 
       if (
         boardTaskId === undefined ||
         loadingUserBoards ||
         loadingBoard ||
-        loadingBoardTask ||
+        loadingBoardTasks ||
         loadingBoardStatuses ||
         (modificationUserBoards && modificationUserBoards > 0) ||
         (modificationBoard && modificationBoard > 0) ||
-        (modificationBoardTask && modificationBoardTask > 0) ||
+        (modificationBoardTasks && modificationBoardTasks > 0) ||
         (modificationBoardStatuses && modificationBoardStatuses > 0)
       ) {
         return;
@@ -203,15 +206,13 @@ export class ViewBoardTaskComponent implements OnDestroy {
         return;
       }
 
-      const boardTask = this._boardTask();
+      const boardTask = this._boardTask$.value;
 
       if (!boardTask && boardTask !== undefined) {
         this._snackBarService.open(`This board task want's found`, 3000);
         this.close();
         return;
       }
-
-      this._viewIsReadyToShowSig.update((val) => (val || 1) - 1);
     });
   }
 
@@ -220,8 +221,8 @@ export class ViewBoardTaskComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    const board = this._board();
-    const boardTask = this._boardTask();
+    const board = this._board$.value;
+    const boardTask = this._boardTask$.value;
 
     if (!board || !boardTask) {
       return
@@ -232,21 +233,21 @@ export class ViewBoardTaskComponent implements OnDestroy {
 
   onBoardTaskStatusIdChange(newBoardStatusId: string) {
 
-    if (this._isRequesting()) {
+    if (this._isRequesting$.value) {
       return;
     }
 
-    const board = this._board();
-    const boardTask = this._boardTask();
-    const boardTaskSubtasks = this._boardTaskSubtasks();
+    const board = this._board$.value;
+    const boardTask = this._boardTask$.value;
+    const boardTaskSubtasks = this._boardTaskSubtasks$.value;
 
     if (!board || !boardTask || !boardTaskSubtasks) {
       return;
     }
 
-    const currentBoardStatusId = this._boardStatusId();
+    const currentBoardStatusId = this._boardTask$.value!.boardStatusId;
 
-    if (this._boardStatusId() === newBoardStatusId) {
+    if (currentBoardStatusId === newBoardStatusId) {
       return;
     }
 
@@ -265,14 +266,14 @@ export class ViewBoardTaskComponent implements OnDestroy {
       }))
     };
 
-    this._isRequesting.set(true);
+    this._isRequesting$.next(true);
 
     this._boardService.boardTaskUpdate(updateTaskData).pipe(
       catchError(() => NEVER)
     ).subscribe(() => {
 
       try {
-        this._isRequesting.set(false);
+        this._isRequesting$.next(false);
       } catch {
         /* empty */
       }
@@ -285,11 +286,11 @@ export class ViewBoardTaskComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    const boardTask = this._boardTask();
+    const boardTask = this._boardTask$.value;
 
     if (boardTask) {
       this._newWindowWithTaskRequested = true;
-      this._boardService.boardTaskIdSig.set(boardTask.id);
+      this._boardService.boardTaskId$.next(boardTask.id);
       this._dialog.open(EditBoardTaskComponent);
 
       this.close();
@@ -301,11 +302,11 @@ export class ViewBoardTaskComponent implements OnDestroy {
     $event.preventDefault();
     $event.stopPropagation();
 
-    const boardTask = this._boardTask();
+    const boardTask = this._boardTask$.value;
 
     if (boardTask) {
       this._newWindowWithTaskRequested = true;
-      this._boardService.boardTaskIdSig.set(boardTask.id);
+      this._boardService.boardTaskId$.next(boardTask.id);
       this._dialog.open(DeleteBoardTaskComponent);
 
       this.close();
@@ -324,7 +325,7 @@ export class ViewBoardTaskComponent implements OnDestroy {
       }
     }
 
-    this._showMenuOptions.set(showMenuOptions);
+    this._showMenuOptions$.next(showMenuOptions);
   }
 
   close() {
@@ -337,7 +338,7 @@ export class ViewBoardTaskComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     if (!this._newWindowWithTaskRequested) {
-      this._boardService.boardTaskIdSig.set(undefined);
+      this._boardService.boardTaskId$.next(null);
     }
   }
 }

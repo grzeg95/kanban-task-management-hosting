@@ -1,9 +1,8 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
-import {DOCUMENT, NgTemplateOutlet} from '@angular/common';
+import {AsyncPipe, DOCUMENT, NgTemplateOutlet} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   ElementRef,
   Inject,
   Input,
@@ -12,6 +11,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {combineLatest, map} from 'rxjs';
 import {SvgDirective} from '../../directives/svg.directive';
 import {LayoutService} from '../../services/layout.service';
 import {LoadingService} from '../../services/loading.service';
@@ -37,7 +37,8 @@ enum states {
     SwitchComponent,
     FormsModule,
     ButtonComponent,
-    LoadingComponent
+    LoadingComponent,
+    AsyncPipe
   ],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
@@ -110,92 +111,127 @@ export class SideBarComponent {
   @Input() appSideBarItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
-  protected readonly _showSideBar = this._layoutService.showSideBarSig.get();
+  protected readonly _showSideBar$ = this._layoutService.showSideBar$;
 
-  protected readonly _isOnPhone = this._layoutService.isOnPhoneSig.get();
-  protected readonly _isOnTablet = this._layoutService.isOnTabletSig.get();
-  protected readonly _isOnDesktop = this._layoutService.isOnDesktopSig.get();
+  protected readonly _isOnPhone$ = this._layoutService.isOnPhone$;
+  protected readonly _isOnTablet$ = this._layoutService.isOnTablet$;
+  protected readonly _isOnDesktop$ = this._layoutService.isOnDesktop$;
 
-  protected readonly _appLoading = this._loadingService.appLoading;
+  protected readonly _appLoading$ = this._loadingService.appLoading$;
 
-  protected readonly _moveForSideBarState = computed(() => {
+  protected readonly _moveForSideBarState$ = combineLatest([
+    this._showSideBar$,
+    this._isOnDesktop$,
+    this._isOnPhone$
+  ]).pipe(
+    map(([
+      showSideBar,
+      isOnDesktop,
+      isOnPhone
+    ]) => {
+      if (!showSideBar) {
 
-    const showSideBar = this._showSideBar();
+        if (isOnDesktop) {
+          return states.hiddenDesktop;
+        }
 
-    if (!showSideBar) {
-
-      if (this._isOnDesktop()) {
-        return states.hiddenDesktop;
-      }
-
-      return states.hiddenTablet;
-    } else {
-      if (this._isOnPhone()) {
         return states.hiddenTablet;
-      }
 
-      return states.visible;
-    }
-  });
+      } else {
+        if (isOnPhone) {
+          return states.hiddenTablet;
+        }
 
-  protected readonly _moveShowSideBarButtonForSideBarState = computed(() => {
-
-    const showSideBar = this._showSideBar();
-
-    if (!showSideBar) {
-
-      if (this._isOnDesktop()) {
         return states.visible;
       }
+    })
+  );
 
-      if (this._isOnTablet()) {
-        return states.visible;
+  protected readonly _moveShowSideBarButtonForSideBarState$ = combineLatest([
+    this._showSideBar$,
+    this._isOnDesktop$,
+    this._isOnTablet$,
+  ]).pipe(
+    map(([
+      showSideBar,
+      isOnDesktop,
+      isOnTablet
+    ]) => {
+
+      if (!showSideBar) {
+
+        if (isOnDesktop) {
+          return states.visible;
+        }
+
+        if (isOnTablet) {
+          return states.visible;
+        }
+
+        return states.hidden;
+      } else {
+
+        if (isOnDesktop) {
+          return states.hiddenDesktop;
+        }
+
+        if (isOnTablet) {
+          return states.hiddenTablet;
+        }
+
+        return states.hidden;
+      }
+    })
+  );
+
+  protected readonly _darkMode$ = this._themeSelectorService.darkMode$;
+  protected readonly _logo$ = combineLatest([
+    this._darkMode$
+  ]).pipe(
+    map(([
+      darkMode
+    ]) => {
+      return darkMode ? 'logo-light' : 'logo-dark'
+    })
+  );
+
+  protected readonly _tabIndex$ = combineLatest([
+    this._isOnPhone$,
+    this._showSideBar$
+  ]).pipe(
+    map(([
+      isOnPhone,
+      showSideBar
+    ]) => {
+
+      if (isOnPhone && showSideBar || !showSideBar) {
+        return -1;
       }
 
-      return states.hidden;
-    } else {
+      return 0;
+    })
+  );
 
-      if (this._isOnDesktop()) {
-        return states.hiddenDesktop;
+  protected readonly _tabIndexShowSidebar$ = combineLatest([
+    this._isOnPhone$,
+    this._showSideBar$
+  ]).pipe(
+    map(([
+      isOnPhone,
+      showSideBar
+    ]) => {
+
+      if (isOnPhone || showSideBar) {
+        return -1;
       }
 
-      if (this._isOnTablet()) {
-        return states.hiddenTablet;
-      }
-
-      return states.hidden;
-    }
-  });
-
-  protected readonly _darkMode = this._themeSelectorService.darkModeSig.get();
-  protected readonly _logo = computed(() => this._darkMode() ? 'logo-light' : 'logo-dark');
-
-  protected readonly _tabIndex = computed(() => {
-
-    const isOnPhone = this._isOnPhone();
-    const showSideBar = this._showSideBar();
-
-    if (isOnPhone && showSideBar || !showSideBar) {
-      return -1;
-    }
-
-    return 0;
-  });
-
-  protected readonly _tabIndexShowSidebar = computed(() => {
-
-    const isOnPhone = this._isOnPhone();
-    const showSideBar = this._showSideBar();
-
-    if (isOnPhone || showSideBar) {
-      return -1;
-    }
-
-    return 0;
-  });
+      return 0;
+    })
+  );
 
   constructor(
-    @Inject(DOCUMENT) private readonly _document: Document,
+    @Inject(DOCUMENT)
+    private readonly _document: Document,
     private readonly _layoutService: LayoutService,
     private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _loadingService: LoadingService
@@ -208,7 +244,7 @@ export class SideBarComponent {
     $event.preventDefault();
     $event.stopPropagation();
 
-    this._layoutService.showSideBarSig.set(value);
+    this._layoutService.showSideBar$.next(value);
 
     switch (this._document.activeElement) {
       case this.hideSideBarButton.nativeElement:
@@ -221,7 +257,7 @@ export class SideBarComponent {
   }
 
   toggleDarkMode() {
-    if (this._darkMode()) {
+    if (this._darkMode$.value) {
       this._themeSelectorService.setLight();
     } else {
       this._themeSelectorService.setDark();

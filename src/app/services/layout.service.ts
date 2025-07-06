@@ -1,8 +1,8 @@
 import {BreakpointObserver} from '@angular/cdk/layout';
-import {effect, Injectable} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {BehaviorSubject, combineLatest} from 'rxjs';
 import {Breakpoints, BreakpointsDevices} from '../models/breakpoints';
-import {Sig} from '../utils/Sig';
 
 export enum LayoutServiceStates {
   first = 'first',
@@ -23,35 +23,29 @@ export class LayoutService {
     [Breakpoints.desktop.selector, BreakpointsDevices.desktop]
   ]);
 
-  readonly firstAnimation = new Sig(true);
-  private readonly _firstAnimation = this.firstAnimation.get();
+  readonly firstAnimation$ = new BehaviorSubject(true);
 
-  readonly isOnPhoneSig = new Sig(false);
-  private readonly _isOnPhone = this.isOnPhoneSig.get();
+  readonly isOnPhone$ = new BehaviorSubject(false);
 
-  readonly isOnTabletSig = new Sig(false);
-  private readonly _isOnTablet = this.isOnTabletSig.get();
+  readonly isOnTablet$ = new BehaviorSubject(false);
 
-  readonly isOnDesktopSig = new Sig(false);
-  private readonly _isOnDesktop = this.isOnDesktopSig.get();
+  readonly isOnDesktop$ = new BehaviorSubject(false);
 
-  readonly heightNavSig = new Sig(0);
+  readonly heightNav$ = new BehaviorSubject(0);
 
-  readonly showNavMenuOptionsSig = new Sig(false);
-  readonly showSideBarSig = new Sig(false);
-  private readonly _showSideBar = this.showSideBarSig.get();
-  readonly moveForSideBarStateSig = new Sig('hidden-first');
+  readonly showNavMenuOptions$ = new BehaviorSubject(false);
+  readonly showSideBar$ = new BehaviorSubject(false);
+  readonly moveForSideBarState$ = new BehaviorSubject('hidden-first');
 
   constructor(
     private _breakpointObserver: BreakpointObserver
   ) {
 
-    effect(() => {
-
-      const isOnPhone = this._isOnPhone();
-      const isOnTablet = this._isOnTablet();
-      const isOnDesktop = this._isOnDesktop();
-
+    combineLatest([
+      this.isOnPhone$,
+      this.isOnTablet$,
+      this.isOnDesktop$
+    ]).subscribe(([isOnPhone, isOnTablet, isOnDesktop]) => {
       let height = 0;
 
       if (isOnPhone) {
@@ -66,16 +60,15 @@ export class LayoutService {
         height = 97;
       }
 
-      this.heightNavSig.set(height);
+      this.heightNav$.next(height);
     });
 
-    effect(() => {
-
-      const firstAnimation = this._firstAnimation();
-
-      const showSideBar = this._showSideBar();
-      const isOnDesktop = this._isOnDesktop();
-      const isOnTablet = this._isOnTablet();
+    combineLatest([
+      this.firstAnimation$,
+      this.showSideBar$,
+      this.isOnTablet$,
+      this.isOnDesktop$
+    ]).subscribe(([firstAnimation, showSideBar, isOnTablet, isOnDesktop]) => {
 
       let state = LayoutServiceStates.hidden;
 
@@ -88,11 +81,11 @@ export class LayoutService {
       }
 
       if (firstAnimation) {
-        this.firstAnimation.set(false);
+        this.firstAnimation$.next(false);
         state = LayoutServiceStates.first;
       }
 
-      this.moveForSideBarStateSig.set(state);
+      this.moveForSideBarState$.next(state);
     });
 
     this._breakpointObserver.observe([
@@ -108,20 +101,20 @@ export class LayoutService {
 
           const breakpointsDevice = this._displayNameMap.get(query);
 
-          this.isOnPhoneSig.set(false);
-          this.isOnTabletSig.set(false);
-          this.isOnDesktopSig.set(false);
+          this.isOnPhone$.next(false);
+          this.isOnTablet$.next(false);
+          this.isOnDesktop$.next(false);
 
           if (breakpointsDevice === BreakpointsDevices.phone) {
-            this.isOnPhoneSig.set(true);
+            this.isOnPhone$.next(true);
           }
 
           if (breakpointsDevice === BreakpointsDevices.tablet) {
-            this.isOnTabletSig.set(true);
+            this.isOnTablet$.next(true);
           }
 
           if (breakpointsDevice === BreakpointsDevices.desktop) {
-            this.isOnDesktopSig.set(true);
+            this.isOnDesktop$.next(true);
           }
         }
       }

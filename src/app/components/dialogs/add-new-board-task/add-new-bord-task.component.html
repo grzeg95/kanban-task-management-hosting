@@ -1,77 +1,74 @@
-@if (_viewIsReadyToShow() === 0) {
+<div class="app-view-board-task" [@fadeZoomInOutTrigger]>
+  <div class="app-view-board-task__title">Add New Board Task</div>
 
-  <div class="app-view-board-task" [@fadeZoomInOutTrigger]>
-    <div class="app-view-board-task__title">Add New Board Task</div>
+  <form [formGroup]="form">
 
-    <form [formGroup]="form">
-
-      <app-form-field>
-        <app-label>Title</app-label>
-        <app-input
-          placeholder="e.g. Take coffee break"
-          [withHint]="true"
-          [formControl]="form.controls.title"
-        />
-        @if (!form.controls.title.valid && !form.controls.title.untouched && form.controls.title.errors?.['required']) {
-          <app-error>Can’t be empty</app-error>
-        }
-      </app-form-field>
-
-      <app-form-field>
-        <app-label>Description</app-label>
-        <app-textarea
-          placeholder="e.g. It’s always good to take a break. This 15 minute break will  recharge the batteries a little."
-          [withHint]="true"
-          [formControl]="form.controls.description"
-        />
-      </app-form-field>
-
-      <app-label>Subtasks</app-label>
-
-      @for (subtask of form.controls.boardTaskSubtasksTitles.controls; track subtask; let i = $index) {
-        <app-form-field>
-          <app-input
-            [@fadeZoomInOutTrigger]
-            [formControl]="subtask"
-            placeholder="e.g. Make coffee"
-            [removeAble]="true"
-            (remove)="form.controls.boardTaskSubtasksTitles.removeAt(i)"
-          />
-        </app-form-field>
+    <app-form-field>
+      <app-label>Title</app-label>
+      <app-input
+        placeholder="e.g. Take coffee break"
+        [withHint]="true"
+        [formControl]="form.controls.title"
+      />
+      @if (!form.controls.title.valid && !form.controls.title.untouched && form.controls.title.errors?.['required']) {
+        <app-error>Can’t be empty</app-error>
       }
+    </app-form-field>
 
-      <button
-        class="app-view-board-task__add-new-subtask-button"
-        app-button
-        appearance="secondary"
-        (click)="addNewSubtask()"
-        [disabled]="_isRequesting()"
-      >+ Add New Board Task Subtask
-      </button>
+    <app-form-field>
+      <app-label>Description</app-label>
+      <app-textarea
+        placeholder="e.g. It’s always good to take a break. This 15 minute break will  recharge the batteries a little."
+        [withHint]="true"
+        [formControl]="form.controls.description"
+      />
+    </app-form-field>
 
+    <app-label>Subtasks</app-label>
+
+    @for (subtask of form.controls.boardTaskSubtasksTitles.controls; track subtask; let i = $index) {
       <app-form-field>
-        <app-label>BoardStatus</app-label>
-        <app-select
-          placeholder="e.g. Take coffee break"
-          [formControl]="form.controls.boardStatusId"
-          [items]="_boardStatusesPopMenuItems()"
-          [withHint]="true"
+        <app-input
+          [@fadeZoomInOutTrigger]
+          [formControl]="subtask"
+          placeholder="e.g. Make coffee"
+          [removeAble]="true"
+          (remove)="form.controls.boardTaskSubtasksTitles.removeAt(i)"
         />
       </app-form-field>
+    }
 
-      <button
-        class="app-view-board-task__create-task-button"
-        app-button
-        appearance="primary"
-        (click)="boardTaskCreate()"
-        [disabled]="_isRequesting()"
-      >
-        Create Board Task
-        @if (_isRequesting()) {
-          <app-loader/>
-        }
-      </button>
+    <button
+      class="app-view-board-task__add-new-subtask-button"
+      app-button
+      appearance="secondary"
+      (click)="addNewSubtask()"
+      [disabled]="(_isRequesting$ | async) === true"
+    >+ Add New Board Task Subtask
+    </button>
 
-    </form>
-  </div>
-}
+    <app-form-field>
+      <app-label>BoardStatus</app-label>
+      <app-select
+        placeholder="e.g. Take coffee break"
+        [formControl]="form.controls.boardStatusId"
+        [items]="(_boardStatusesPopMenuItems$ | async) || []"
+        [withHint]="true"
+      />
+    </app-form-field>
+
+    <button
+      class="app-view-board-task__create-task-button"
+      app-button
+      appearance="primary"
+      (click)="boardTaskCreate()"
+      [disabled]="(_isRequesting$ | async) === true"
+    >
+      Create Board Task
+      @if ((_isRequesting$ | async) === true) {
+        <app-loader/>
+      }
+    </button>
+
+  </form>
+</div>
