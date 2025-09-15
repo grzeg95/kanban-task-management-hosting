@@ -17,7 +17,6 @@ import {LoaderComponent} from '../../loader/loader.component';
 
 @Component({
   selector: 'app-edit-board',
-  standalone: true,
   imports: [
     InputComponent,
     ButtonComponent,

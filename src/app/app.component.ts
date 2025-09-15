@@ -32,7 +32,6 @@ import {handleTabIndex} from './utils/handle-tabindex';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [
     SideBarComponent,
     SideBarPhoneWrapperComponent,

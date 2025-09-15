@@ -35,7 +35,6 @@ type BoardStatusView = BoardStatus & {
 
 @Component({
   selector: 'app-board',
-  standalone: true,
   imports: [
     NgStyle,
     ButtonComponent,

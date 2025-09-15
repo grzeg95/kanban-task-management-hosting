@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, ViewEncapsulation} from '@angular/co
 
 @Component({
   selector: 'app-label',
-  standalone: true,
   imports: [],
   templateUrl: './label.component.html',
   styleUrl: './label.component.scss',

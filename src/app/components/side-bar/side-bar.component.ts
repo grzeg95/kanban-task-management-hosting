@@ -30,7 +30,6 @@ enum states {
 
 @Component({
   selector: 'app-side-bar',
-  standalone: true,
   imports: [
     SvgDirective,
     NgTemplateOutlet,

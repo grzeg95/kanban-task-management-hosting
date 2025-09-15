@@ -17,7 +17,6 @@ import {LoaderComponent} from '../../loader/loader.component';
 
 @Component({
   selector: 'app-add-new-board',
-  standalone: true,
   imports: [
     InputComponent,
     ButtonComponent,

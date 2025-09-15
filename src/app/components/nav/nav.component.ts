@@ -15,7 +15,6 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
 
 @Component({
   selector: 'app-nav',
-  standalone: true,
   imports: [
     NgTemplateOutlet,
     CdkOverlayOrigin,

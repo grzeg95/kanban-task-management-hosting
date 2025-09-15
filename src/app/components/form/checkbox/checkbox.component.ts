@@ -13,7 +13,6 @@ import {SvgDirective} from '../../../directives/svg.directive';
 
 @Component({
   selector: 'app-checkbox',
-  standalone: true,
   imports: [
     NgClass,
     SvgDirective

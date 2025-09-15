@@ -20,7 +20,6 @@ const animateTiming = '0.333s ease-in-out';
 
 @Component({
   selector: 'app-side-bar-phone',
-  standalone: true,
   imports: [
     ButtonComponent,
     SvgDirective,

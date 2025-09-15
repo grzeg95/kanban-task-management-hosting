@@ -23,7 +23,6 @@ const HOST_SELECTOR_CLASS_PAIR: {attribute: string; classes: string[]}[] = [
 
 @Component({
   selector: 'button[app-button]',
-  standalone: true,
   imports: [
     NgTemplateOutlet
   ],

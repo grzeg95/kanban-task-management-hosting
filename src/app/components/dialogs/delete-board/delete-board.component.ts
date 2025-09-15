@@ -11,7 +11,6 @@ import {LoaderComponent} from '../../loader/loader.component';
 
 @Component({
   selector: 'app-delete-board',
-  standalone: true,
   imports: [
     ButtonComponent,
     ReactiveFormsModule,

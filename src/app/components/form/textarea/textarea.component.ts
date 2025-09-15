@@ -14,7 +14,6 @@ import {SvgDirective} from '../../../directives/svg.directive';
 
 @Component({
   selector: 'app-textarea',
-  standalone: true,
   imports: [
     SvgDirective
   ],

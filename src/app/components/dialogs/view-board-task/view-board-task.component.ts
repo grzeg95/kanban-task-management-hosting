@@ -28,7 +28,6 @@ type BoardTaskView = BoardTask & {
 
 @Component({
   selector: 'app-view-board-task',
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SvgDirective,

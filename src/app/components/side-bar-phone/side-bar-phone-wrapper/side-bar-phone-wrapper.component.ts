@@ -5,7 +5,6 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
 
 @Component({
   selector: 'app-side-bar-phone-wrapper',
-  standalone: true,
   imports: [
     SideBarPhoneComponent,
     AsyncPipe

@@ -11,7 +11,6 @@ import {handleTabIndex} from '../../../utils/handle-tabindex';
 
 @Component({
   selector: 'app-switch',
-  standalone: true,
   imports: [],
   templateUrl: './switch.component.html',
   styleUrl: './switch.component.scss',

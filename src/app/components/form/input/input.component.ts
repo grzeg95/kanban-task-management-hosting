@@ -16,7 +16,6 @@ import {handleTabIndex} from '../../../utils/handle-tabindex';
 
 @Component({
   selector: 'app-input',
-  standalone: true,
   imports: [
     SvgDirective,
     SvgHoverDirective

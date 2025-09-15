@@ -20,7 +20,6 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 
 @Component({
   selector: 'app-view-board-task',
-  standalone: true,
   imports: [
     InputComponent,
     ButtonComponent,

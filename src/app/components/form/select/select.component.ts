@@ -23,7 +23,6 @@ import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
 
 @Component({
   selector: 'app-select',
-  standalone: true,
   imports: [
     SvgDirective,
     PopMenuComponent,
