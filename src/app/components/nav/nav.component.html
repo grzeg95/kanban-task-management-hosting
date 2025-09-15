@@ -37,25 +37,6 @@
   class="app-nav__menu"
 >
 
-  @if (_authStateReady$ | async) {
-    @if (!!!(_isLoggedIn$ | async)) {
-      <button
-        class="app-nav__menu__login-button"
-        app-button
-        appearance="primary"
-        [size]="_loginButtonSize$ | async"
-        svg="left"
-        (click)="signInAnonymously()"
-      >
-        <svg appSvg="incognito"/>
-
-        @if (!!!(_isOnPhone$ | async)) {
-          Try It
-        }
-      </button>
-    }
-  }
-
   @if (appNavButtonTemplateRef; as appNavButtonTemplateRef) {
     <ng-container [ngTemplateOutlet]="appNavButtonTemplateRef"/>
   }
@@ -88,10 +69,6 @@
 
         @if (appNavMenuButtonsTemplateRef; as appNavMenuButtonsTemplateRef) {
           <ng-container [ngTemplateOutlet]="appNavMenuButtonsTemplateRef"/>
-        }
-
-        @if (_isLoggedIn$ | async) {
-          <app-pop-menu-item [danger]="true" (click)="setShowNavMenuOptions($event,false); signOut();">Sign Out</app-pop-menu-item>
         }
       </app-pop-menu>
     </ng-template>

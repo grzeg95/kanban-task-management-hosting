@@ -166,6 +166,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+
+    this._loadingBoard$.next(true);
+
     combineLatest([
       this._loadingBoard$,
       this._loadingBoardStatuses$,

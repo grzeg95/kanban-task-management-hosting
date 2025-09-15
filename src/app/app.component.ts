@@ -4,9 +4,10 @@ import {AsyncPipe, NgStyle} from '@angular/common';
 import {Component, DestroyRef, Inject, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NavigationEnd, Router, RouterOutlet} from '@angular/router';
+import {User as FirebaseUser} from 'firebase/auth';
 import {Firestore, limit} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
-import {BehaviorSubject, catchError, combineLatest, filter, map, of, Subscription} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, filter, map, of, Subscription, tap} from 'rxjs';
 import {fadeZoomInOutTrigger} from './animations/fade-zoom-in-out.trigger';
 import {ButtonComponent, ButtonSize} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
@@ -26,7 +27,6 @@ import {AuthService} from './services/auth.service';
 import {BoardService} from './services/board.service';
 import {collectionSnapshots} from './services/firebase/firestore';
 import {LayoutService, LayoutServiceStates} from './services/layout.service';
-import {ThemeSelectorService} from './services/theme-selector.service';
 import {FirestoreInjectionToken} from './tokens/firebase';
 import {handleTabIndex} from './utils/handle-tabindex';
 
@@ -84,6 +84,7 @@ import {handleTabIndex} from './utils/handle-tabindex';
 export class AppComponent implements OnInit {
 
   protected readonly _user$ = this._authService.user$;
+  protected readonly _firebaseUser$ = this._authService.firebaseUser$;
 
   protected readonly _userBoards$ = new BehaviorSubject<UserBoard[] | null | undefined>(undefined);
   private _userBoardsSub: Subscription | undefined;
@@ -97,7 +98,7 @@ export class AppComponent implements OnInit {
   protected readonly _showSideBar$ = this._layoutService.showSideBar$;
   protected readonly _isLoggedIn$ = this._authService.isLoggedIn$;
   protected readonly _authStateReady$ = this._authService.authStateReady$;
-  protected readonly _darkMode$ = this._themeSelectorService.darkMode$;
+  protected readonly _loadingUser$ = this._authService.loadingUser$;
 
   protected get _showSideBar() {
     return this._showSideBar$.value;
@@ -129,18 +130,19 @@ export class AppComponent implements OnInit {
   );
 
   protected readonly _navTitle$ = combineLatest([
-    this._isLoggedIn$,
     this._userBoards$,
-    this._board$
+    this._board$,
+    this._boardId$,
+    this._loadingUser$
   ]).pipe(
     map(([
-      isLoggedIn,
       userBoards,
-      board
+      board,
+      boardId
     ]) => {
 
-      if (!isLoggedIn) {
-        return 'App';
+      if (boardId && board === undefined || userBoards === undefined) {
+        return 'Loading...';
       }
 
       if (userBoards === null || userBoards?.length === 0) {
@@ -195,7 +197,6 @@ export class AppComponent implements OnInit {
     private readonly _layoutService: LayoutService,
     private readonly _dialog: Dialog,
     private readonly _router: Router,
-    private readonly _themeSelectorService: ThemeSelectorService,
     private readonly _destroyRef: DestroyRef
   ) {
   }
@@ -218,21 +219,26 @@ export class AppComponent implements OnInit {
     let userBoards_userId: string | undefined;
     let userBoards_userBoardsIds: string[] | undefined;
     let userBoards_userConfigMaxUserBoards: number | undefined;
+    let userBoards_firebaseUser: FirebaseUser | null;
     combineLatest([
       this._user$,
-      this._authStateReady$
+      this._firebaseUser$,
+      this._authStateReady$,
+      this._loadingUser$
     ]).pipe(
       takeUntilDestroyed(this._destroyRef)
     ).subscribe(([
       user,
-      authStateReady
+      firebaseUser,
+      authStateReady,
+      loadingUser
     ]) => {
 
       if (!authStateReady) {
         return;
       }
 
-      if (!user) {
+      if (!user && !loadingUser) {
         this._userBoards$.next(null);
         userBoards_userId = undefined;
         userBoards_userBoardsIds = undefined;
@@ -241,11 +247,16 @@ export class AppComponent implements OnInit {
         return;
       }
 
+      if (!user) {
+        return;
+      }
+
       if (
         userBoards_userId === user.id &&
         isEqual(userBoards_userBoardsIds, user.boardsIds) &&
         userBoards_userConfigMaxUserBoards === user.config.maxUserBoards &&
-        this._userBoardsSub && !this._userBoardsSub.closed
+        this._userBoardsSub && !this._userBoardsSub.closed &&
+        userBoards_firebaseUser === firebaseUser
       ) {
         return;
       }
@@ -253,6 +264,8 @@ export class AppComponent implements OnInit {
       userBoards_userId = user.id;
       userBoards_userBoardsIds = user.boardsIds;
       userBoards_userConfigMaxUserBoards = user.config.maxUserBoards;
+      userBoards_userConfigMaxUserBoards = user.config.maxUserBoards;
+      userBoards_firebaseUser = firebaseUser;
 
       const userBoardCollectionRef = UserBoard.firestoreCollectionRef(User.firestoreRef(this._firestore, userBoards_userId));
 
@@ -351,10 +364,5 @@ export class AppComponent implements OnInit {
   select(boardId: string) {
     this._router.navigate(['/', boardId]);
     this._boardService.boardId$.next(boardId);
-  }
-
-  signInAnonymously(): Promise<void> {
-    this._router.navigate(['/']);
-    return this._authService.signInAnonymously();
   }
 }

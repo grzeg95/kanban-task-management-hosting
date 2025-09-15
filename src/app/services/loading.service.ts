@@ -9,7 +9,6 @@ import {BoardService} from './board.service';
 export class LoadingService {
 
   readonly appLoading$ = combineLatest([
-    this._authService.whileLoginIn$,
     this._authService.authStateReady$,
     this._authService.loadingUser$,
     this._boardService.loadingUserBoards$,
@@ -24,7 +23,6 @@ export class LoadingService {
     this._boardService.modificationBoardTaskSubtasks$
   ]).pipe(
     map(([
-      whileLoginIn,
       authStateReady,
       loadingUser,
       loadingUserBoards,
@@ -40,7 +38,6 @@ export class LoadingService {
     ]) => {
 
       return [
-        whileLoginIn,
         !authStateReady,
         loadingUser,
         loadingUserBoards,

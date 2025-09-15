@@ -2,7 +2,7 @@ import {HttpClient, provideHttpClient} from '@angular/common/http';
 import {APP_INITIALIZER, ApplicationConfig, provideExperimentalZonelessChangeDetection, Provider} from '@angular/core';
 import {initializeApp} from 'firebase/app';
 import {initializeAppCheck, ReCaptchaEnterpriseProvider} from 'firebase/app-check';
-import {connectAuthEmulator, getAuth} from 'firebase/auth';
+import {connectAuthEmulator, getAuth, signInAnonymously} from 'firebase/auth';
 import {connectFirestoreEmulator, getFirestore} from 'firebase/firestore';
 import {connectFunctionsEmulator, getFunctions} from 'firebase/functions';
 import {provideAnimations} from '@angular/platform-browser/animations';
@@ -47,6 +47,9 @@ const provideFirebase = () => {
   if (!environment.production) {
     connectAuthEmulator(auth, `${environment.emulators.auth.protocol}://${environment.emulators.auth.host}:${environment.emulators.auth.port}`);
   }
+
+  // sign in anonymously on start
+  signInAnonymously(auth);
 
   providers.push({
     provide: AuthInjectionToken,

@@ -1,6 +1,6 @@
 import {DestroyRef, Inject, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {Auth, onAuthStateChanged, signInAnonymously, signOut, User as FirebaseUser} from 'firebase/auth';
+import {Auth, onAuthStateChanged, User as FirebaseUser} from 'firebase/auth';
 import {Firestore} from 'firebase/firestore';
 import {BehaviorSubject, catchError, combineLatest, from, map, Observable, of, Subscription} from 'rxjs';
 import {User} from '../models/user';
@@ -32,8 +32,6 @@ export class AuthService {
   readonly loadingUser$ = new BehaviorSubject<boolean>(true);
   readonly user$ = new BehaviorSubject<User | null | undefined>(undefined);
   private _userSub: Subscription | undefined;
-
-  readonly whileLoginIn$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     @Inject(AuthInjectionToken) readonly _auth: Auth,
@@ -73,16 +71,5 @@ export class AuthService {
       });
 
     });
-  }
-
-  signInAnonymously(): Promise<void> {
-    this.whileLoginIn$.next(true);
-    return signInAnonymously(this._auth).then(() => {
-      this.whileLoginIn$.next(false);
-    });
-  }
-
-  signOut(): Promise<void> {
-    return signOut(this._auth);
   }
 }
