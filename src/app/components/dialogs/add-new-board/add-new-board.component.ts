@@ -1,6 +1,6 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {AsyncPipe} from '@angular/common';
-import {Component, DestroyRef, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {BehaviorSubject, catchError, combineLatest, of} from 'rxjs';
@@ -36,6 +36,11 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class AddNewBoardComponent implements OnInit {
 
+  private readonly _dialogRef = inject(DialogRef<AddNewBoardComponent>);
+  private readonly _boardService = inject(BoardService);
+  private readonly _authService = inject(AuthService);
+  private readonly _destroyRef = inject(DestroyRef);
+
   protected readonly _isRequesting$ = new BehaviorSubject(false);
   protected readonly _user$ = this._authService.user$;
 
@@ -43,14 +48,6 @@ export class AddNewBoardComponent implements OnInit {
     name: new FormControl('', Validators.required),
     boardStatusesNames: new FormArray<FormControl<string | null>>([])
   });
-
-  constructor(
-    private readonly _dialogRef: DialogRef<AddNewBoardComponent>,
-    private readonly _boardService: BoardService,
-    private readonly _authService: AuthService,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

@@ -1,7 +1,7 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {combineLatest, map} from 'rxjs';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AuthService} from '../../services/auth.service';
@@ -62,6 +62,11 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
   ]
 })
 export class NavComponent {
+
+  private readonly _themeSelectorService = inject(ThemeSelectorService);
+  private readonly _authService = inject(AuthService);
+  private readonly _layoutService = inject(LayoutService);
+  private readonly _loadingService = inject(LoadingService);
 
   @Input() appNavButtonTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
@@ -157,14 +162,6 @@ export class NavComponent {
       return buttonSize;
     })
   );
-
-  constructor(
-    private readonly _themeSelectorService: ThemeSelectorService,
-    private readonly _authService: AuthService,
-    private readonly _layoutService: LayoutService,
-    private readonly _loadingService: LoadingService
-  ) {
-  }
 
   setShowSideBar($event: KeyboardEvent | MouseEvent, value: boolean) {
 

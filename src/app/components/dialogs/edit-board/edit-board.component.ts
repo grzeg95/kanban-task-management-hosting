@@ -1,6 +1,6 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {AsyncPipe} from '@angular/common';
-import {Component, DestroyRef, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {BehaviorSubject, catchError, combineLatest, of} from 'rxjs';
@@ -36,6 +36,11 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class EditBoardComponent implements OnInit {
 
+  private readonly _boardService = inject(BoardService);
+  private readonly _dialogRef = inject(DialogRef<EditBoardComponent>);
+  private readonly _snackBarService = inject(SnackBarService);
+  private readonly _destroyRef = inject(DestroyRef);
+
   protected readonly _isRequesting$ = new BehaviorSubject(false);
   protected readonly _board$ = this._boardService.board$;
   protected readonly _boardStatuses$ = this._boardService.boardStatuses$;
@@ -50,14 +55,6 @@ export class EditBoardComponent implements OnInit {
     boardName: new FormControl('', Validators.required),
     boardStatuses: new FormArray<FormGroup<{id: FormControl<string | null>, name: FormControl<string | null>}>>([])
   });
-
-  constructor(
-    private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<EditBoardComponent>,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

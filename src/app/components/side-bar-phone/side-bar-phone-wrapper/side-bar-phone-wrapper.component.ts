@@ -1,5 +1,5 @@
 import {AsyncPipe} from '@angular/common';
-import {Component, Input, TemplateRef} from '@angular/core';
+import {Component, inject, Input, TemplateRef} from '@angular/core';
 import {LayoutService} from '../../../services/layout.service';
 import {SideBarPhoneComponent} from '../side-bar-phone.component';
 
@@ -20,14 +20,11 @@ import {SideBarPhoneComponent} from '../side-bar-phone.component';
 })
 export class SideBarPhoneWrapperComponent {
 
+  private readonly _layoutService = inject(LayoutService);
+
   protected readonly _isOnPhone$ = this._layoutService.isOnPhone$;
   protected readonly _showSideBar$ = this._layoutService.showSideBar$;
 
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
-
-  constructor(
-    private readonly _layoutService: LayoutService
-  ) {
-  }
 }

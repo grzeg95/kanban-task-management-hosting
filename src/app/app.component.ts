@@ -1,13 +1,13 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {Dialog} from '@angular/cdk/dialog';
 import {AsyncPipe, NgStyle} from '@angular/common';
-import {Component, DestroyRef, Inject, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NavigationEnd, Router, RouterOutlet} from '@angular/router';
 import {User as FirebaseUser} from 'firebase/auth';
-import {Firestore, limit} from 'firebase/firestore';
+import {limit} from 'firebase/firestore';
 import isEqual from 'lodash/isEqual';
-import {BehaviorSubject, catchError, combineLatest, filter, map, of, Subscription, tap} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, filter, map, of, Subscription} from 'rxjs';
 import {fadeZoomInOutTrigger} from './animations/fade-zoom-in-out.trigger';
 import {ButtonComponent, ButtonSize} from './components/button/button.component';
 import {AddNewBordTaskComponent} from './components/dialogs/add-new-board-task/add-new-bord-task.component';
@@ -81,6 +81,14 @@ import {handleTabIndex} from './utils/handle-tabindex';
   ]
 })
 export class AppComponent implements OnInit {
+
+  private readonly _firestore = inject(FirestoreInjectionToken);
+  private readonly _authService = inject(AuthService);
+  private readonly _boardService = inject(BoardService);
+  private readonly _layoutService = inject(LayoutService);
+  private readonly _dialog = inject(Dialog);
+  private readonly _router = inject(Router);
+  private readonly _destroyRef = inject(DestroyRef);
 
   protected readonly _user$ = this._authService.user$;
   protected readonly _firebaseUser$ = this._authService.firebaseUser$;
@@ -188,17 +196,6 @@ export class AppComponent implements OnInit {
       return buttonSize;
     })
   );
-
-  constructor(
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
-    private readonly _authService: AuthService,
-    private readonly _boardService: BoardService,
-    private readonly _layoutService: LayoutService,
-    private readonly _dialog: Dialog,
-    private readonly _router: Router,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

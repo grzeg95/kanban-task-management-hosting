@@ -1,10 +1,12 @@
 import {NgClass} from '@angular/common';
 import {
-  ChangeDetectionStrategy, ChangeDetectorRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   forwardRef,
   HostBinding,
   HostListener,
+  inject,
   Input,
   ViewEncapsulation
 } from '@angular/core';
@@ -34,15 +36,12 @@ import {SvgDirective} from '../../../directives/svg.directive';
 })
 export class CheckboxComponent {
 
+  private readonly _cdr = inject(ChangeDetectorRef);
+
   private static _id = 1;
   protected readonly _id = 'app-checkbox-id-' + CheckboxComponent._id++;
   @Input() @HostBinding('class.app-checkbox--checked') checked!: boolean;
   @HostBinding('class.app-checkbox--disabled') @Input() disabled!: boolean;
-
-  constructor(
-    private readonly _cdr: ChangeDetectorRef
-  ) {
-  }
 
   @HostListener('click', ['$event'])
   handleOnClick($event: MouseEvent) {

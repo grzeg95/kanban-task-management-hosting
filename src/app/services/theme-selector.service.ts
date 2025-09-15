@@ -1,6 +1,5 @@
-import {DOCUMENT, isPlatformBrowser} from '@angular/common';
-import {Inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
-import {Firestore} from 'firebase/firestore';
+import {isPlatformBrowser} from '@angular/common';
+import {DOCUMENT, inject, Injectable, PLATFORM_ID, Renderer2, RendererFactory2} from '@angular/core';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {User} from '../models/user';
 import {FirestoreInjectionToken} from '../tokens/firebase';
@@ -12,17 +11,17 @@ import {updateDoc} from './firebase/firestore';
 })
 export class ThemeSelectorService {
 
+  private readonly _rendererFactory = inject(RendererFactory2);
+  private readonly _document = inject(DOCUMENT);
+  private readonly _platformId = inject(PLATFORM_ID) as NonNullable<unknown>;
+  private readonly _authService = inject(AuthService);
+  private readonly _firestore = inject(FirestoreInjectionToken);
+
   private readonly _renderer: Renderer2;
   readonly darkMode$ = new BehaviorSubject<boolean | undefined>(undefined);
   private readonly _user$ = this._authService.user$;
 
-  constructor(
-    private readonly _rendererFactory: RendererFactory2,
-    @Inject(DOCUMENT) private readonly _document: Document,
-    @Inject(PLATFORM_ID) private readonly _platformId: NonNullable<unknown>,
-    private readonly _authService: AuthService,
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore
-  ) {
+  constructor() {
     this._renderer = this._rendererFactory.createRenderer(null, null);
 
     let userDarkMode: boolean | null;

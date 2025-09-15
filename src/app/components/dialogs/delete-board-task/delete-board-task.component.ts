@@ -1,6 +1,6 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {AsyncPipe} from '@angular/common';
-import {Component, DestroyRef, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ReactiveFormsModule} from '@angular/forms';
 import {BehaviorSubject, catchError, combineLatest, of} from 'rxjs';
@@ -26,16 +26,13 @@ import {LoaderComponent} from '../../loader/loader.component';
 })
 export class DeleteBoardTaskComponent implements OnInit, OnDestroy {
 
+  private readonly _boardService = inject(BoardService);
+  private readonly _dialogRef = inject(DialogRef<DeleteBoardTaskComponent>)
+  private readonly _destroyRef = inject(DestroyRef);
+
   protected readonly _isRequesting$ = new BehaviorSubject(false);
   protected readonly _board$ = this._boardService.board$;
   protected readonly _boardTask$ = this._boardService.boardTask$;
-
-  constructor(
-    private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<DeleteBoardTaskComponent>,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

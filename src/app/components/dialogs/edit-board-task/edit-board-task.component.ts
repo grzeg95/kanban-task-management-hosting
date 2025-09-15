@@ -1,6 +1,6 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {AsyncPipe} from '@angular/common';
-import {Component, DestroyRef, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {BehaviorSubject, catchError, combineLatest, map, of} from 'rxjs';
@@ -41,6 +41,11 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
   ]
 })
 export class EditBoardTaskComponent implements OnInit, OnDestroy {
+
+  private readonly _boardService = inject(BoardService);
+  private readonly _dialogRef = inject(DialogRef<EditBoardTaskComponent>);
+  private readonly _snackBarService = inject(SnackBarService);
+  private readonly _destroyRef = inject(DestroyRef);
 
   protected readonly _isRequesting$ = new BehaviorSubject(false);
   protected readonly _board$ = this._boardService.board$;
@@ -101,14 +106,6 @@ export class EditBoardTaskComponent implements OnInit, OnDestroy {
     description: new FormControl<string | null>(''),
     boardTaskSubtasks: new FormArray<FormGroup<{id: FormControl<string | null>, title: FormControl<string | null>}>>([])
   });
-
-  constructor(
-    private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<EditBoardTaskComponent>,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

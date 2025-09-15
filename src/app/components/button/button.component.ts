@@ -4,7 +4,10 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef, HostBinding, HostListener,
+  ElementRef,
+  HostBinding,
+  HostListener,
+  inject,
   Input,
   Renderer2,
   ViewEncapsulation
@@ -32,6 +35,10 @@ const HOST_SELECTOR_CLASS_PAIR: {attribute: string; classes: string[]}[] = [
   encapsulation: ViewEncapsulation.None
 })
 export class ButtonComponent implements AfterViewChecked {
+
+  private readonly _elementRef = inject(ElementRef);
+  private readonly _renderer = inject(Renderer2);
+  private readonly _cdr = inject(ChangeDetectorRef);
 
   private readonly _element: HTMLElement;
 
@@ -77,11 +84,7 @@ export class ButtonComponent implements AfterViewChecked {
     }
   }
 
-  constructor(
-    private readonly _elementRef: ElementRef,
-    private readonly _renderer: Renderer2,
-    private readonly _cdr: ChangeDetectorRef
-  ) {
+  constructor() {
 
     this._element = this._elementRef.nativeElement;
 

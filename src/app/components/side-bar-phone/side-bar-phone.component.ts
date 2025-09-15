@@ -1,11 +1,10 @@
 import {animate, animation, style, transition, trigger} from '@angular/animations';
 import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SvgDirective} from '../../directives/svg.directive';
 import {LayoutService} from '../../services/layout.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
-import {ButtonComponent} from '../button/button.component';
 import {SwitchComponent} from '../form/switch/switch.component';
 
 const closedStyles = style({
@@ -21,7 +20,6 @@ const animateTiming = '0.333s ease-in-out';
 @Component({
   selector: 'app-side-bar-phone',
   imports: [
-    ButtonComponent,
     SvgDirective,
     SwitchComponent,
     FormsModule,
@@ -51,16 +49,13 @@ const animateTiming = '0.333s ease-in-out';
 })
 export class SideBarPhoneComponent {
 
+  private readonly _layoutService = inject(LayoutService);
+  private readonly _themeSelectorService = inject(ThemeSelectorService);
+
   @Input() appSideBarPhoneItemsTitleTemplateRef: TemplateRef<any> | undefined;
   @Input() appSideBarPhoneItemsContainerTemplateRef: TemplateRef<any> | undefined;
 
   protected readonly _darkMode$ = this._themeSelectorService.darkMode$;
-
-  constructor(
-    private readonly _layoutService: LayoutService,
-    private readonly _themeSelectorService: ThemeSelectorService
-  ) {
-  }
 
   toggleDarkMode() {
     if (this._darkMode$.value) {

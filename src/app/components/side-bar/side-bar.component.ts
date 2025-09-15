@@ -1,10 +1,11 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
-import {AsyncPipe, DOCUMENT, NgTemplateOutlet} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DOCUMENT,
   ElementRef,
-  Inject,
+  inject,
   Input,
   TemplateRef,
   ViewChild,
@@ -103,6 +104,11 @@ enum states {
   ]
 })
 export class SideBarComponent {
+
+  private readonly _document = inject(DOCUMENT);
+  private readonly _layoutService = inject(LayoutService);
+  private readonly _themeSelectorService = inject(ThemeSelectorService);
+  private readonly _loadingService = inject(LoadingService);
 
   @ViewChild('hideSideBarButton', {read: ElementRef}) hideSideBarButton!: ElementRef;
   @ViewChild('showSideBarButton', {read: ElementRef}) showSideBarButton!: ElementRef;
@@ -228,13 +234,7 @@ export class SideBarComponent {
     })
   );
 
-  constructor(
-    @Inject(DOCUMENT)
-    private readonly _document: Document,
-    private readonly _layoutService: LayoutService,
-    private readonly _themeSelectorService: ThemeSelectorService,
-    private readonly _loadingService: LoadingService
-  ) {
+  constructor() {
   }
 
   setShowSideBar($event: KeyboardEvent | MouseEvent, value: boolean) {

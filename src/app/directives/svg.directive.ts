@@ -1,4 +1,13 @@
-import {ChangeDetectorRef, Directive, ElementRef, HostBinding, Input, OnChanges, Renderer2} from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Directive,
+  ElementRef,
+  HostBinding,
+  inject,
+  Input,
+  OnChanges,
+  Renderer2
+} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {filter, Subject} from 'rxjs';
 import {SvgService} from '../services/svg.service';
@@ -9,17 +18,17 @@ import {SvgService} from '../services/svg.service';
 })
 export class SvgDirective implements OnChanges {
 
+  private readonly _el = inject(ElementRef);
+  private readonly _cdr = inject(ChangeDetectorRef);
+  private readonly _renderer = inject(Renderer2);
+  private readonly _svgService = inject(SvgService);
+
   @Input({required: true}) appSvg!: string;
   @Input() @HostBinding('attr.aria-label') arialLabel!: string;
 
   private readonly _onChanges = new Subject<SVGElement | undefined>();
 
-  constructor(
-    private readonly _el: ElementRef,
-    private readonly _cdr: ChangeDetectorRef,
-    private readonly _renderer: Renderer2,
-    private readonly _svgService: SvgService
-  ) {
+  constructor() {
     this._onChanges.pipe(
       filter((svg): svg is SVGElement => !!svg),
       takeUntilDestroyed()

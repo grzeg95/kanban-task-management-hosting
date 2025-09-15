@@ -3,7 +3,7 @@ import {
   ApplicationConfig,
   inject,
   provideAppInitializer,
-  provideExperimentalZonelessChangeDetection,
+  provideZonelessChangeDetection,
   Provider
 } from '@angular/core';
 import {provideAnimations} from '@angular/platform-browser/animations';
@@ -109,7 +109,7 @@ const provideFirebase = () => {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideExperimentalZonelessChangeDetection(),
+    provideZonelessChangeDetection(),
     provideRouter(routes),
     provideAnimations(),
     ThemeSelectorService,

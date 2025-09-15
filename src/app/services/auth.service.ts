@@ -1,7 +1,6 @@
-import {DestroyRef, Inject, Injectable} from '@angular/core';
+import {DestroyRef, inject, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {Auth, onAuthStateChanged, User as FirebaseUser} from 'firebase/auth';
-import {Firestore} from 'firebase/firestore';
+import {onAuthStateChanged, User as FirebaseUser} from 'firebase/auth';
 import {BehaviorSubject, catchError, combineLatest, from, map, Observable, of, Subscription} from 'rxjs';
 import {User} from '../models/user';
 import {AuthInjectionToken, FirestoreInjectionToken} from '../tokens/firebase';
@@ -11,6 +10,10 @@ import {docSnapshots} from './firebase/firestore';
   providedIn: 'root'
 })
 export class AuthService {
+
+  private readonly _auth = inject(AuthInjectionToken);
+  private readonly _firestore = inject(FirestoreInjectionToken);
+  private readonly _destroyRef = inject(DestroyRef);
 
   readonly authStateReady$ = from(this._auth.authStateReady()).pipe(
     map(() => true)
@@ -33,11 +36,7 @@ export class AuthService {
   readonly user$ = new BehaviorSubject<User | null | undefined>(undefined);
   private _userSub: Subscription | undefined;
 
-  constructor(
-    @Inject(AuthInjectionToken) readonly _auth: Auth,
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
-    private readonly _destroyRef: DestroyRef
-  ) {
+  constructor() {
 
     combineLatest([
       this.firebaseUser$

@@ -1,6 +1,6 @@
 import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {Overlay} from '@angular/cdk/overlay';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {SnackBarComponent} from '../components/snack-bar/snack-bar.component';
 
 @Injectable({
@@ -8,13 +8,10 @@ import {SnackBarComponent} from '../components/snack-bar/snack-bar.component';
 })
 export class SnackBarService {
 
-  private _dialogRef: DialogRef<unknown, SnackBarComponent> | undefined;
+  private readonly _overlay = inject(Overlay);
+  private readonly _dialog = inject(Dialog);
 
-  constructor(
-    private readonly _overlay: Overlay,
-    private readonly _dialog: Dialog,
-  ) {
-  }
+  private _dialogRef: DialogRef<unknown, SnackBarComponent> | undefined;
 
   open(message: string, duration?: number): void {
 

@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {combineLatest, map} from 'rxjs';
 import {AuthService} from './auth.service';
 import {BoardService} from './board.service';
@@ -7,6 +7,9 @@ import {BoardService} from './board.service';
   providedIn: 'root'
 })
 export class LoadingService {
+
+  private readonly _authService = inject(AuthService);
+  private readonly _boardService = inject(BoardService);
 
   readonly appLoading$ = combineLatest([
     this._authService.authStateReady$,
@@ -53,10 +56,4 @@ export class LoadingService {
       ].some((val) => !!val);
     })
   );
-
-  constructor(
-    private readonly _authService: AuthService,
-    private readonly _boardService: BoardService
-  ) {
-  }
 }

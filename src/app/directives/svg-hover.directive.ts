@@ -1,10 +1,13 @@
-import {Directive, ElementRef, HostBinding, HostListener, Input, OnChanges, Renderer2} from '@angular/core';
+import {Directive, ElementRef, HostBinding, HostListener, inject, Input, OnChanges, Renderer2} from '@angular/core';
 
 @Directive({
   selector: '[appSvgHover]',
   standalone: true
 })
 export class SvgHoverDirective implements OnChanges {
+
+  private readonly _elementRef = inject(ElementRef);
+  private readonly _renderer = inject(Renderer2);
 
   @HostBinding('style.cursor') cursor = 'pointer';
 
@@ -28,12 +31,6 @@ export class SvgHoverDirective implements OnChanges {
         this._renderer.setAttribute(element, 'fill', fill);
       }
     }
-  }
-
-  constructor(
-    private readonly _elementRef: ElementRef,
-    private readonly _renderer: Renderer2
-  ) {
   }
 
   ngOnChanges(): void {
