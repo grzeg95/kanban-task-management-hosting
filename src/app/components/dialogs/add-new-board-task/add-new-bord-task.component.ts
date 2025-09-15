@@ -1,6 +1,6 @@
 import {DialogRef} from '@angular/cdk/dialog';
 import {AsyncPipe} from '@angular/common';
-import {Component, DestroyRef, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {BehaviorSubject, catchError, combineLatest, map, of} from 'rxjs';
@@ -20,7 +20,6 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
 
 @Component({
   selector: 'app-view-board-task',
-  standalone: true,
   imports: [
     InputComponent,
     ButtonComponent,
@@ -41,6 +40,11 @@ import {PopMenuItem} from '../../pop-menu/pop-menu-item/pop-menu-item.model';
   ]
 })
 export class AddNewBordTaskComponent implements OnInit {
+
+  private readonly _boardService = inject(BoardService);
+  private readonly _dialogRef = inject(DialogRef<AddNewBordTaskComponent>);
+  private readonly _snackBarService = inject(SnackBarService);
+  private readonly _destroyRef = inject(DestroyRef);
 
   protected readonly _isRequesting$ = new BehaviorSubject(false);
   protected readonly _board$ = this._boardService.board$;
@@ -81,14 +85,6 @@ export class AddNewBordTaskComponent implements OnInit {
     description: new FormControl(''),
     boardTaskSubtasksTitles: new FormArray<FormControl<string | null>>([])
   });
-
-  constructor(
-    private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<AddNewBordTaskComponent>,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

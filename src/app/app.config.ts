@@ -1,12 +1,18 @@
 import {HttpClient, provideHttpClient} from '@angular/common/http';
-import {APP_INITIALIZER, ApplicationConfig, provideExperimentalZonelessChangeDetection, Provider} from '@angular/core';
-import {initializeApp} from 'firebase/app';
-import {initializeAppCheck, ReCaptchaEnterpriseProvider} from 'firebase/app-check';
-import {connectAuthEmulator, getAuth} from 'firebase/auth';
-import {connectFirestoreEmulator, getFirestore} from 'firebase/firestore';
-import {connectFunctionsEmulator, getFunctions} from 'firebase/functions';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideZonelessChangeDetection,
+  Provider
+} from '@angular/core';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {provideRouter} from '@angular/router';
+import {initializeApp} from 'firebase/app';
+import {initializeAppCheck, ReCaptchaEnterpriseProvider} from 'firebase/app-check';
+import {connectAuthEmulator, getAuth, signInAnonymously} from 'firebase/auth';
+import {connectFirestoreEmulator, getFirestore} from 'firebase/firestore';
+import {connectFunctionsEmulator, getFunctions} from 'firebase/functions';
 import {join} from 'path-browserify';
 import {forkJoin, mergeMap} from 'rxjs';
 import {environment} from '../environments/environment';
@@ -47,6 +53,9 @@ const provideFirebase = () => {
   if (!environment.production) {
     connectAuthEmulator(auth, `${environment.emulators.auth.protocol}://${environment.emulators.auth.host}:${environment.emulators.auth.port}`);
   }
+
+  // sign in anonymously on start
+  signInAnonymously(auth);
 
   providers.push({
     provide: AuthInjectionToken,
@@ -100,38 +109,32 @@ const provideFirebase = () => {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideExperimentalZonelessChangeDetection(),
+    provideZonelessChangeDetection(),
     provideRouter(routes),
     provideAnimations(),
     ThemeSelectorService,
-    {
-      provide: APP_INITIALIZER,
-      multi: true,
-      deps: [ThemeSelectorService],
-      useFactory: (themeSelectorService: ThemeSelectorService) => {
-        return () => themeSelectorService.loadTheme();
-      }
-    },
+    provideAppInitializer(() => {
+      const themeSelectorService = inject(ThemeSelectorService);
+      return themeSelectorService.loadTheme();
+    }),
     provideHttpClient(),
-    {
-      provide: APP_INITIALIZER,
-      multi: true,
-      deps: [SvgService, HttpClient],
-      useFactory: (svgService: SvgService, http: HttpClient) => {
+    provideAppInitializer(() => {
 
-        const path = '/assets/images/svgs';
+      const http = inject(HttpClient);
+      const svgService = inject(SvgService);
 
-        return () => http.get<{name: string, src: string}[]>(
-          join(path, 'index.json')
-        ).pipe(
-          mergeMap((svgs) => {
-            return forkJoin(
-              svgs.map((svg) => svgService.registerSvg(svg.name, join(path, svg.src)))
-            );
-          })
-        )
-      }
-    },
+      const path = '/assets/images/svgs';
+
+      return http.get<{name: string, src: string}[]>(
+        join(path, 'index.json')
+      ).pipe(
+        mergeMap((svgs) => {
+          return forkJoin(
+            svgs.map((svg) => svgService.registerSvg(svg.name, join(path, svg.src)))
+          );
+        })
+      )
+    }),
     provideFirebase()
   ]
 };

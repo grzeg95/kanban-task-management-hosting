@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, ViewEncapsulation} from '@angular/co
 
 @Component({
   selector: 'app-error',
-  standalone: true,
   imports: [],
   templateUrl: './error.component.html',
   styleUrl: './error.component.scss',

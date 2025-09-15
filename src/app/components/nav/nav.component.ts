@@ -1,8 +1,7 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
-import {ChangeDetectionStrategy, Component, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
-import {Router} from '@angular/router';
+import {ChangeDetectionStrategy, Component, inject, Input, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {combineLatest, map} from 'rxjs';
 import {SvgDirective} from '../../directives/svg.directive';
 import {AuthService} from '../../services/auth.service';
@@ -10,21 +9,17 @@ import {LayoutService, LayoutServiceStates} from '../../services/layout.service'
 import {LoadingService} from '../../services/loading.service';
 import {ThemeSelectorService} from '../../services/theme-selector.service';
 import {handleTabIndex} from '../../utils/handle-tabindex';
-import {ButtonComponent, ButtonSize} from '../button/button.component';
+import {ButtonSize} from '../button/button.component';
 import {LoadingComponent} from '../loading/loading.component';
-import {PopMenuItemComponent} from '../pop-menu/pop-menu-item/pop-menu-item.component';
 import {PopMenuComponent} from '../pop-menu/pop-menu.component';
 
 @Component({
   selector: 'app-nav',
-  standalone: true,
   imports: [
     NgTemplateOutlet,
     CdkOverlayOrigin,
-    ButtonComponent,
     CdkConnectedOverlay,
     PopMenuComponent,
-    PopMenuItemComponent,
     SvgDirective,
     LoadingComponent,
     AsyncPipe
@@ -67,6 +62,11 @@ import {PopMenuComponent} from '../pop-menu/pop-menu.component';
   ]
 })
 export class NavComponent {
+
+  private readonly _themeSelectorService = inject(ThemeSelectorService);
+  private readonly _authService = inject(AuthService);
+  private readonly _layoutService = inject(LayoutService);
+  private readonly _loadingService = inject(LoadingService);
 
   @Input() appNavButtonTemplateRef: TemplateRef<any> | undefined;
   @Input() appNavMenuButtonsTemplateRef: TemplateRef<any> | undefined;
@@ -162,25 +162,6 @@ export class NavComponent {
       return buttonSize;
     })
   );
-
-  constructor(
-    private readonly _themeSelectorService: ThemeSelectorService,
-    private readonly _authService: AuthService,
-    private readonly _layoutService: LayoutService,
-    private readonly _loadingService: LoadingService,
-    private readonly _router: Router
-  ) {
-  }
-
-  signInAnonymously(): Promise<void> {
-    this._router.navigate(['/']);
-    return this._authService.signInAnonymously();
-  }
-
-  signOut(): Promise<void> {
-    this._router.navigate(['/']);
-    return this._authService.signOut();
-  }
 
   setShowSideBar($event: KeyboardEvent | MouseEvent, value: boolean) {
 

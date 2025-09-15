@@ -1,5 +1,5 @@
-import {Inject, Injectable} from '@angular/core';
-import {Firestore, updateDoc} from 'firebase/firestore';
+import {inject, Injectable} from '@angular/core';
+import {updateDoc} from 'firebase/firestore';
 import {BehaviorSubject, catchError, defer, tap} from 'rxjs';
 import {
   Board,
@@ -30,6 +30,10 @@ import {SnackBarService} from './snack-bar.service';
 })
 export class BoardService {
 
+  private readonly _firestore = inject(FirestoreInjectionToken);
+  private readonly _functionsService = inject(FunctionsService);
+  private readonly _snackBarService = inject(SnackBarService);
+
   readonly boardId$ = new BehaviorSubject<string | null | undefined>(null);
   readonly boardTaskId$ = new BehaviorSubject<string | null>(null);
   readonly board$ = new BehaviorSubject<Board | null | undefined>(undefined);
@@ -50,11 +54,7 @@ export class BoardService {
   readonly modificationBoardTasks$ = new BehaviorSubject(0);
   readonly modificationBoardTaskSubtasks$ = new BehaviorSubject(0);
 
-  constructor(
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
-    private readonly _functionsService: FunctionsService,
-    private readonly _snackBarService: SnackBarService
-  ) {
+  constructor() {
   }
 
   boardCreate(data: BoardCreateData) {

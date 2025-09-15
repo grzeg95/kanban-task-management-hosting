@@ -1,4 +1,3 @@
-import {CdkMenuTrigger} from '@angular/cdk/menu';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {
   AfterViewInit,
@@ -8,6 +7,7 @@ import {
   forwardRef,
   HostBinding,
   HostListener,
+  inject,
   Input,
   OnChanges,
   signal,
@@ -23,13 +23,11 @@ import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
 
 @Component({
   selector: 'app-select',
-  standalone: true,
   imports: [
     SvgDirective,
     PopMenuComponent,
     CdkOverlayOrigin,
     CdkConnectedOverlay,
-    CdkMenuTrigger,
     PopMenuItemComponent
   ],
   templateUrl: './select.component.html',
@@ -48,6 +46,8 @@ import {PopMenuComponent} from '../../pop-menu/pop-menu.component';
   ]
 })
 export class SelectComponent implements ControlValueAccessor, OnChanges, AfterViewInit {
+
+  private readonly _cdr = inject(ChangeDetectorRef);
 
   private static _id = 1;
   protected readonly _id = 'app-select-id-' + SelectComponent._id++;
@@ -73,11 +73,6 @@ export class SelectComponent implements ControlValueAccessor, OnChanges, AfterVi
   @HostListener('window:resize')
   onResize() {
     this._appPopMenuItemWidth.set(this._trigger.elementRef.nativeElement.getBoundingClientRect().width);
-  }
-
-  constructor(
-    private readonly _cdr: ChangeDetectorRef,
-  ) {
   }
 
   ngOnChanges(changes: SimpleChanges): void {

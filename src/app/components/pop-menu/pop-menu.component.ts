@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, ViewEncapsulation} from '@angular/co
 
 @Component({
   selector: 'app-pop-menu',
-  standalone: true,
   imports: [],
   templateUrl: './pop-menu.component.html',
   styleUrl: './pop-menu.component.scss',

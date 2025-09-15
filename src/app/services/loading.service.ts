@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {combineLatest, map} from 'rxjs';
 import {AuthService} from './auth.service';
 import {BoardService} from './board.service';
@@ -8,8 +8,10 @@ import {BoardService} from './board.service';
 })
 export class LoadingService {
 
+  private readonly _authService = inject(AuthService);
+  private readonly _boardService = inject(BoardService);
+
   readonly appLoading$ = combineLatest([
-    this._authService.whileLoginIn$,
     this._authService.authStateReady$,
     this._authService.loadingUser$,
     this._boardService.loadingUserBoards$,
@@ -24,7 +26,6 @@ export class LoadingService {
     this._boardService.modificationBoardTaskSubtasks$
   ]).pipe(
     map(([
-      whileLoginIn,
       authStateReady,
       loadingUser,
       loadingUserBoards,
@@ -40,7 +41,6 @@ export class LoadingService {
     ]) => {
 
       return [
-        whileLoginIn,
         !authStateReady,
         loadingUser,
         loadingUserBoards,
@@ -56,10 +56,4 @@ export class LoadingService {
       ].some((val) => !!val);
     })
   );
-
-  constructor(
-    private readonly _authService: AuthService,
-    private readonly _boardService: BoardService
-  ) {
-  }
 }

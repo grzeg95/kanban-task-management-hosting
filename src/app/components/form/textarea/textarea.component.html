@@ -11,5 +11,5 @@
 ></textarea>
 
 @if (removeAble) {
-  <svg tabindex="0" class="app-textarea__remove" (click)="remove.emit()" appSvg="icon-cross"/>
+  <svg tabindex="0" class="app-textarea__remove" (keydown.enter)="remove.emit()" (keydown.space)="remove.emit()" (click)="remove.emit()" appSvg="icon-cross"/>
 }

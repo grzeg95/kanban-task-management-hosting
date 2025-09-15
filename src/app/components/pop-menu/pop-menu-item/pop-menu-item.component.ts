@@ -2,7 +2,6 @@ import {ChangeDetectionStrategy, Component, HostBinding, Input, ViewEncapsulatio
 
 @Component({
   selector: 'app-pop-menu-item',
-  standalone: true,
   imports: [],
   templateUrl: './pop-menu-item.component.html',
   styleUrl: './pop-menu-item.component.scss',

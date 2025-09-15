@@ -1,7 +1,7 @@
 import {Dialog, DialogRef} from '@angular/cdk/dialog';
 import {CdkConnectedOverlay, CdkOverlayOrigin} from '@angular/cdk/overlay';
 import {AsyncPipe} from '@angular/common';
-import {Component, DestroyRef, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, DestroyRef, inject, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {BehaviorSubject, catchError, combineLatest, map, NEVER} from 'rxjs';
@@ -28,7 +28,6 @@ type BoardTaskView = BoardTask & {
 
 @Component({
   selector: 'app-view-board-task',
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SvgDirective,
@@ -51,6 +50,12 @@ type BoardTaskView = BoardTask & {
   ]
 })
 export class ViewBoardTaskComponent implements OnInit, OnDestroy {
+
+  private readonly _boardService = inject(BoardService);
+  private readonly _dialogRef = inject(DialogRef<ViewBoardTaskComponent>);
+  private readonly _dialog = inject(Dialog);
+  private readonly _snackBarService = inject(SnackBarService);
+  private readonly _destroyRef = inject(DestroyRef);
 
   protected readonly _isRequesting$ = new BehaviorSubject(false);
 
@@ -139,15 +144,6 @@ export class ViewBoardTaskComponent implements OnInit, OnDestroy {
   );
 
   protected _newWindowWithTaskRequested = false;
-
-  constructor(
-    private readonly _boardService: BoardService,
-    private readonly _dialogRef: DialogRef<ViewBoardTaskComponent>,
-    private readonly _dialog: Dialog,
-    private readonly _snackBarService: SnackBarService,
-    private readonly _destroyRef: DestroyRef
-  ) {
-  }
 
   ngOnInit() {
 

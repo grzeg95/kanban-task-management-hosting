@@ -5,13 +5,14 @@ import {
   Component,
   DestroyRef,
   HostBinding,
-  Inject,
-  OnDestroy, OnInit,
+  inject,
+  OnDestroy,
+  OnInit,
   ViewEncapsulation
 } from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Firestore, limit} from 'firebase/firestore';
+import {limit} from 'firebase/firestore';
 import {catchError, combineLatest, map, of, Subscription} from 'rxjs';
 import {fadeZoomInOutTrigger} from '../../animations/fade-zoom-in-out.trigger';
 import {Board} from '../../models/board';
@@ -35,7 +36,6 @@ type BoardStatusView = BoardStatus & {
 
 @Component({
   selector: 'app-board',
-  standalone: true,
   imports: [
     NgStyle,
     ButtonComponent,
@@ -53,6 +53,15 @@ type BoardStatusView = BoardStatus & {
   ]
 })
 export class BoardComponent implements OnInit, OnDestroy {
+
+  private readonly _firestore = inject(FirestoreInjectionToken);
+  private readonly _boardService = inject(BoardService);
+  private readonly _authService = inject(AuthService);
+  private readonly _activatedRoute = inject(ActivatedRoute);
+  private readonly _router = inject(Router);
+  private readonly _layoutService = inject(LayoutService);
+  private readonly _dialog = inject(Dialog);
+  private readonly _destroyRef = inject(DestroyRef);
 
   @HostBinding('style.height') height = '';
   @HostBinding('style.width') width = '';
@@ -153,19 +162,13 @@ export class BoardComponent implements OnInit, OnDestroy {
     })
   );
 
-  constructor(
-    @Inject(FirestoreInjectionToken) private readonly _firestore: Firestore,
-    private readonly _boardService: BoardService,
-    private readonly _authService: AuthService,
-    private readonly _activatedRoute: ActivatedRoute,
-    private readonly _router: Router,
-    private readonly _layoutService: LayoutService,
-    private readonly _dialog: Dialog,
-    private readonly _destroyRef: DestroyRef
-  ) {
+  constructor() {
   }
 
   ngOnInit() {
+
+    this._loadingBoard$.next(true);
+
     combineLatest([
       this._loadingBoard$,
       this._loadingBoardStatuses$,

@@ -1,5 +1,5 @@
 import {BreakpointObserver} from '@angular/cdk/layout';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {BehaviorSubject, combineLatest} from 'rxjs';
 import {Breakpoints, BreakpointsDevices} from '../models/breakpoints';
@@ -16,6 +16,8 @@ export enum LayoutServiceStates {
   providedIn: 'root'
 })
 export class LayoutService {
+
+  private readonly _breakpointObserver = inject(BreakpointObserver);
 
   private readonly _displayNameMap = new Map([
     [Breakpoints.phone.selector, BreakpointsDevices.phone],
@@ -37,9 +39,7 @@ export class LayoutService {
   readonly showSideBar$ = new BehaviorSubject(false);
   readonly moveForSideBarState$ = new BehaviorSubject('hidden-first');
 
-  constructor(
-    private _breakpointObserver: BreakpointObserver
-  ) {
+  constructor() {
 
     combineLatest([
       this.isOnPhone$,

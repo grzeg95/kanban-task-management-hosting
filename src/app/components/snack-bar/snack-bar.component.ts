@@ -4,7 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostBinding,
-  Inject,
+  inject,
   Input,
   OnDestroy,
   OnInit,
@@ -13,7 +13,6 @@ import {
 
 @Component({
   selector: 'app-snack-bar',
-  standalone: true,
   imports: [],
   templateUrl: './snack-bar.component.html',
   styleUrl: './snack-bar.component.scss',
@@ -57,18 +56,17 @@ import {
 })
 export class SnackBarComponent implements OnInit, OnDestroy {
 
+  public readonly data = inject(DIALOG_DATA) as {message: string};
+
   @HostBinding('@state') protected _animationState: 'void' | 'visible' = 'void';
   @Input() message: string = '';
 
-  constructor(
-    @Inject(DIALOG_DATA) public data: {message: string}
-  ) {
-    if (data) {
-      this.message = data.message;
-    }
-  }
-
   ngOnInit() {
+
+    if (this.data) {
+      this.message = this.data.message;
+    }
+
     this._animationState = 'visible';
   }
 
