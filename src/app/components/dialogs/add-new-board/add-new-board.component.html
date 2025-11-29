@@ -4,7 +4,7 @@
   <form [formGroup]="_form">
 
     <app-form-field>
-      <app-label>Board Name</app-label>
+      <app-label>Name</app-label>
       <app-input
         placeholder="e.g. Web Design"
         [withHint]="true"
@@ -15,7 +15,7 @@
       }
     </app-form-field>
 
-    <app-label>Board columns</app-label>
+    <app-label>Columns</app-label>
 
     @for (bordName of _form.controls.boardStatusesNames.controls; track bordName; let i = $index) {
       <app-form-field>
