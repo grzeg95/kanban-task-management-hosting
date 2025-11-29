@@ -17,7 +17,7 @@ export class FunctionsService {
       () => httpsCallable<RequestData, ResponseData>(this._functions, name)(data)
         .then((res) => res.data)
         .catch((error) => {
-          this._snackBarService.open(error.message);
+          this._snackBarService.open(error.message, 3000);
           throw error;
         })
     );
